@@ -7,6 +7,12 @@ Repository containing the code and results for the paper *A Novel Explainable Ou
 
 <img src="https://github.com/aitor-martinez-seras/OoD_on_SNNs/blob/main/figures/attribution_workflow.pdf"/>
 
+<object data="https://github.com/aitor-martinez-seras/OoD_on_SNNs/blob/main/figures/attribution_workflow.pdf" type="application/pdf" width="700px" height="700px">
+    <embed src="https://github.com/aitor-martinez-seras/OoD_on_SNNs/blob/main/figures/attribution_workflow.pdf">
+        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="https://github.com/aitor-martinez-seras/OoD_on_SNNs/blob/main/figures/attribution_workflow.pdf">Download PDF</a>.</p>
+    </embed>
+</object>
+
 
 ### Requirements and dependencies
 
