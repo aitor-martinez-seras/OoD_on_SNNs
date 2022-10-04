@@ -2,7 +2,10 @@
 
 Repository containing the code and results for the paper *A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks*. The paper is currently being evaluated is Neural Networks, but a preprint is available at https://arxiv.org/abs/2210.00894.
 
-<img src="./figures/attribution_workflow.pdf"/>
+![This is an image](https://github.com/aitor-martinez-seras/OoD_on_SNNs/figures/attribution_workflow.pdf)
+
+
+<img src="https://github.com/aitor-martinez-seras/OoD_on_SNNs/figures/attribution_workflow.pdf"/>
 
 
 ### Requirements and dependencies
