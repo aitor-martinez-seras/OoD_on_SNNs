@@ -3,9 +3,8 @@
 Repository containing the code and results for the paper *A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks*. The paper is currently being evaluated is Neural Networks, but a preprint is available at https://arxiv.org/abs/2210.00894.
 
 
-<img src="./figures/attribution_workflow.png"/>
-<img src="./figures/g830.png"/>
-<img src="./figures/CAPTURA.png"/>
+<img src="./figures/attribution_workflow.png"  width="100%" />
+<img src="./figures/CAPTURA.png" width="100%" />
 
 
 
