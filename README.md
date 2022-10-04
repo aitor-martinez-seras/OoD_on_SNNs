@@ -4,7 +4,7 @@ Repository containing the code and results for the paper *A Novel Explainable Ou
 
 
 <img src="./figures/attribution_workflow.png"  width="100%" />
-<img src="./figures/CAPTURA.png" width="100%" />
+<img src="./figures/att_workflow.png" width="100%" />
 
 
 
