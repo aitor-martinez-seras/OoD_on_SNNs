@@ -2,14 +2,20 @@
 
 Repository containing the code and results for the paper *A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks*. The paper is currently being evaluated is Neural Networks, but a preprint is available at https://arxiv.org/abs/2210.00894.
 
-FALTAN LAS IMAGENES AQUI
+<img src="./figures/attribution_workflow.pdf"/>
+
 
 ### Requirements and dependencies
 
-1. PyTorch [https://github.com/pytorch/pytorch]
-2. Norse [https://github.com/norse/norse]
-3. NetworkX [https://github.com/networkx/networkx]
-4. Other libraries typically included in mainstream Python distributions (Numpy, Pickle, Matplotlib, Pandas etc)
+1. PyTorch 1.12.1 [https://github.com/pytorch/pytorch]
+2. Norse 0.0.7 [https://github.com/norse/norse]
+3. Other libraries typically included in mainstream Python distributions (NumPy, Pickle, Matplotlib, Pandas, scikit-learn, SciPy etc)
+
+For the bayesian test and the CD graph, the following resources are used:
+1. Orange3 [https://github.com/biolab/orange3]
+2. Bayesian test repository's bayesiantest.py [https://github.com/BayesianTestsML/tutorial/blob/master/Python/bayesiantests.py]
+
+
 
 ### How to run:
 
