@@ -13,10 +13,11 @@ Repository containing the code and results for the paper *A Novel Explainable Ou
 2. Norse 0.0.7 [https://github.com/norse/norse]
 3. Other libraries typically included in mainstream Python distributions (NumPy, Pickle, Matplotlib, Pandas, scikit-learn, SciPy etc)
 
+To correctly install Norse locally, first install desired PyTorch version and then install Norse following the instructions at [the norse instalation guide and troubleshooting](https://norse.github.io/norse/pages/installing.html#installation-troubleshooting)
+
 For the bayesian test and the CD graph, the following resources are used:
 1. Orange3 [https://github.com/biolab/orange3]
 2. Bayesian test repository's bayesiantest.py [https://github.com/BayesianTestsML/tutorial/blob/master/Python/bayesiantests.py]
-
 
 
 ### How to run:
