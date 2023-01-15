@@ -1,7 +1,7 @@
 from pathlib import Path
 # Path for the datasets
 root_path = Path(Path.cwd())
-DATASETS_PATH = Path('datasets/')
+DATASETS_PATH = Path('SCP/utils/datasets/')
 PRETRAINED_WEIGHTS_PATH = Path('weights/pretrained')
 FIGURES_PATH = Path('figures/')
 
