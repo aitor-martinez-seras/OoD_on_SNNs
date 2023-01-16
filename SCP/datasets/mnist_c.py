@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torchvision.datasets import VisionDataset
 
-from SCP.utils.datasets.data import download_dataset
+from SCP.datasets.utils import download_dataset
 
 
 class ToTensor(object):
@@ -58,6 +58,6 @@ def load_MNIST_C(batch_size, datasets_path: Path, option='zigzag'):
 
 
 if __name__ == '__main__':
-    load_MNIST_C(64, Path(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets'))
+    load_MNIST_C(64, Path(r'/datasets'))
 
 

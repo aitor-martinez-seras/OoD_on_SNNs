@@ -5,7 +5,7 @@ import torchvision
 from torchvision.datasets import VisionDataset
 from sklearn.utils import shuffle as skl_shuffle
 
-from SCP.utils.datasets.data import download_dataset
+from SCP.datasets.utils import download_dataset
 
 
 class notMNIST(VisionDataset):
@@ -82,4 +82,4 @@ def load_notMNIST(batch_size: int, datasets_path: Path, samples_per_class=1000):
 
 
 if __name__ == '__main__':
-    load_notMNIST(64, Path(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets'))
+    load_notMNIST(64, Path(r'/datasets'))

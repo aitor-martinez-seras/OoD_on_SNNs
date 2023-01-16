@@ -3,10 +3,8 @@ from pathlib import Path
 import torch
 import torchvision
 
-from constants import DATASETS_PATH
 
-
-def load_CIFAR10_BW(batch_size, datasets_path: Path, test_only=True):
+def load_CIFAR10_BW(batch_size, datasets_path: Path):
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(),

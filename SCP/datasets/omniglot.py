@@ -4,7 +4,7 @@ import torch
 import torchvision
 from torchvision.transforms import Lambda
 
-from SCP.utils.datasets.data import parse_size_of_dataloader
+from SCP.datasets.utils import parse_size_of_dataloader
 
 
 def load_omniglot(batch_size, datasets_path: Path):

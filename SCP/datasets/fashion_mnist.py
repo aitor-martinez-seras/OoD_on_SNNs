@@ -39,4 +39,4 @@ def load_Fashion_MNIST(batch_size, datasets_path: Path, test_only=False):
 
 
 if __name__ == "__main__":
-    load_Fashion_MNIST(64, Path(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets'))
+    load_Fashion_MNIST(64, Path(r'/datasets'))
