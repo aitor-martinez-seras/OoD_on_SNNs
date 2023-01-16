@@ -1,4 +1,4 @@
-import numpy as plt
+import numpy as np
 
 
 def tp_fn_fp_tn_computation(in_or_out_distribution_per_tpr):
@@ -11,22 +11,22 @@ def tp_fn_fp_tn_computation(in_or_out_distribution_per_tpr):
     tp_fn_fp_tn = np.zeros((len(in_or_out_distribution_per_tpr), 2), dtype='uint16')
     length_array = in_or_out_distribution_per_tpr.shape[1]
     for index, element in enumerate(in_or_out_distribution_per_tpr):
-        n_True = int(len(element.nonzero()[0]))
-        tp_fn_fp_tn[index, 0] = n_True
-        tp_fn_fp_tn[index, 1] = length_array - n_True
+        n_true = int(len(element.nonzero()[0]))
+        tp_fn_fp_tn[index, 0] = n_true
+        tp_fn_fp_tn[index, 1] = length_array - n_true
     return tp_fn_fp_tn
 
 
 # ---------------------------------------------
 # Metrics for Distances per class approach #
 # ---------------------------------------------
-def thresholds_per_class_for_each_TPR(dist_per_class):
+def thresholds_per_class_for_each_TPR(n_classes, dist_per_class):
     # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
     sorted_distances_per_class = [np.sort(x) for x in dist_per_class]
     tpr_range = np.arange(0, 1, 0.01)
     tpr_range[-1] = 0.99999999  # For selecting the last item correctly
-    distance_thresholds_test = np.zeros((len(train_data.classes), len(tpr_range)))
-    for class_index in range(len(train_data.classes)):
+    distance_thresholds_test = np.zeros((n_classes, len(tpr_range)))
+    for class_index in range(n_classes):
         for index, tpr in enumerate(tpr_range):
             distance_thresholds_test[class_index, index] = sorted_distances_per_class[class_index][
                 int(len(sorted_distances_per_class[class_index]) * tpr)]
@@ -74,6 +74,7 @@ def compute_precision_tpr_fpr_for_test_and_ood(dist_test_per_class, dist_ood_per
     # Eliminating NaN value at TPR = 1
     precision[0] = 1
     return precision, tpr_values, fpr_values
+
 
 # ---------------------------------------------
 # Metrics for Distances all classes at the same time approach #
@@ -195,13 +196,13 @@ def likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(likelihood_test
 # ---------------------------------------------
 # Metrics for Likelihood per class approach #
 # ---------------------------------------------
-def thresholds_likelihood_per_class_for_each_TPR(likelihood_per_class):
+def thresholds_likelihood_per_class_for_each_TPR(n_classes, likelihood_per_class):
     # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
     sorted_distances_per_class = [np.sort(x) for x in likelihood_per_class]
     tpr_range = np.arange(0, 1, 0.01)
     tpr_range[-1] = 0.99999999  # For selecting the last item correctly
-    distance_thresholds_test = np.zeros((len(train_data.classes), len(tpr_range)))
-    for class_index in range(len(train_data.classes)):
+    distance_thresholds_test = np.zeros((n_classes, len(tpr_range)))
+    for class_index in range(n_classes):
         for index, tpr in enumerate(tpr_range[::-1]):
             distance_thresholds_test[class_index, index] = sorted_distances_per_class[class_index][
                 int(len(sorted_distances_per_class[class_index]) * tpr)]
@@ -226,9 +227,11 @@ def compare_likelihood_per_class_to_likelihood_thr_per_class(likelihood_list_per
     return in_or_out_distribution_per_tpr
 
 
-def likelihood_method_per_class_compute_precision_tpr_fpr_for_test_and_ood(likelihood_test_per_class,
-                                                                           likelihood_ood_per_class,
-                                                                           likelihood_thresholds_per_class):
+def likelihood_method_per_class_compute_precision_tpr_fpr_for_test_and_ood(
+        likelihood_test_per_class,
+        likelihood_ood_per_class,
+        likelihood_thresholds_per_class
+    ):
     # Creation of the array with True if predicted InD (True) or OD (False)
     in_or_out_distribution_per_tpr_test = compare_likelihood_per_class_to_likelihood_thr_per_class(
         likelihood_test_per_class, likelihood_thresholds_per_class)

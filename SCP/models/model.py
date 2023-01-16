@@ -80,7 +80,6 @@ def load_model(model_arch: str, device, input_features: int,
             hidden_neurons = 300
 
         if n_hidden_layers == 1:
-
             model = Model(
                 encoder=encoder,
                 snn=ConvSNN1(hidden_neurons=hidden_neurons,

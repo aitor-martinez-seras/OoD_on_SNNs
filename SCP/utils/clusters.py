@@ -75,7 +75,6 @@ def distance_to_clusters_averages(spike_frecs, predictions, avg_per_class):
   return distances_per_class, closest_clusters_per_class
 
 
-
 def create_clusters(subset_train_loader_clusters, preds_train_clusters,
                     spk_count_train_clusters,
                     size=1000, distance_for_clustering=None, verbose=2):

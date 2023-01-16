@@ -10,3 +10,4 @@ certifi==2022.12.7
 idna==3.4
 torchaudio==0.12.1+cu116
 norse==0.0.7.post1
+tomli==2.0.1
