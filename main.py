@@ -2,6 +2,7 @@ import logging
 import sys
 from pathlib import Path
 import datetime
+import argparse
 
 import pytz
 from tqdm import tqdm
@@ -22,10 +23,9 @@ from test import validate_one_epoch
 
 
 def get_args_parser():
-    import argparse
-
     parser = argparse.ArgumentParser(description="OOD detection on SNNs", add_help=True)
 
+    parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
     parser.add_argument("--pretrained", action="store_true", default=False,
                         help="Can only be set if no SNN is used, and in that case the pretrained weights for"
                              "RPN and Detector will be used")
@@ -36,10 +36,10 @@ def get_args_parser():
                         dest="samples_for_cluster_per_class", help="number of samples for validation per class")
     parser.add_argument("--samples-for-thr-per-class", default=1000, type=int,
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
+    return parser
 
 
-
-def my_custom_logger(logger_name, level=logging.INFO):
+def my_custom_logger(logger_name, logs_pth, level=logging.INFO):
     """
     Method to return a custom logger with the given name and level
     """
@@ -49,7 +49,7 @@ def my_custom_logger(logger_name, level=logging.INFO):
 
     # Create handlers
     console_handler = logging.StreamHandler(sys.stdout)
-    file_handler = logging.FileHandler(logger_name, mode='w')
+    file_handler = logging.FileHandler(logs_pth / f"{logger_name}.log", mode='w')
 
     # Set handler levels
     console_handler.setLevel(level)
@@ -82,14 +82,18 @@ def main(args):
     # -----------------
     # Settings
     # -----------------
+    print(args)
+
     # Load config
-    with open(Path(r"config\config.toml"), mode="rb") as fp:
+    print(f'Loading configuration from {args.conf}.toml')
+    with open(Path(rf"config\{args.conf}.toml"), mode="rb") as fp:
         config = tomli.load(fp)
 
     # Paths
-    results_pth = Path(config["paths"]["results_path"])
-    logs_pth = Path(config["paths"]["logs_path"])
-    pretrained_weights_path = Path(config["paths"]["pretrained_weights_path"])
+    results_path = Path(config["paths"]["results"])
+    logs_path = Path(config["paths"]["logs"])
+    pretrained_weights_path = Path(config["paths"]["pretrained_weights"])
+    datasets_path = Path(config["paths"]["datasets"])
 
     # Datasets to test
     in_dist_dataset_to_test = config["in_distribution_datasets"]
@@ -97,7 +101,7 @@ def main(args):
 
     # Model architectures
     model_archs = config["model_arch"]
-    archs_to_test = [k for k in model_archs.keys()]
+    archs_to_test = [k for k in model_archs.keys()][1:]  # First key is the input features
 
     # Dataframe to store the results
     COLUMNS = ['Timestamp', 'In-Distribution', 'Out-Distribution', 'Model',
@@ -115,11 +119,13 @@ def main(args):
         # results_list = []
 
         # New logger for each In-Distribution Dataset
-        logger = my_custom_logger(f"Logger_{in_dataset}.log")
+        logger = my_custom_logger(in_dataset, logs_path)
 
         # Load in-distribution data from the dictionary
         batch_size = get_batch_size(config, in_dataset, logger)
-        train_data, train_loader, test_loader = in_distribution_datasets_loader[in_dataset](batch_size)
+        train_data, train_loader, test_loader = in_distribution_datasets_loader[in_dataset](batch_size, datasets_path)
+        class_names = train_loader.dataset.classes
+        n_classes = len(class_names)
 
         logger.info(f'Starting In-Distribution dataset {in_dataset}')
         for model_name in tqdm(archs_to_test, desc='Model loop'):
@@ -127,13 +133,21 @@ def main(args):
             logger.info(f'Logs for benchmark with the model {model_name}')
 
             # Load model arch
+            input_features = model_archs['input_features'][in_dataset]
             hidden_neurons = model_archs[model_name][in_dataset][0]
             output_neurons = model_archs[model_name][in_dataset][1]
-            model = load_model(model_name, device, hidden_neurons, output_neurons, args.n_hidden_layers)
+            model = load_model(
+                model_arch=model_name,
+                device=device,
+                input_features=input_features,
+                hidden_neurons=hidden_neurons,
+                output_neurons=output_neurons,
+                n_hidden_layers=args.n_hidden_layers
+            )
 
             # Load weights
             weights_path = Path(
-                f'state_dict_{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers} _layers.pth'
+                f'state_dict_{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers.pth'
             )
             if args.pretrained:
                 weights_path = pretrained_weights_path / weights_path
@@ -169,7 +183,7 @@ def main(args):
                 train_loader,
                 n_samples_per_class=args.samples_for_thr_per_class,
                 dataset_name=in_dataset,
-                init_pos=number_of_samples_per_class * len(train_loader.dataset.classes)
+                init_pos=number_of_samples_per_class * n_classes
             )
             training_subset = Subset(train_data, [x for x in selected_indices_per_class])
             subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
@@ -208,9 +222,9 @@ def main(args):
             #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
             #   para cuando se ejecute
             clusters_per_class, logging_info = create_clusters(
-                subset_train_loader_clusters,
                 preds_train_clusters,
                 spk_count_train_clusters,
+                class_names,
                 distance_for_clustering=dist_clustering,
                 size=args.samples_for_cluster_per_class,
                 verbose=1
@@ -251,30 +265,35 @@ def main(args):
                 # Create the median aggregations for each cluster of each class
                 agg_counts_per_class_cluster = average_per_class_and_cluster(
                     spk_count_train_clusters,
-                    preds_train_clusters, clusters_per_class,
+                    preds_train_clusters,
+                    clusters_per_class,
+                    n_classes,
                     n_samples=1000, option='median'
                 )
 
                 # Computation of the distances of train, test and ood
                 distances_train_per_class, _ = distance_to_clusters_averages(
-                    spk_count_train, preds_train, agg_counts_per_class_cluster
+                    spk_count_train, preds_train, agg_counts_per_class_cluster, n_classes
                 )
                 distances_test_per_class, _ = distance_to_clusters_averages(
-                    spk_count_test, preds_test, agg_counts_per_class_cluster
+                    spk_count_test, preds_test, agg_counts_per_class_cluster, n_classes
                 )
                 distances_ood_per_class, _ = distance_to_clusters_averages(
-                    spk_count_ood, preds_ood, agg_counts_per_class_cluster
+                    spk_count_ood, preds_ood, agg_counts_per_class_cluster, n_classes
                 )
 
                 # -----------
                 # Metrics
                 # -----------
+                # TODO: Implement as class that inherits from _OODMethod
                 # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
-                distance_thresholds_train = thresholds_per_class_for_each_TPR(distances_train_per_class)
-                # Conmputing precision, tpr and fpr
-                precision, tpr_values, fpr_values = compute_precision_tpr_fpr_for_test_and_ood(distances_test_per_class,
-                                                                                               distances_ood_per_class,
-                                                                                               distance_thresholds_train)
+                distance_thresholds_train = thresholds_per_class_for_each_TPR(
+                    distances_train_per_class, distances_train_per_class
+                )
+                # Computing precision, tpr and fpr
+                precision, tpr_values, fpr_values = compute_precision_tpr_fpr_for_test_and_ood(
+                    distances_test_per_class, distances_ood_per_class, distance_thresholds_train
+                )
                 # Appending that when FPR = 1 the TPR is also 1:
                 tpr_values_auroc = np.append(tpr_values, 1)
                 fpr_values_auroc = np.append(fpr_values, 1)
@@ -321,7 +340,7 @@ def main(args):
             # a file
             df_results_one_run = pd.DataFrame(results_list, columns=COLUMNS)
             # Save into .csv format
-            # df_results_one_run.to_csv(results_path / f'checkpoint_{in_dataset}.csv')
+            df_results_one_run.to_csv(results_path / f'checkpoint_{in_dataset}.csv')
             df_results = pd.concat([df_results, df_results_one_run])
             # Save into .csv
             # df_results.to_csv(results_path / f'Benchmark_results.csv')
@@ -332,4 +351,4 @@ def main(args):
 
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
-    main()
+    main(args)

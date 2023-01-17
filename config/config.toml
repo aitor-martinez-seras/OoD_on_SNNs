@@ -12,22 +12,26 @@ out_of_distribution_datasets = [
 # as the variable to define the batch size
 batch_size = 64
 
-
-
 [model_arch]
-    [model_arch.fully_connected]
+    [model_arch.input_features]  # Input features must be the first key
+        'MNIST' = 784
+        'Fashion_MNIST' = 784
+        'KMNIST' = 784
+        'Letters' = 784
+    [model_arch.Fully_connected]
         'MNIST' = [200, 10]
         'Fashion_MNIST' = [200, 10]
         'KMNIST' = [200, 10]
         'Letters' = [200, 26]
 
-    [model_arch.conv_net]
+    [model_arch.ConvNet]
         'MNIST' = [300, 10]
         'Fashion_MNIST' = [300, 10]
         'KMNIST' = [300, 10]
         'Letters' = [300, 26]
 
 [paths]
-results_path = './results'  # Single quotation for literal strings
-logs_path = './logs'
-pretrained_weights_path = './weights/pretrained'
+results = './results'  # Single quotation for literal strings
+logs = './logs'
+pretrained_weights = './weights/pretrained'
+datasets = './datasets'

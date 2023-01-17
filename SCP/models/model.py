@@ -39,10 +39,10 @@ def decode(x):
 
 
 def load_model(model_arch: str, device, input_features: int,
-               hidden_neurons=None, output_neurons=10, encoder='poisson',
-               n_time_steps=24, f_max=100, n_hidden_layers=1):
+               hidden_neurons=None, output_neurons=10, n_hidden_layers=1, encoder='poisson',
+               n_time_steps=24, f_max=100):
     if encoder == 'poisson':
-        encoder = PoissonEncoder(seq_length=n_time_steps, f_max=100)
+        encoder = PoissonEncoder(seq_length=n_time_steps, f_max=f_max)
     elif encoder == 'constant current':
         encoder = ConstantCurrentLIFEncoder(seq_length=n_time_steps, p=LIFParameters(v_th=torch.tensor(0.25)))
     else:
