@@ -371,7 +371,7 @@ def main(args):
             # df_results.to_csv(results_path / f'Benchmark_results.csv')
 
     # Save all the results to excel
-    df_results.to_excel('benchmark_results_full.xlsx')
+    df_results.to_excel(results_path / 'benchmark_results_full.xlsx')
 
 
 if __name__ == "__main__":
