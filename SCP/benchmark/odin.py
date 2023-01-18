@@ -9,7 +9,7 @@ from SCP.benchmark._base import _OODMethod
 class ODIN(_OODMethod):
 
     def __init__(self):
-        super(ODIN, self).__init__()
+        super().__init__()
 
     def __call__(self, logits_train, logits_test, logits_ood):
         prelim_results = []

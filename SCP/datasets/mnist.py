@@ -9,7 +9,7 @@ from torchvision.datasets import VisionDataset
 from SCP.datasets.utils import download_dataset
 
 
-def load_MNIST(batch_size, datasets_path: Path, test_only=False):
+def load_MNIST(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(),
@@ -55,7 +55,7 @@ def square_creation(input_tensor: torch.Tensor):
     return input_tensor
 
 
-def load_MNIST_square(batch_size, datasets_path: Path, *args):
+def load_MNIST_square(batch_size, datasets_path: Path, *args, **kwargs):
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(),
@@ -113,7 +113,7 @@ class MNIST_C(VisionDataset):
         return sample
 
 
-def load_MNIST_C(batch_size, datasets_path: Path, option='zigzag'):
+def load_MNIST_C(batch_size, datasets_path: Path, option='zigzag', *args, **kwargs):
     compressed_fname = 'mnist_c.zip'
     url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/ERi3c4DxluJFqpv4wtlTkKEBvhdrY4WwqNRJWKyyVoTQqg?download=1"
     uncomp_fpath = download_dataset(compressed_fname, datasets_path, url)

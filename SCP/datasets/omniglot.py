@@ -7,7 +7,7 @@ from torchvision.transforms import Lambda
 from SCP.datasets.utils import parse_size_of_dataloader
 
 
-def load_omniglot(batch_size, datasets_path: Path):
+def load_omniglot(batch_size, datasets_path: Path, *args, **kwargs):
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(),

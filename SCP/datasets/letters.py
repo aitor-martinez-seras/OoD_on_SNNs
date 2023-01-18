@@ -5,7 +5,7 @@ import torchvision
 from torchvision.transforms import Lambda
 
 
-def load_MNIST_Letters(batch_size, datasets_path: Path, test_only=False):
+def load_MNIST_Letters(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
     # The rotation and horizontal flip are for getting the images in a similar
     # way to the MNIST dataset i.e. vertical and readable from left to right
     transform = torchvision.transforms.Compose(

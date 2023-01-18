@@ -4,7 +4,7 @@ import torch
 import torchvision
 
 
-def load_CIFAR10_BW(batch_size, datasets_path: Path):
+def load_CIFAR10_BW(batch_size, datasets_path: Path, *args, **kwargs):
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(),
@@ -27,7 +27,7 @@ def load_CIFAR10_BW(batch_size, datasets_path: Path):
     return test_loader_CIFAR10
 
 
-def load_CIFAR10(batch_size, datasets_path: Path, test_only=False):
+def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor()

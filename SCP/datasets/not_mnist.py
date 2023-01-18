@@ -23,7 +23,8 @@ class notMNIST(VisionDataset):
         # Every directory is a class in the structure of notMNINST
         for cl_index, class_dir_name in enumerate(sorted(root.iterdir())):
             # Extract the class name from the path
-            classes.append(class_dir_name.as_posix().split('/')[-1])
+            class_dir_name = class_dir_name.as_posix().split('/')[-1]
+            classes.append(class_dir_name)
             class_dir_path = root / class_dir_name
             if samples_per_class is None:
                 # We put the limit way above the length of the dataset to not limit
@@ -69,7 +70,8 @@ class notMNIST(VisionDataset):
         return sample
 
 
-def load_notMNIST(batch_size: int, datasets_path: Path, samples_per_class=1000):
+def load_notMNIST(batch_size: int, datasets_path: Path, *args, **kwargs):
+    samples_per_class = 1000
     compressed_fname = 'notMNIST_small.zip'
     url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/EXzRbeXSE2tKvYlLdML9mSkBDq7r8GVoy27n70_5HxUi-A?download=1"
     notmnist_path = download_dataset(compressed_fname, datasets_path, url)

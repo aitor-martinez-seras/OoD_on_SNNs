@@ -12,6 +12,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Subset
 
+from SCP.benchmark.weights import download_pretrained_weights
 from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_datasets_loader
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
@@ -71,13 +72,16 @@ def my_custom_logger(logger_name, logs_pth, level=logging.INFO):
 def get_batch_size(config: dict, in_dataset: str, logger: logging.Logger):
     try:  # If the key exists, it means a specific batch size is defined for the dataset
         batch_size = config["hyperparameters"][in_dataset]
+        logging.warning(f"Using custom batch_size = {batch_size} for {in_dataset}")
     except KeyError:
         batch_size = config["hyperparameters"]["batch_size"]
-        logging.warning(f"Using custom batch_size = {batch_size} for {in_dataset}")
     return batch_size
 
 
 def main(args):
+    # TODO: 1.Change requirements.txt to not contain torch requirements
+    #   2. Modify change download of pretrained weights to benchmark and define the path to look for OoD_on_SNNs
+    #       to enable the automatic download from any platform
 
     # -----------------
     # Settings
@@ -86,7 +90,7 @@ def main(args):
 
     # Load config
     print(f'Loading configuration from {args.conf}.toml')
-    with open(Path(rf"config\{args.conf}.toml"), mode="rb") as fp:
+    with open(Path(rf"config/{args.conf}.toml"), mode="rb") as fp:
         config = tomli.load(fp)
 
     # Paths
@@ -102,6 +106,24 @@ def main(args):
     # Model architectures
     model_archs = config["model_arch"]
     archs_to_test = [k for k in model_archs.keys()][1:]  # First key is the input features
+
+    # Check if pretrained weights are downloaded when required
+    if args.pretrained:
+        exist = False
+        for in_dataset in in_dist_dataset_to_test:
+            for model_name in archs_to_test:
+                hidden_neurons = model_archs[model_name][in_dataset][0]
+                output_neurons = model_archs[model_name][in_dataset][1]
+                weights_path = Path(
+                    f'state_dict_{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers.pth'
+                )
+                if not weights_path.exists():
+                    print(f'As {weights_path} does not exist, pretrained weights will be downloaded')
+                    download_pretrained_weights(pretrained_weights_path=pretrained_weights_path)
+                else:
+                    exist = True
+        if exist:
+            print('Pretrained weights are correctly in path')
 
     # Dataframe to store the results
     COLUMNS = ['Timestamp', 'In-Distribution', 'Out-Distribution', 'Model',
@@ -244,11 +266,14 @@ def main(args):
                 if ood_dataset.split('/')[0] == 'MNIST-C':
                     test_loader_ood = out_of_distribution_datasets_loader[ood_dataset.split('/')[0]](
                         batch_size_ood,
+                        datasets_path,
                         test_only=True,
                         option=ood_dataset.split('/')[1]
                     )
                 else:
-                    test_loader_ood = out_of_distribution_datasets_loader[ood_dataset](batch_size_ood, test_only=True)
+                    test_loader_ood = out_of_distribution_datasets_loader[ood_dataset](
+                        batch_size_ood, datasets_path, test_only=True
+                    )
 
                 # Extract the spikes and logits for OoD
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(
@@ -288,7 +313,7 @@ def main(args):
                 # TODO: Implement as class that inherits from _OODMethod
                 # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
                 distance_thresholds_train = thresholds_per_class_for_each_TPR(
-                    distances_train_per_class, distances_train_per_class
+                    n_classes, distances_train_per_class
                 )
                 # Computing precision, tpr and fpr
                 precision, tpr_values, fpr_values = compute_precision_tpr_fpr_for_test_and_ood(

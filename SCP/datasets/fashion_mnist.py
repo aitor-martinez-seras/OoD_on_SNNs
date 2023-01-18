@@ -4,7 +4,7 @@ import torch
 import torchvision
 
 
-def load_Fashion_MNIST(batch_size, datasets_path: Path, test_only=False):
+def load_Fashion_MNIST(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
     transform = torchvision.transforms.Compose(
         [
             torchvision.transforms.ToTensor(),

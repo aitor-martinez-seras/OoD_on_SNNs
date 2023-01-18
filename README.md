@@ -9,7 +9,7 @@ Repository containing the code and results for the paper *A Novel Explainable Ou
 
 ### Requirements and dependencies
 
-1. PyTorch 1.12.1 [https://github.com/pytorch/pytorch]
+1. PyTorch 1.12.1 (vision 0.13.1) [https://github.com/pytorch/pytorch]
 2. Norse 0.0.7 [https://github.com/norse/norse]
 3. Other libraries typically included in mainstream Python distributions (NumPy, Pickle, Matplotlib, Pandas, scikit-learn, SciPy etc)
 
