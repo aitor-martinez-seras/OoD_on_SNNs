@@ -6,15 +6,19 @@ from norse.torch import LICell
 
 class ConvSNN1(torch.nn.Module):
     def __init__(self, hidden_neurons, output_neurons, num_channels=1,
-                 feature_size=28, alpha=100):
+                 feature_size=28, alpha=100, input_size=None):
         # super(ConvNet, self).__init__()
         super().__init__()
 
         self.features = int(((feature_size - 2) / 2) - 2)
 
-        self.conv1 = torch.nn.Conv2d(num_channels, 20, 3, 1, bias=False)
+        self.ftmaps_h = int(((input_size[1] - 2) / 2) - 2)
+        self.ftmaps_v = int(((input_size[2] - 2) / 2) - 2)
+
+        self.conv1 = torch.nn.Conv2d(input_size[0], 20, 3, 1, bias=False)
         self.conv2 = torch.nn.Conv2d(20, 50, 3, 1, bias=False)
-        self.fc1 = torch.nn.Linear(self.features * self.features * 50, hidden_neurons, bias=False)
+        # self.fc1 = torch.nn.Linear(self.features * self.features * 50, hidden_neurons, bias=False)
+        self.fc1 = torch.nn.Linear(self.ftmaps_h * self.ftmaps_v * 50, hidden_neurons, bias=False)
         self.fc2 = torch.nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
         self.lif0 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
         self.lif1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
@@ -34,7 +38,7 @@ class ConvSNN1(torch.nn.Module):
             seq_length, batch_size, self.output_neurons, device=x.device, dtype=x.dtype
         )
         if flag is None:
-            for ts in range(seq_length):  # A la derecha pongo la salida del modelo
+            for ts in range(seq_length):
                 # First convolution
                 z = self.conv1(x[ts, :])
                 z, s0 = self.lif0(z, s0)
@@ -46,7 +50,8 @@ class ConvSNN1(torch.nn.Module):
                 # z = torch.nn.functional.avg_pool2d(z, 2)
 
                 # Fully connected part
-                z = z.view(-1, self.features ** 2 * 50)  # Flatten -Z (batch_size, 800)
+                z = z.flatten(start_dim=1)
+                # z = z.view(-1, self.features ** 2 * 50)  # Flatten -Z (batch_size, 800)
 
                 # First linear connection
                 z = self.fc1(z)  # (batch_size, 500)

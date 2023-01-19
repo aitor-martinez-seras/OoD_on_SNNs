@@ -17,6 +17,7 @@ from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_da
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
+from SCP.utils.common import load_paths_config, load_config, get_batch_size
 from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood, \
     thresholds_for_each_TPR_likelihood, likelihood_method_compute_precision_tpr_fpr_for_test_and_ood
 from SCP.benchmark import MSP, ODIN, EnergyOOD
@@ -69,15 +70,6 @@ def my_custom_logger(logger_name, logs_pth, level=logging.INFO):
     return logger
 
 
-def get_batch_size(config: dict, in_dataset: str, logger: logging.Logger):
-    try:  # If the key exists, it means a specific batch size is defined for the dataset
-        batch_size = config["hyperparameters"][in_dataset]
-        logging.warning(f"Using custom batch_size = {batch_size} for {in_dataset}")
-    except KeyError:
-        batch_size = config["hyperparameters"]["batch_size"]
-    return batch_size
-
-
 def main(args):
     # TODO: 1.Change requirements.txt to not contain torch requirements
     #   2. Modify change download of pretrained weights to benchmark and define the path to look for OoD_on_SNNs
@@ -90,14 +82,14 @@ def main(args):
 
     # Load config
     print(f'Loading configuration from {args.conf}.toml')
-    with open(Path(rf"config/{args.conf}.toml"), mode="rb") as fp:
-        config = tomli.load(fp)
+    config = load_config(args.conf)
 
     # Paths
-    results_path = Path(config["paths"]["results"])
-    logs_path = Path(config["paths"]["logs"])
-    pretrained_weights_path = Path(config["paths"]["pretrained_weights"])
-    datasets_path = Path(config["paths"]["datasets"])
+    config_pth = load_paths_config()
+    results_path = Path(config_pth["paths"]["results"])
+    logs_path = Path(config_pth["paths"]["logs"])
+    pretrained_weights_path = Path(config_pth["paths"]["pretrained_weights"])
+    datasets_path = Path(config_pth["paths"]["datasets"])
 
     # Datasets to test
     in_dist_dataset_to_test = config["in_distribution_datasets"]
@@ -154,6 +146,7 @@ def main(args):
 
             logger.info(f'Logs for benchmark with the model {model_name}')
 
+            # TODO: CAMBIAR TODO A USAR EL INPUT SIZE
             # Load model arch
             input_features = model_archs['input_features'][in_dataset]
             hidden_neurons = model_archs[model_name][in_dataset][0]
@@ -161,7 +154,7 @@ def main(args):
             model = load_model(
                 model_arch=model_name,
                 device=device,
-                input_features=input_features,
+                input_size=input_features,
                 hidden_neurons=hidden_neurons,
                 output_neurons=output_neurons,
                 n_hidden_layers=args.n_hidden_layers

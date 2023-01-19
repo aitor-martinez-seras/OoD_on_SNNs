@@ -1,0 +1,6 @@
+[paths]
+results = './results'  # Single quotation for literal strings
+logs = './logs'
+pretrained_weights = './weights/pretrained'
+datasets = './datasets'
+weights = './weights'

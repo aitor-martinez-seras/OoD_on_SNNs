@@ -1,3 +1,5 @@
+import math
+
 import torch
 from norse.torch import PoissonEncoder
 from norse.torch import ConstantCurrentLIFEncoder
@@ -38,7 +40,7 @@ def decode(x):
     return log_p_y
 
 
-def load_model(model_arch: str, device, input_features: int,
+def load_model(model_arch: str, device, input_size: list,
                hidden_neurons=None, output_neurons=10, n_hidden_layers=1, encoder='poisson',
                n_time_steps=24, f_max=100):
     if encoder == 'poisson':
@@ -49,6 +51,9 @@ def load_model(model_arch: str, device, input_features: int,
         raise NotImplementedError(f'Encoder {encoder} not implemented')
 
     if model_arch == 'Fully_connected':
+
+        input_size = math.prod(input_size)
+
         if hidden_neurons is None:
             hidden_neurons = 200
 
@@ -56,7 +61,7 @@ def load_model(model_arch: str, device, input_features: int,
 
             model = Model(
                 encoder=encoder,
-                snn=FCSNN1(input_features=input_features,
+                snn=FCSNN1(input_features=input_size,
                            hidden_features=hidden_neurons,
                            output_features=output_neurons),
                 decoder=decode
@@ -65,7 +70,7 @@ def load_model(model_arch: str, device, input_features: int,
         elif n_hidden_layers == 2:
             model = Model(
                 encoder=encoder,
-                snn=FCSNN2(input_features=input_features,
+                snn=FCSNN2(input_features=input_size,
                            hidden_features=hidden_neurons,
                            output_features=output_neurons),
                 decoder=decode
@@ -82,18 +87,24 @@ def load_model(model_arch: str, device, input_features: int,
         if n_hidden_layers == 1:
             model = Model(
                 encoder=encoder,
-                snn=ConvSNN1(hidden_neurons=hidden_neurons,
-                             output_neurons=output_neurons,
-                             alpha=80),
+                snn=ConvSNN1(
+                    input_size=input_size,
+                    hidden_neurons=hidden_neurons,
+                    output_neurons=output_neurons,
+                    alpha=80
+                ),
                 decoder=decode
             ).to(device)
 
         elif n_hidden_layers == 2:
             model = Model(
                 encoder=PoissonEncoder(n_time_steps),
-                snn=ConvSNN2(hidden_neurons=hidden_neurons,
-                             output_neurons=output_neurons,
-                             alpha=80),
+                snn=ConvSNN2(
+                    input_size=input_size,
+                    hidden_neurons=hidden_neurons,
+                    output_neurons=output_neurons,
+                    alpha=80
+                ),
                 decoder=decode
             ).to(device)
 

@@ -1,4 +1,10 @@
-def searchIndicesOfClass(searched_class, labels, n=0, initial_pos=0):
+import logging
+from pathlib import Path
+
+import tomli
+
+
+def find_idx_of_class(searched_class, labels, n=0, initial_pos=0):
     """
     Function that outputs a list with all the indices of the searched_class in the labelsList
     If n is provided, only the first n coincidences are outputted
@@ -22,3 +28,27 @@ def searchIndicesOfClass(searched_class, labels, n=0, initial_pos=0):
                 indices.append(initial_pos + index)
                 i += 1
     return indices
+
+
+def load_config(conf_name):
+    with open(Path(rf"config/{conf_name}.toml"), mode="rb") as fp:
+        conf = tomli.load(fp)
+    return conf
+
+
+def load_paths_config() -> dict:
+    print(f'Loading path from paths.toml')
+    return load_config('paths')
+
+
+def get_batch_size(config: dict, in_dataset: str, logger: logging.Logger):
+    try:  # If the key exists, it means a specific batch size is defined for the dataset
+        batch_size = config["hyperparameters"][in_dataset]
+        logger.warning(f"Using custom batch_size = {batch_size} for {in_dataset}")
+    except KeyError:
+        batch_size = config["hyperparameters"]["batch_size"]
+    return batch_size
+
+
+
+

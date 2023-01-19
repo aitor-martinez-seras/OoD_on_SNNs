@@ -30,8 +30,3 @@ batch_size = 64
         'KMNIST' = [300, 10]
         'Letters' = [300, 26]
 
-[paths]
-results = './results'  # Single quotation for literal strings
-logs = './logs'
-pretrained_weights = './weights/pretrained'
-datasets = './datasets'

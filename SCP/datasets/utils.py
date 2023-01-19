@@ -5,7 +5,7 @@ import requests
 from io import BytesIO
 from zipfile import ZipFile
 
-from SCP.utils.common import searchIndicesOfClass
+from SCP.utils.common import find_idx_of_class
 
 
 def _download_dataset(fpath: Path, url: str):
@@ -66,7 +66,7 @@ def indices_of_every_class_for_subset(train_loader, n_samples_per_class, dataset
     if dataset_name == 'Letters':
       cl_index = cl_index + 1
 
-    indices = searchIndicesOfClass(
+    indices = find_idx_of_class(
         cl_index, train_loader.dataset.targets, n=n_samples_per_class, initial_pos=init_pos
     )
     selected_indices_per_class += indices

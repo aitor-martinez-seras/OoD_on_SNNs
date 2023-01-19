@@ -5,7 +5,7 @@ from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import pairwise_distances
 
-from .common import searchIndicesOfClass
+from .common import find_idx_of_class
 from .plots import plot_dendrogram
 
 
@@ -32,9 +32,9 @@ def average_per_class_and_cluster(spike_frecs, preds, clusters_per_class, n_clas
     for class_index in range(n_classes):
         # Calculation of the array of frecuencies that corresponds to a class
         if n_samples is None:
-            indices = searchIndicesOfClass(class_index, preds)
+            indices = find_idx_of_class(class_index, preds)
         else:
-            indices = searchIndicesOfClass(class_index, preds, n_samples)
+            indices = find_idx_of_class(class_index, preds, n_samples)
         spikesFrecsOneClass = spike_frecs[indices]
         # For every cluster of the class, compute the median
         avgPerCluster = []
@@ -65,7 +65,7 @@ def distance_to_clusters_averages(spike_frecs, predictions, avg_per_class, n_cla
     # Order array by predicted class
     spike_frecs_per_class = []
     for class_index in range(n_classes):
-        spike_frecs_per_class.append(spike_frecs[searchIndicesOfClass(class_index, predictions)])
+        spike_frecs_per_class.append(spike_frecs[find_idx_of_class(class_index, predictions)])
     # Compute the pairwise distances per predicted class
     distances_per_class = []
     closest_clusters_per_class = []
@@ -104,7 +104,7 @@ def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names,
         dunnIndexes = []
         silh_scores = []
         for dist in dist_thrs:
-            indices = searchIndicesOfClass(class_index, preds_train_clusters, size)
+            indices = find_idx_of_class(class_index, preds_train_clusters, size)
             cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='average',
                                                     distance_threshold=dist)
             try:  # Handle the case that one class has no representation in the training samples
@@ -156,7 +156,7 @@ def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names,
     # Create the clusters by extracting the labels for every sample
     clusters_per_class = []
     for class_index in range(n_classes):
-        indices = searchIndicesOfClass(class_index, preds_train_clusters, 1000)
+        indices = find_idx_of_class(class_index, preds_train_clusters, 1000)
         if isinstance(opt_dist_thr_per_class, list):
             cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='complete',
                                                     distance_threshold=opt_dist_thr_per_class[class_index])
