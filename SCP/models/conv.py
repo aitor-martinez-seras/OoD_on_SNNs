@@ -20,10 +20,12 @@ class ConvSNN1(torch.nn.Module):
         # self.fc1 = torch.nn.Linear(self.features * self.features * 50, hidden_neurons, bias=False)
         self.fc1 = torch.nn.Linear(self.ftmaps_h * self.ftmaps_v * 50, hidden_neurons, bias=False)
         self.fc2 = torch.nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
-        self.lif0 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
-        self.lif1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
-        self.lif2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.lif0 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.lif1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
+        self.lif2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
         self.out = LICell()
+
+        # TODO: Abstraer los thrs the aqui (0.2, 0.2, 0.1)
 
         self.hidden_neurons = hidden_neurons
         self.output_neurons = output_neurons
@@ -41,13 +43,16 @@ class ConvSNN1(torch.nn.Module):
             for ts in range(seq_length):
                 # First convolution
                 z = self.conv1(x[ts, :])
+                print(f'Encoder: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
                 z, s0 = self.lif0(z, s0)
                 z = torch.nn.functional.avg_pool2d(z, 2)  # (batch_size, filters (20), (H-4)/2, (W-4)/2)
+                print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
                 z = self.conv2(z)
                 z, s1 = self.lif1(z, s1)
                 # z = torch.nn.functional.avg_pool2d(z, 2)
+                print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
@@ -75,7 +80,7 @@ class ConvSNN1(torch.nn.Module):
                 z = torch.nn.functional.avg_pool2d(z, 2)  # (batch_size, filters (20), (H-4)/2, (W-4)/2)
 
                 # Second convolution
-                z = self.conv2(z)  # Multiplica por 10 para que el valor de
+                z = self.conv2(z)
                 z, s1 = self.lif1(z, s1)
 
                 # Fully connected part

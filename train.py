@@ -89,8 +89,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
         training_losses.append(mean_training_loss)
         test_losses.append(mean_test_loss)
         accuracies.append(accuracy)
-        print(f"\nThe accuracy of the model with {train_loader.dataset.__str__()} "
-              f"for epoch {epoch + 1} is {accuracies[-1]}%")
+        print(f"\nThe accuracy of the model for epoch {epoch + 1} is {accuracies[-1]}%")
 
         # Update the learning rate
         if lr_scheduler:
@@ -100,6 +99,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
 
 
 def main(args):
+    print(args)
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
