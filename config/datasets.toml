@@ -16,7 +16,7 @@ classes = 26
 
 [Flowers102]
 input_size = [3, 400, 400]
-classes = 26
+classes = 102
 
 [noMNIST]
 input_size = [1, 28, 28]
