@@ -7,6 +7,8 @@ import torchvision.transforms as transforms
 
 # This datasets needs Scipy to load target files form .mat format
 def load_flowers(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
     transform = transforms.Compose(
         [
             transforms.Resize((500, 500)),
