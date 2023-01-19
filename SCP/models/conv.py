@@ -42,17 +42,17 @@ class ConvSNN1(torch.nn.Module):
         if flag is None:
             for ts in range(seq_length):
                 # First convolution
+                # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
                 z = self.conv1(x[ts, :])
-                print(f'Encoder: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
                 z, s0 = self.lif0(z, s0)
                 z = torch.nn.functional.avg_pool2d(z, 2)  # (batch_size, filters (20), (H-4)/2, (W-4)/2)
-                print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+                # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
                 z = self.conv2(z)
                 z, s1 = self.lif1(z, s1)
                 # z = torch.nn.functional.avg_pool2d(z, 2)
-                print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
