@@ -12,7 +12,7 @@ from SCP.utils.common import load_paths_config, load_config
 from SCP.utils.plots import plot_loss_history
 from SCP.models.model import load_model
 from test import validate_one_epoch
-from constants import WEIGHTS_PATH
+from SCP.models.model import save_checkpoint
 
 
 def get_args_parser():
@@ -114,6 +114,7 @@ def main(args):
     # Paths
     config_pth = load_paths_config()
     logs_path = Path(config_pth["paths"]["logs"])
+    figures_path = Path(config_pth["paths"]["figures"])
     weights_path = Path(config_pth["paths"]["weights"])
     datasets_path = Path(config_pth["paths"]["datasets"])
 
@@ -189,13 +190,17 @@ def main(args):
     )
 
     print('Saving model...')
-    torch.save(
-        model.state_dict(),
-        weights_path / f'state_dict_{args.dataset}_{args.model}_{args.penultimate_layer_neurons}'
-        f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers.pth'
+    fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}_{dat_conf["classes"]}_{args.n_hidden_layers}'
+    save_checkpoint(
+        fpath=weights_path / f'state_dict_{fname}_layers.pth',
+        model=model,
+        optimizer=optimizer,
+        lr_scheduler=lr_scheduler,
+        args=args,
+        epoch=args.epochs,
     )
     print('Model saved!')
-    plot_loss_history(train_losses, test_losses)
+    plot_loss_history(train_losses, test_losses, fpath=figures_path / f'history_{fname}.jpg')
 
 
 if __name__ == "__main__":

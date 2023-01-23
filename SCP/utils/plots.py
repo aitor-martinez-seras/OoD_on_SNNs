@@ -3,7 +3,7 @@ from scipy.cluster.hierarchy import dendrogram
 import numpy as np
 
 
-def plot_loss_history(training_losses, test_losses):
+def plot_loss_history(training_losses, test_losses, fpath=""):
     plt.figure(facecolor="w", figsize=(10, 5))
     plt.plot(training_losses)
     plt.plot(test_losses)
@@ -12,6 +12,9 @@ def plot_loss_history(training_losses, test_losses):
     plt.xlabel("Iteration")
     plt.ylabel("Loss")
     plt.show()
+    if fpath:
+        plt.savefig(fpath)
+        plt.close()
 
 
 def plot_dendrogram(model, **kwargs):

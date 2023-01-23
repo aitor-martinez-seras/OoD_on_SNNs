@@ -1,3 +1,5 @@
+from typing import Dict
+from collections import OrderedDict
 import math
 
 import torch
@@ -7,6 +9,66 @@ from norse.torch import LIFParameters
 
 from SCP.models.fc import FCSNN1, FCSNN2
 from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3
+
+
+def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler=None):
+
+    if lr_scheduler:
+        lr_scheduler.state_dict()
+
+    checkpoint = {
+        "model": model.state_dict(),
+        "optimizer": optimizer.state_dict(),
+        "lr_scheduler": lr_scheduler,
+        "args": args,
+        "epoch": epoch,
+    }
+    torch.save(checkpoint, fpath)
+
+
+def _load(fpath):
+    try:
+        file = torch.load(fpath, map_location="cpu")
+    except NotImplementedError:
+        print('')
+        print('WARNING: Loading weights saved on Linux into a Windows machine, overriding pathlib.PosixPath'
+              ' with pathlib.WindowsPath to enable the load')
+        print('')
+        import pathlib
+        pathlib.PosixPath = pathlib.WindowsPath
+        file = torch.load(fpath, map_location="cpu")
+    return file
+
+
+def load_weights(model, weights_path):
+    print('----------------------------------')
+    print('       LOADING WEIGHTS')
+    weights = _load(weights_path)
+    if isinstance(weights, OrderedDict):
+        print(model.load_state_dict(weights, strict=False))
+    elif type(weights) == dict:
+        print(model.load_state_dict(weights["model"], strict=False))
+    else:
+        raise TypeError(f"Loaded file has wrong type: {type(weights)}")
+    print("Loading weights finished!")
+    print('----------------------------------')
+
+
+def load_checkpoint(model, weights_path, optimizer, lr_scheduler):
+    print('----------------------------------')
+    print('         RESUMING TRAINING        ')
+    checkpoint = _load(weights_path)
+    if type(checkpoint) == dict:
+        print(model.load_state_dict(checkpoint["model"]))
+        optimizer.load_state_dict(checkpoint["optimizer"])
+        if lr_scheduler:
+            lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+        start_epoch = checkpoint["epoch"] + 1
+    else:
+        raise TypeError(f"Loaded file has wrong type: {type(checkpoint)}")
+    print("Loading checkpoint finished!")
+    print('----------------------------------')
+    return start_epoch
 
 
 # TODO: Maybe optimize the encoder for less memory utilization in the future
