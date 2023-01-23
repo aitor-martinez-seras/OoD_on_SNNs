@@ -85,7 +85,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
     test_losses = []
     accuracies = []
     for epoch in range(epochs):
-        print(f'\nEpoch {epoch + 1}:')
+        print(f'\nEpoch {epoch + 1}:', end="\n\t")
         # Train
         _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer, epoch)
 
@@ -96,9 +96,9 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
         training_losses.append(mean_training_loss)
         test_losses.append(mean_test_loss)
         accuracies.append(accuracy)
-        print(f"Training loss:\t{mean_training_loss}%")
-        print(f"Test loss:\t {mean_training_loss}%")
-        print(f"Accuracy test:\t{accuracies[-1]}%")
+        print(f"Training loss:\t{mean_training_loss}%", end="\n\t")
+        print(f"Test loss:\t {mean_test_loss}%", end="\n\t")
+        print(f"Accuracy test:\t{accuracies[-1]}%", end="\n\t")
 
         # Update the learning rate
         if lr_scheduler:
