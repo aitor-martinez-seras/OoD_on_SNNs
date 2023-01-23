@@ -143,7 +143,6 @@ def main(args):
         n_time_steps=args.n_time_steps,
         f_max=args.f_max
     )
-    model = model.to(device)
 
     # Optimizer and LR scheduler
     params = [p for p in model.parameters() if p.requires_grad]
@@ -177,6 +176,9 @@ def main(args):
         )
     else:
         print('No LR scheduler used')
+
+    # Move model to device after resuming it
+    model = model.to(device)
 
     # Train the model
     train_losses, test_losses = train(
