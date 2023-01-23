@@ -18,11 +18,17 @@ from constants import WEIGHTS_PATH
 def get_args_parser():
     parser = argparse.ArgumentParser(description="Training SNN", add_help=True)
 
+    parser.add_argument("--dataset", default="", type=str, help="dataset to train on")
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
-    parser.add_argument("--dataset", default="", type=str, help="dataset to train on")
-    parser.add_argument("-b", "--batch-size", default=16, type=int, help="batch size")
+    parser.add_argument("-b", "--batch-size", dest='batch_size', default=16, type=int, help="batch size")
     parser.add_argument("--model", default="", type=str, help="name of the model")
+    parser.add_argument("--encoder", default="poisson", type=str,
+                        help="encoder to use. Options 'poisson' and 'constant'")
+    parser.add_argument("--n-time-steps", default=24, type=int, dest='n_time_steps',
+                        help="number of timesteps for the simulation")
+    parser.add_argument("--f-max", default=100, type=int, dest='f_max',
+                        help="max frecuency of the input neurons per second")
     parser.add_argument("--n-hidden-layers", default=1, type=int,
                         dest="n_hidden_layers", help="number of hidden layers of the models")
     parser.add_argument("--penultimate-layer-neurons", default=200, type=int, dest="penultimate_layer_neurons",
@@ -114,7 +120,7 @@ def main(args):
     # Load dataset and its config and create the data loaders
     dat_conf = load_config('datasets')
     import ssl
-    ssl._create_default_https_context = ssl._create_unverified_context
+    ssl._create_default_https_context = ssl._create_unverified_context  # To enable the correct download of datasets
     if args.dataset in load_config('datasets').keys():
         dat_conf = dat_conf[args.dataset]
     else:
@@ -134,7 +140,9 @@ def main(args):
         hidden_neurons=args.penultimate_layer_neurons,
         output_neurons=dat_conf['classes'],
         n_hidden_layers=args.n_hidden_layers,
-        n_time_steps=16,
+        encoder=args.encoder,
+        n_time_steps=args.n_time_steps,
+        f_max=args.f_max,
     )
 
     # Optimizer and LR scheduler
