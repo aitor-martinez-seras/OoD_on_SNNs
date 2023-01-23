@@ -24,7 +24,7 @@ For the bayesian test and the CD graph, the following resources are used:
 
 For reproducing results in GPU and with one FC hidden layer models, run:
 ````shell
-python main.py --conf config.toml --pretrained --n-hidden-layers 1
+python main.py --conf config --pretrained --n-hidden-layers 1
 ````
 
 For training:
@@ -32,6 +32,7 @@ For training:
 ````shell
 CUDA_VISIBLE_DEVICES=1,2,3 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --lr 0.01 --epochs 25
 ````
+The name of the dataset must be the same as in the configuration file
 
 
 All the code is available in the jupyter notebook called [Explainable_OoD_detection_on_SNNs](https://github.com/aitor-martinez-seras/OoD_on_SNNs/blob/main/Explainable_OoD_detection_on_SNNs.ipynb), where instructions about how the algorithm works and how to execute it are provided. 

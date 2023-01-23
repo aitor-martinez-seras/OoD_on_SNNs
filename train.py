@@ -113,11 +113,14 @@ def main(args):
 
     # Load dataset and its config and create the data loaders
     dat_conf = load_config('datasets')
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
     if args.dataset in load_config('datasets').keys():
         dat_conf = dat_conf[args.dataset]
     else:
         raise NotImplementedError(f'Dataset with name {args.dataset} is not implemented')
     print(f'Loading {args.dataset}...')
+
     train_data, train_loader, test_loader = in_distribution_datasets_loader[args.dataset](
         args.batch_size, datasets_path,
     )
