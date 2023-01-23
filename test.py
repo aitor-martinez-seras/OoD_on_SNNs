@@ -7,11 +7,9 @@ def validate_one_epoch(model, device, test_loader, return_logits=False):
     preds = []
     all_logits = []
     hidden_spikes = []
-    conv_spikes = []
     losses = []
     correct = 0
 
-    n = 0
     model.eval()
 
     with torch.no_grad():

@@ -52,12 +52,12 @@ def get_args_parser():
     return parser
 
 
-def train_one_epoch(model, device, train_loader, optimizer):
+def train_one_epoch(model, device, train_loader, optimizer, epoch):
 
     model.train()
     losses = []
 
-    for (data, target) in tqdm(train_loader, leave=False, desc='Progress of one epoch'):
+    for data, target in tqdm(train_loader, leave=False, desc=f'Progress of epoch {epoch}'):
 
         # Process data
         data, target = data.to(device), target.to(device)
@@ -84,10 +84,10 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
     training_losses = []
     test_losses = []
     accuracies = []
-    for epoch in trange(epochs, desc='Number of epochs', leave=False):
+    for epoch in range(epochs):
 
         # Train
-        _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer)
+        _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer, epoch)
 
         # Val
         mean_test_loss, accuracy, _ = validate_one_epoch(model, device, test_loader)

@@ -6,7 +6,7 @@ from norse.torch import ConstantCurrentLIFEncoder
 from norse.torch import LIFParameters
 
 from SCP.models.fc import FCSNN1, FCSNN2
-from SCP.models.conv import ConvSNN1, ConvSNN2
+from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3
 
 
 # TODO: Maybe optimize the encoder for less memory utilization in the future
@@ -19,6 +19,7 @@ class Model(torch.nn.Module):
         self.decoder = decoder
 
     def forward(self, x, flag=None):
+        # print(f'Max: {x.max()}, Min: {x.min()}, Mean: {x.mean()}')
         x = self.encoder(x)
         if flag is None:
             x = self.snn(x)
@@ -52,6 +53,7 @@ def load_model(model_arch: str, device, input_size: list,
 
     if model_arch == 'Fully_connected':
 
+        # To obtain input size flattened from the different dimensions of the image
         input_size = math.prod(input_size)
 
         if hidden_neurons is None:
@@ -98,12 +100,24 @@ def load_model(model_arch: str, device, input_size: list,
 
         elif n_hidden_layers == 2:
             model = Model(
-                encoder=PoissonEncoder(n_time_steps),
+                encoder=encoder,
                 snn=ConvSNN2(
                     input_size=input_size,
                     hidden_neurons=hidden_neurons,
                     output_neurons=output_neurons,
                     alpha=80
+                ),
+                decoder=decode
+            ).to(device)
+
+        elif n_hidden_layers == 3:
+            model = Model(
+                encoder=encoder,
+                snn=ConvSNN3(
+                    input_size=input_size,
+                    hidden_neurons=hidden_neurons,
+                    output_neurons=output_neurons,
+                    alpha=100
                 ),
                 decoder=decode
             ).to(device)
