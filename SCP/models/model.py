@@ -41,9 +41,8 @@ def decode(x):
     return log_p_y
 
 
-def load_model(model_arch: str, device, input_size: list,
-               hidden_neurons=None, output_neurons=10, n_hidden_layers=1, encoder='poisson',
-               n_time_steps=24, f_max=100):
+def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_neurons=10, n_hidden_layers=1,
+               encoder='poisson', n_time_steps=24, f_max=100):
     if encoder == 'poisson':
         encoder = PoissonEncoder(seq_length=n_time_steps, f_max=f_max)
     elif encoder == 'constant':
@@ -67,7 +66,7 @@ def load_model(model_arch: str, device, input_size: list,
                            hidden_features=hidden_neurons,
                            output_features=output_neurons),
                 decoder=decode
-            ).to(device)
+            )
 
         elif n_hidden_layers == 2:
             model = Model(
@@ -76,7 +75,7 @@ def load_model(model_arch: str, device, input_size: list,
                            hidden_features=hidden_neurons,
                            output_features=output_neurons),
                 decoder=decode
-            ).to(device)
+            )
 
         else:
             raise NameError('Wrong number of layers')
@@ -96,7 +95,7 @@ def load_model(model_arch: str, device, input_size: list,
                     alpha=80
                 ),
                 decoder=decode
-            ).to(device)
+            )
 
         elif n_hidden_layers == 2:
             model = Model(
@@ -108,7 +107,7 @@ def load_model(model_arch: str, device, input_size: list,
                     alpha=80
                 ),
                 decoder=decode
-            ).to(device)
+            )
 
         elif n_hidden_layers == 3:
             model = Model(
@@ -120,7 +119,7 @@ def load_model(model_arch: str, device, input_size: list,
                     alpha=100
                 ),
                 decoder=decode
-            ).to(device)
+            )
 
         else:
             raise NameError('Wrong number of layers')

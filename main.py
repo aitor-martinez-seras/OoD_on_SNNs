@@ -151,14 +151,8 @@ def main(args):
             input_features = model_archs['input_features'][in_dataset]
             hidden_neurons = model_archs[model_name][in_dataset][0]
             output_neurons = model_archs[model_name][in_dataset][1]
-            model = load_model(
-                model_arch=model_name,
-                device=device,
-                input_size=input_features,
-                hidden_neurons=hidden_neurons,
-                output_neurons=output_neurons,
-                n_hidden_layers=args.n_hidden_layers
-            )
+            model = load_model(model_arch=model_name, input_size=input_features, hidden_neurons=hidden_neurons,
+                               output_neurons=output_neurons, n_hidden_layers=args.n_hidden_layers)
 
             # Load weights
             weights_path = Path(

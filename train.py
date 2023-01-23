@@ -57,7 +57,7 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
     model.train()
     losses = []
 
-    for data, target in tqdm(train_loader, leave=False, desc=f'Progress of epoch {epoch}'):
+    for data, target in tqdm(train_loader, leave=False, desc=f'Progress of epoch {epoch + 1}'):
 
         # Process data
         data, target = data.to(device), target.to(device)
@@ -106,15 +106,15 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
 
 
 def main(args):
+    print('****************** Starting training script ******************')
     print(args)
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
     # Paths
     config_pth = load_paths_config()
-    results_path = Path(config_pth["paths"]["results"])
     logs_path = Path(config_pth["paths"]["logs"])
-    pretrained_weights_path = Path(config_pth["paths"]["pretrained_weights"])
+    weights_path = Path(config_pth["paths"]["weights"])
     datasets_path = Path(config_pth["paths"]["datasets"])
 
     # Load dataset and its config and create the data loaders
@@ -126,7 +126,6 @@ def main(args):
     else:
         raise NotImplementedError(f'Dataset with name {args.dataset} is not implemented')
     print(f'Loading {args.dataset}...')
-
     train_data, train_loader, test_loader = in_distribution_datasets_loader[args.dataset](
         args.batch_size, datasets_path,
     )
@@ -135,15 +134,15 @@ def main(args):
     # Load model
     model = load_model(
         model_arch=args.model,
-        device=device,
         input_size=dat_conf['input_size'],
         hidden_neurons=args.penultimate_layer_neurons,
         output_neurons=dat_conf['classes'],
         n_hidden_layers=args.n_hidden_layers,
         encoder=args.encoder,
         n_time_steps=args.n_time_steps,
-        f_max=args.f_max,
+        f_max=args.f_max
     )
+    model = model.to(device)
 
     # Optimizer and LR scheduler
     params = [p for p in model.parameters() if p.requires_grad]
@@ -192,7 +191,7 @@ def main(args):
     print('Saving model...')
     torch.save(
         model.state_dict(),
-        WEIGHTS_PATH / f'state_dict_{args.dataset}_{args.model}_{args.penultimate_layer_neurons}'
+        weights_path / f'state_dict_{args.dataset}_{args.model}_{args.penultimate_layer_neurons}'
         f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers.pth'
     )
     print('Model saved!')
