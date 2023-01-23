@@ -119,9 +119,9 @@ def main(args):
     if args.load_weights:
         print('----------------------------------')
         print('       LOADING WEIGHTS')
-        args.load_model = Path(args.load_model)  # args.resume must contain the path to the checkpoint
+        args.load_weights = Path(args.load_weights)  # args.resume must contain the path to the checkpoint
         try:
-            checkpoint = torch.load(args.load_model, map_location="cpu")
+            checkpoint = torch.load(args.load_weights, map_location="cpu")
         except NotImplementedError:
             print('')
             print('WARNING: Loading weights saved on Linux into a Windows machine, overriding pathlib.PosixPath'
@@ -129,7 +129,7 @@ def main(args):
             print('')
             import pathlib
             pathlib.PosixPath = pathlib.WindowsPath
-            checkpoint = torch.load(args.load_model, map_location="cpu")
+            checkpoint = torch.load(args.load_weights, map_location="cpu")
         print(model.load_state_dict(checkpoint["model"], strict=False))
         print('----------------------------------')
 
