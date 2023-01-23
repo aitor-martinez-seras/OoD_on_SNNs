@@ -18,6 +18,10 @@ classes = 26
 input_size = [3, 400, 400]
 classes = 102
 
+[CIFAR10-BW]
+input_size = [3, 32, 32]
+classes = 10
+
 [noMNIST]
 input_size = [1, 28, 28]
 classes = 0

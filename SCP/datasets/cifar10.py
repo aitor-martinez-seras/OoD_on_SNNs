@@ -2,6 +2,7 @@ from pathlib import Path
 
 import torch
 import torchvision
+import torchvision.transforms as transforms
 
 
 def load_CIFAR10_BW(batch_size, datasets_path: Path, *args, **kwargs):
@@ -28,9 +29,13 @@ def load_CIFAR10_BW(batch_size, datasets_path: Path, *args, **kwargs):
 
 
 def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
-    transform = torchvision.transforms.Compose(
+    transform = transforms.Compose(
         [
-            torchvision.transforms.ToTensor()
+            transforms.RandomRotation(15, ),
+            # transforms.RandomCrop(400),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            transforms.ToTensor()
         ]
     )
     test_data_CIFAR10 = torchvision.datasets.CIFAR10(
