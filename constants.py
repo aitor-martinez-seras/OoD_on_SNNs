@@ -1,9 +1,11 @@
 from pathlib import Path
-# Path for the datasets
-root_path = Path(Path.cwd())
-DATASETS_PATH = Path('SCP/datasets/')
-PRETRAINED_WEIGHTS_PATH = Path('weights/pretrained')
-FIGURES_PATH = Path('figures/')
+import os
+
+root_path = Path(os.path.dirname(__file__))
+DATASETS_PATH = root_path / 'SCP/datasets'
+WEIGHTS_PATH = root_path / 'weights'
+PRETRAINED_WEIGHTS_PATH = root_path / 'weights/pretrained'
+FIGURES_PATH = root_path / 'figures'
 
 # Constants for the correct visualization of the .csv in Spanish configuration
 CSV_SEPARATOR = ';'

@@ -51,7 +51,7 @@ def load_flowers(batch_size, datasets_path: Path, test_only=False, *args, **kwar
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     # data_loader = load_flowers(64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=True)
-    _, train_loader, test_loader = load_flowers(64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False)
+    dataset, train_loader, test_loader = load_flowers(64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False)
     images, targets = next(iter(train_loader))
     # images, targets = next(iter(test_loader))
     n = 25
@@ -62,6 +62,3 @@ if __name__ == "__main__":
     # plt.imshow(images[n].permute(1, 2, 0))
     plt.imshow(grid.permute(1, 2, 0))
     plt.show()
-
-
-

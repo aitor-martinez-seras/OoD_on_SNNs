@@ -10,8 +10,9 @@ import numpy as np
 from SCP.datasets import in_distribution_datasets_loader
 from SCP.utils.common import load_paths_config, load_config
 from SCP.utils.plots import plot_loss_history
-from test import validate_one_epoch
 from SCP.models.model import load_model
+from test import validate_one_epoch
+from constants import WEIGHTS_PATH
 
 
 def get_args_parser():
@@ -177,12 +178,13 @@ def main(args):
         lr_scheduler=lr_scheduler,
     )
 
+    print('Saving model...')
     torch.save(
         model.state_dict(),
-        f'state_dict_{args.dataset}_{args.model}_{args.penultimate_layer_neurons}'
+        WEIGHTS_PATH / f'state_dict_{args.dataset}_{args.model}_{args.penultimate_layer_neurons}'
         f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers.pth'
     )
-
+    print('Model saved!')
     plot_loss_history(train_losses, test_losses)
 
 
