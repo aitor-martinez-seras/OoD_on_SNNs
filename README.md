@@ -30,7 +30,7 @@ python main.py --conf config --pretrained --n-hidden-layers 1
 For training:
 
 ````shell
-CUDA_VISIBLE_DEVICES=1,2,3 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --lr 0.01 --epochs 25
+CUDA_VISIBLE_DEVICES=1,2,3 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --n-hidden-layers 3 --f-max 200 -b 256 --lr 0.1 --opt SGD --epochs 100 --lr-decay-milestones 50 75 --lr-decay-rate 0.5
 ````
 The name of the dataset must be the same as in the configuration file
 
