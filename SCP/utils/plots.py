@@ -1,6 +1,20 @@
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram
 import numpy as np
+from torchvision.utils import make_grid
+
+
+def plot_grid(images, size=8):
+    grid = make_grid(images, nrow=size)
+    plt.imshow(grid.permute(1, 2, 0))
+    plt.show()
+
+
+
+def plot_image(image, height=6, width=6):
+    plt.subplots(1, 1, figsize=(width, height))
+    plt.imshow(image)
+    plt.show()
 
 
 def plot_loss_history(training_losses, test_losses, fpath=""):
