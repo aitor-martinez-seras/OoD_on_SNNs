@@ -118,7 +118,7 @@ def main(args):
     )
 
     if args.load_weights:
-        load_weights(model, args.load_weigths)
+        load_weights(model, args.load_weights)
     model = model.to(device)
 
     print('Testing...')
