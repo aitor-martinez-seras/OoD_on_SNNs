@@ -210,7 +210,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     output_neurons=output_neurons,
                     alpha=100
                 ),
-                decoder=decode
+                decoder=decode_last
             )
 
         else:

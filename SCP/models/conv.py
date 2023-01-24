@@ -538,10 +538,10 @@ class ConvSNN5(nn.Module):
         # super(ConvNet, self).__init__()
         super().__init__()
 
-        self.ftmaps_h = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
-        self.ftmaps_v = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
-        # self.ftmaps_h = int(((input_size[1] - 2 - 2) - 2 - 2) - 2 - 2)
-        # self.ftmaps_v = int(((input_size[2] - 2 - 2) - 2 - 2) - 2 - 2)
+        # self.ftmaps_h = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
+        # self.ftmaps_v = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
+        self.ftmaps_h = int(((input_size[1] - 2 - 2) - 2 - 2) - 2 - 2)
+        self.ftmaps_v = int(((input_size[2] - 2 - 2) - 2 - 2) - 2 - 2)
 
         # Convolutions
         self.conv11 = nn.Conv2d(input_size[0], 32, 3, 1, bias=False)
@@ -576,6 +576,23 @@ class ConvSNN5(nn.Module):
 
         self.hidden_neurons = hidden_neurons
         self.output_neurons = output_neurons
+
+        for m in self.modules():
+            import math
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+                variance1 = math.sqrt(2.0 / n)
+                m.weight.data.normal_(0, variance1)
+                # define threshold
+                # m.threshold = 1
+
+            elif isinstance(m, nn.Linear):
+                size = m.weight.size()
+                fan_in = size[1]  # number of columns
+                variance2 = math.sqrt(2.0 / fan_in)
+                m.weight.data.normal_(0.0, variance2)
+                # define threshold
+                # m.threshold = 1
 
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
@@ -624,9 +641,8 @@ class ConvSNN5(nn.Module):
                 # Fc out
                 z = self.fc_out(z)
                 v, so = self.out(z, so)
-                voltages[ts, :, :] = v
 
-            return voltages
+            return v
 
         elif flag == "hidden_spikes_and_logits":
             hdn_spk_last_layer = torch.zeros(

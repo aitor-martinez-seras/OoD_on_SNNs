@@ -79,6 +79,11 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
         # Store the losses of every minibatch
         losses.append(loss.item())
 
+        for name, param in model.named_parameters():
+            print(name, param.grad.norm())
+            # if p[:6] == 'weight':
+            #     print('===========\ngradient:{}\n----------\n{}'.format(n, p.grad))
+
     mean_loss = np.mean(losses)
     return losses, mean_loss
 
