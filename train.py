@@ -117,6 +117,9 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
             if epoch // save_every_n_epochs:
                 file_path = datasets_path / f'checkpoint{epoch+1}_{file_name}.pth'
                 save_checkpoint(file_path, model, optimizer, args, epoch, lr_scheduler)
+                print(' ----------------------------------')
+                print(f'- Checkpoint saved for epoch {epoch+1} -')
+                print(' ---------------------------------')
 
     return training_losses, test_losses
 
