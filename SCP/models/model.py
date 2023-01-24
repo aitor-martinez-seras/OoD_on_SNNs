@@ -103,6 +103,12 @@ def decode(x):
     return log_p_y
 
 
+def decode_last(x):
+    # Then compute the logsoftmax across the batch dimension, as the last
+    log_p_y = torch.nn.functional.log_softmax(x, dim=1)
+    return log_p_y
+
+
 def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_neurons=10, n_hidden_layers=1,
                encoder='poisson', n_time_steps=24, f_max=100):
     if encoder == 'poisson':

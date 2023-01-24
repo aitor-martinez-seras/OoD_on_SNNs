@@ -37,7 +37,7 @@ def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, *args, **kwar
             # transforms.RandomRotation(15, ),
             # transforms.RandomCrop(400),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
+            # transforms.RandomVerticalFlip(),
             transforms.ToTensor()
         ]
     )

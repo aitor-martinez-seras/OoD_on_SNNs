@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 from norse.torch import LIFParameters
 from norse.torch.module.lif import LIFCell
 from norse.torch import LICell
@@ -362,6 +363,8 @@ class ConvSNN4(nn.Module):
         # super(ConvNet, self).__init__()
         super().__init__()
 
+        self.input_size = input_size
+
         self.ftmaps_h = int(((input_size[1] - 2) / 2) - 2 - 2)
         self.ftmaps_v = int(((input_size[2] - 2) / 2) - 2 - 2)
 
@@ -406,8 +409,33 @@ class ConvSNN4(nn.Module):
         seq_length = x.shape[0]
         batch_size = x.shape[1]
 
+        # Dropout
+        drop = nn.Dropout(p=0.2, inplace=True)
+
+        mask_11 = Variable(torch.ones(seq_length, 64, 32, 32).cuda(), requires_grad=False)
+        mask_11 = drop(mask_11)
+        mask_12 = Variable(torch.ones(seq_length, 64, 32, 32).cuda(), requires_grad=False)
+        mask_12 = drop(mask_12)
+        mask_21 = Variable(torch.ones(seq_length, 128, 16, 16).cuda(), requires_grad=False)
+        mask_21 = drop(mask_21)
+        mask_22 = Variable(torch.ones(seq_length, 128, 16, 16).cuda(), requires_grad=False)
+        mask_22 = drop(mask_22)
+        mask_31 = Variable(torch.ones(seq_length, 256, 8, 8).cuda(), requires_grad=False)
+        mask_31 = drop(mask_31)
+        mask_32 = Variable(torch.ones(seq_length, 256, 8, 8).cuda(), requires_grad=False)
+        mask_32 = drop(mask_32)
+        mask_33 = Variable(torch.ones(seq_length, 256, 8, 8).cuda(), requires_grad=False)
+        mask_33 = drop(mask_33)
+
+        mask_f0 = Variable(torch.ones(seq_length, 1024).cuda(), requires_grad=False)
+        mask_f0 = drop(mask_f0)
+
+        mem_1s = Variable(torch.zeros(seq_length, 64, 16, 16).cuda(), requires_grad=False)
+        mem_2s = Variable(torch.zeros(seq_length, 128, 8, 8).cuda(), requires_grad=False)
+        mem_3s = Variable(torch.zeros(seq_length, 256, 4, 4).cuda(), requires_grad=False)
+
         # specify the initial states
-        sconv1 = sconv2 = sconv3 = sfc1 = sfc2 = so = None
+        sconv11 = sconv12 = sconv21 = sconv22 = sconv31 = sconv32 = sconv33 = sfc0 = sfc1 = so = None
         voltages = torch.zeros(
             seq_length, batch_size, self.output_neurons, device=x.device, dtype=x.dtype
         )
@@ -415,20 +443,31 @@ class ConvSNN4(nn.Module):
             for ts in range(seq_length):
                 # First convolution
                 # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
-                z = self.conv1(x[ts, :])
-                z, sconv1 = self.lif_conv1(z, sconv1)
-                z = nn.functional.avg_pool2d(z, 2)  # (batch_size, filters (20), (H-4)/2, (W-4)/2)
+                z = self.conv11(x[ts, :])
+                z, sconv11 = self.lif_conv11(z, sconv11)
+                out = torch.mul(out, mask_11)
+                z = self.conv12(z)
+                z, sconv12 = self.lif_conv12(z, sconv12)
+                out = torch.mul(out, mask_12)
+                # pooling Layer
+                mem_1s = mem_1s + self.avgpool1(out)
+                mem_1s, out = Pooling_sNeuron(mem_1s, 0.75, i)
+                z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
-                z = self.conv2(z)
-                z, sconv2 = self.lif_conv2(z, sconv2)
-                # z = nn.functional.avg_pool2d(z, 2)
+                z = self.conv21(z)
+                z, sconv21 = self.lif_conv21(z, sconv21)
+                z = self.conv22(z)
+                z, sconv22 = self.lif_conv22(z, sconv22)
+                z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
-                z = self.conv3(z)
-                z, sconv3 = self.lif_conv2(z, sconv3)
+                z = self.conv31(z)
+                z, sconv31 = self.lif_conv31(z, sconv31)
+                z = self.conv32(z)
+                z, sconv32 = self.lif_conv32(z, sconv32)
                 # print(f'After conv3: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fully connected part
@@ -437,10 +476,6 @@ class ConvSNN4(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
-
-                # Second FC
-                z = self.fc2(z)
-                z, sfc2 = self.lif_fc2(z, sfc2)
 
                 # Fc out
                 z = self.fc_out(z)
@@ -540,7 +575,8 @@ class ConvSNN5(nn.Module):
                 z, sconv11 = self.lif_conv11(z, sconv11)
                 z = self.conv12(z)
                 z, sconv12 = self.lif_conv12(z, sconv12)
-                z = nn.functional.avg_pool2d(z, 2)
+                z = self.avgpool1(z)
+                # z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
@@ -548,7 +584,8 @@ class ConvSNN5(nn.Module):
                 z, sconv21 = self.lif_conv21(z, sconv21)
                 z = self.conv22(z)
                 z, sconv22 = self.lif_conv22(z, sconv22)
-                z = nn.functional.avg_pool2d(z, 2)
+                z = self.avgpool2(z)
+                # z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
