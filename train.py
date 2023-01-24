@@ -19,6 +19,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser(description="Training SNN", add_help=True)
 
     parser.add_argument("--dataset", default="", type=str, help="dataset to train on")
+    parser.add_argument("--save-every", default=25, type=int, dest='save_every')
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("-b", "--batch-size", dest='batch_size', default=16, type=int, help="batch size")
@@ -79,13 +80,18 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
     return losses, mean_loss
 
 
-def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
-          epochs: int, optimizer: Optimizer, lr_scheduler):
+def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, optimizer: Optimizer,
+          lr_scheduler, save_every_n_epochs=0, datasets_path=Path('.'), file_name='', args=None):
     training_losses = []
     test_losses = []
     accuracies = []
+    assert save_every_n_epochs >= 0 and isinstance(save_every_n_epochs, int), f'save_every must be ' \
+                                                            f'an integer greater than 0, not {save_every_n_epochs}'
+    if save_every_n_epochs > 0:
+        assert datasets_path != '.' and file_name != '' and args is not None, 'datasets_path, file_path ' \
+                                                                             'and args must be passed to the function'
     for epoch in range(epochs):
-        print(f'\nEpoch {epoch + 1}:', end="\n\t")
+        print(f'\nEpoch {epoch + 1}:')
         # Train
         _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer, epoch)
 
@@ -96,13 +102,18 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader,
         training_losses.append(mean_training_loss)
         test_losses.append(mean_test_loss)
         accuracies.append(accuracy)
-        print(f"Training loss:\t{mean_training_loss}%", end="\n\t")
+        print(f"\tTraining loss:\t{mean_training_loss}%", end="\n\t")
         print(f"Test loss:\t {mean_test_loss}%", end="\n\t")
         print(f"Accuracy test:\t{accuracies[-1]}%", end="\n\t")
 
         # Update the learning rate
         if lr_scheduler:
             lr_scheduler.step()
+
+        if save_every_n_epochs:
+            if epoch // save_every_n_epochs:
+                file_path = datasets_path / f'checkpoint{epoch+1}_{file_name}.pth'
+                save_checkpoint(file_path, model, optimizer, args, epoch, lr_scheduler)
 
     return training_losses, test_losses
 
@@ -182,6 +193,9 @@ def main(args):
     # Move model to device after resuming it
     model = model.to(device)
 
+    fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}' \
+            f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers'
+
     # Train the model
     train_losses, test_losses = train(
         model,
@@ -191,12 +205,15 @@ def main(args):
         epochs=args.epochs,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
+        save_every_n_epochs=args.save_every,
+        datasets_path=datasets_path,
+        file_name=fname,
+        args=args
     )
 
     print('Saving model...')
-    fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}_{dat_conf["classes"]}_{args.n_hidden_layers}'
     save_checkpoint(
-        fpath=weights_path / f'state_dict_{fname}_layers.pth',
+        fpath=weights_path / f'state_dict_{fname}.pth',
         model=model,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
