@@ -125,7 +125,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
             lr_scheduler.step()
 
         if save_every_n_epochs:
-            if epoch // save_every_n_epochs:
+            if epoch % save_every_n_epochs == 0:
                 file_path = datasets_path / f'checkpoint{epoch+1}_{file_name}.pth'
                 save_checkpoint(file_path, model, optimizer, args, epoch, lr_scheduler)
                 print(' ----------------------------------')

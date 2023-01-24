@@ -925,3 +925,127 @@ class Net(nn.Module):
         x = self.dropout(F.relu(self.fc2(x)))
         x = torch.nn.functional.log_softmax(self.fc3(x), dim=1)
         return x
+
+
+class ConvSNN9(nn.Module):
+    def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
+        # super(ConvNet, self).__init__()
+        super().__init__()
+
+        self.ftmaps_h = int(((input_size[1] / 2) / 2) - 2 - 2)
+        self.ftmaps_v = int(((input_size[1] / 2) / 2) - 2 - 2)
+        # self.ftmaps_h = int(((input_size[1] - 2 - 2) - 2 - 2) - 2 - 2)
+        # self.ftmaps_v = int(((input_size[2] - 2 - 2) - 2 - 2) - 2 - 2)
+
+        # Convolutions
+        self.conv1 = nn.Conv2d(input_size[0], 16, 3, 1, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(16, 32, 3, 1, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(32, 64, 3, 1, padding=1, bias=False)
+        self.avgpool = nn.AvgPool2d(kernel_size=2)
+        self.maxpool = nn.MaxPool2d(kernel_size=2)
+
+        # Linear part
+        self.fc1 = nn.Linear(4 * 4 * 64, 512, bias=False)
+        self.fc2 = nn.Linear(512, hidden_neurons, bias=False)
+        self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
+
+        # LIF cells
+        self.lif_conv1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.25), alpha=alpha))
+        self.lif_conv2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
+        self.lif_conv3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+
+        self.lif_fc1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.out = LICell()
+
+        self.hidden_neurons = hidden_neurons
+        self.output_neurons = output_neurons
+
+        # for m in self.modules():
+        #     import math
+        #     if isinstance(m, nn.Conv2d):
+        #         n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+        #         variance1 = math.sqrt(2.0 / n)
+        #         m.weight.data.normal_(0, variance1)
+        #         # define threshold
+        #         # m.threshold = 1
+        #
+        #     elif isinstance(m, nn.Linear):
+        #         size = m.weight.size()
+        #         fan_in = size[1]  # number of columns
+        #         variance2 = math.sqrt(2.0 / fan_in)
+        #         m.weight.data.normal_(0.0, variance2)
+        #         # define threshold
+        #         # m.threshold = 1
+
+    def forward(self, x, flag=None):
+        seq_length = x.shape[0]
+        batch_size = x.shape[1]
+
+        # Dropout
+        drop = nn.Dropout(p=0.5, inplace=True)
+
+        # mask_11 = Variable(torch.ones(batch_size, 64, 32, 32).cuda(), requires_grad=False)
+        # mask_11 = drop(mask_11)
+        # mask_12 = Variable(torch.ones(batch_size, 64, 32, 32).cuda(), requires_grad=False)
+        # mask_12 = drop(mask_12)
+        # mask_21 = Variable(torch.ones(batch_size, 128, 16, 16).cuda(), requires_grad=False)
+        # mask_21 = drop(mask_21)
+        # mask_22 = Variable(torch.ones(batch_size, 128, 16, 16).cuda(), requires_grad=False)
+        # mask_22 = drop(mask_22)
+        # mask_31 = Variable(torch.ones(batch_size, 256, 8, 8).cuda(), requires_grad=False)
+        # mask_31 = drop(mask_31)
+        # mask_32 = Variable(torch.ones(batch_size, 256, 8, 8).cuda(), requires_grad=False)
+        # mask_32 = drop(mask_32)
+        # mask_33 = Variable(torch.ones(batch_size, 256, 8, 8).cuda(), requires_grad=False)
+        # mask_33 = drop(mask_33)
+
+        mask_f1 = Variable(torch.ones(batch_size, 512).cuda(), requires_grad=False)
+        mask_f1 = drop(mask_f1)
+        mask_f2 = Variable(torch.ones(batch_size, self.hidden_neurons).cuda(), requires_grad=False)
+        mask_f2 = drop(mask_f2)
+
+        # specify the initial states
+        sconv1 = sconv2 = sconv3 = sfc1 = sfc2 = so = None
+        voltages = torch.zeros(
+            seq_length, batch_size, self.output_neurons, device=x.device, dtype=x.dtype
+        )
+        if flag is None:
+            for ts in range(seq_length):
+                # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
+
+                # First convolution
+                z = self.conv1(x[ts, :])
+                z, sconv1 = self.lif_conv1(z, sconv1)
+                z = self.avgpool(z)
+
+                # Second convolution
+                z = self.conv2(z)
+                z, sconv2 = self.lif_conv2(z, sconv2)
+                z = self.avgpool(z)
+                # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+                # Third convolution
+                z = self.conv3(z)
+                z, sconv3 = self.lif_conv3(z, sconv3)
+                z = self.avgpool(z)
+                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+                # Fully connected part
+                z = z.flatten(start_dim=1)
+
+                # First FC
+                z = self.fc1(z)
+                z, sfc1 = self.lif_fc1(z, sfc1)
+                z = torch.mul(z, mask_f1)
+
+                # First FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc1(z, sfc2)
+                z = torch.mul(z, mask_f2)
+
+                # Fc out
+                z = self.fc_out(z)
+                v, so = self.out(z, so)
+
+            return v
