@@ -10,7 +10,7 @@ import numpy as np
 from SCP.datasets import in_distribution_datasets_loader
 from SCP.utils.common import load_paths_config, load_config
 from SCP.utils.plots import plot_loss_history
-from SCP.models.model import load_model
+from SCP.models.model import load_model, load_weights, load_checkpoint
 from test import validate_one_epoch
 from SCP.models.model import save_checkpoint
 
@@ -20,6 +20,9 @@ def get_args_parser():
 
     parser.add_argument("--dataset", default="", type=str, help="dataset to train on")
     parser.add_argument("--save-every", default=25, type=int, dest='save_every')
+    parser.add_argument("--resume", type=str, default=False, help="load a checkpoint to resume training")
+    parser.add_argument("--load-weights", type=str, default=False, dest='load_weights',
+                        help="load weights for a model")
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("-b", "--batch-size", dest='batch_size', default=16, type=int, help="batch size")
@@ -157,6 +160,9 @@ def main(args):
         f_max=args.f_max
     )
 
+    if args.load_weights:
+        load_weights(model, args.load_weights)
+
     # Optimizer and LR scheduler
     params = [p for p in model.parameters() if p.requires_grad]
     opt_name = args.opt.lower()
@@ -189,6 +195,9 @@ def main(args):
         )
     else:
         print('No LR scheduler used')
+
+    if args.resume:
+        load_checkpoint(model, weights_path, optimizer, lr_scheduler)
 
     # Move model to device after resuming it
     model = model.to(device)
