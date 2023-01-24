@@ -484,10 +484,10 @@ class ConvSNN5(nn.Module):
         # super(ConvNet, self).__init__()
         super().__init__()
 
-        # self.ftmaps_h = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
-        # self.ftmaps_v = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
-        self.ftmaps_h = int(((input_size[1] - 2 - 2) - 2 - 2) - 2 - 2)
-        self.ftmaps_v = int(((input_size[2] - 2 - 2) - 2 - 2) - 2 - 2)
+        self.ftmaps_h = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
+        self.ftmaps_v = int(((((input_size[1] - 2 - 2) / 2) - 2 - 2) / 2) - 2 - 2)
+        # self.ftmaps_h = int(((input_size[1] - 2 - 2) - 2 - 2) - 2 - 2)
+        # self.ftmaps_v = int(((input_size[2] - 2 - 2) - 2 - 2) - 2 - 2)
 
         # Convolutions
         self.conv11 = nn.Conv2d(input_size[0], 32, 3, 1, bias=False)
@@ -540,7 +540,7 @@ class ConvSNN5(nn.Module):
                 z, sconv11 = self.lif_conv11(z, sconv11)
                 z = self.conv12(z)
                 z, sconv12 = self.lif_conv12(z, sconv12)
-                # z = nn.functional.avg_pool2d(z, 2)
+                z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
@@ -548,7 +548,7 @@ class ConvSNN5(nn.Module):
                 z, sconv21 = self.lif_conv21(z, sconv21)
                 z = self.conv22(z)
                 z, sconv22 = self.lif_conv22(z, sconv22)
-                # z = nn.functional.avg_pool2d(z, 2)
+                z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
