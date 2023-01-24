@@ -116,8 +116,8 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         training_losses.append(mean_training_loss)
         test_losses.append(mean_test_loss)
         accuracies.append(accuracy)
-        print(f"\tTraining loss:\t{mean_training_loss}%", end="\n\t")
-        print(f"Test loss:\t {mean_test_loss}%", end="\n\t")
+        print(f"\tTraining loss:\t{mean_training_loss}", end="\n\t")
+        print(f"Test loss:\t {mean_test_loss}", end="\n\t")
         print(f"Accuracy test:\t{accuracies[-1]}%", end="\n\t")
 
         # Update the learning rate

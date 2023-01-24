@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Variable
 from norse.torch import LIFParameters
 from norse.torch.module.lif import LIFCell
@@ -845,7 +846,7 @@ class LIFConvNet(nn.Module):
         from norse.torch.module import SequentialState
         super().__init__()
         self.seq_length = seq_length
-        self.p = LIFParameters(v_th=torch.tensor(0.4), alpha=alpha)
+        self.p = LIFParameters(v_th=torch.tensor(0.2), alpha=alpha)
 
         c = 64
         c = [c, 2 * c, 4 * c, 4 * c]
@@ -887,9 +888,40 @@ class LIFConvNet(nn.Module):
             out_f, sf = self.features(x[ts], sf)
             # print(out_f.shape)
             out_c, sc = self.classification(out_f, sc)
+            print(f'Features: {(out_c.count_nonzero() / out_c.nelement()) * 100:.3f}%')
             voltages[ts, :, :] = out_c + 0.001 * torch.randn(
                 x.shape[1], 10, device=x.device
             )
 
         y_hat, _ = torch.max(voltages, 0)
         return y_hat
+
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        # convolutional layer
+        self.conv1 = nn.Conv2d(3, 16, 3, padding=1)
+        self.conv2 = nn.Conv2d(16, 32, 3, padding=1)
+        self.conv3 = nn.Conv2d(32, 64, 3, padding=1)
+        # max pooling layer
+        self.pool = nn.MaxPool2d(2, 2)
+        # fully connected layers
+        self.fc1 = nn.Linear(64 * 4 * 4, 512)
+        self.fc2 = nn.Linear(512, 64)
+        self.fc3 = nn.Linear(64, 10)
+        # dropout
+        self.dropout = nn.Dropout(p=.5)
+
+    def forward(self, x):
+        # add sequence of convolutional and max pooling layers
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = self.pool(F.relu(self.conv3(x)))
+        # flattening
+        x = x.view(-1, 64 * 4 * 4)
+        # fully connected layers
+        x = self.dropout(F.relu(self.fc1(x)))
+        x = self.dropout(F.relu(self.fc2(x)))
+        x = torch.nn.functional.log_softmax(self.fc3(x), dim=1)
+        return x
