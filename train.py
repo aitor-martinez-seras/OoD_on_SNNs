@@ -42,11 +42,11 @@ def get_args_parser():
     #                          "RPN and Detector will be used")
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--lr", default=0.001, type=float)
-    parser.add_argument("--opt", default="AdamW", type=str, help="optimizer. Options: AdamW and SGD")
+    parser.add_argument("--opt", default="Adam", type=str, help="optimizer. Options: AdamW and SGD")
     parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
     parser.add_argument(
-        "--wd", "--weight-decay", default=0.0001, type=float, metavar="W",
-        help="weight decay (default: 1e-4)", dest="weight_decay",
+        "--wd", "--weight-decay", default=0.0005, type=float, metavar="W",
+        help="weight decay (default: 5e-4)", dest="weight_decay",
     )
     parser.add_argument("--lr-decay-milestones", default=[], type=int, nargs='+',
                         dest="lr_decay_milestones", help="lr decay milestones")
@@ -54,6 +54,14 @@ def get_args_parser():
     parser.add_argument("--lr-decay-rate", default=0, type=float, dest="lr_decay_rate", help="lr decay rate")
 
     return parser
+
+
+def label_smoothing_loss(y_hat, y, alpha=0.2):
+    log_probs = torch.nn.functional.log_softmax(y_hat, dim=1, _stacklevel=5)
+    xent = torch.nn.functional.nll_loss(log_probs, y, reduction="none")
+    KL = -log_probs.mean(dim=1)
+    loss = (1 - alpha) * xent + alpha * KL
+    return loss.sum()
 
 
 def train_one_epoch(model, device, train_loader, optimizer, epoch):
@@ -69,7 +77,8 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
 
         # Negative loglikelihoog loss, for classification problems.
         # The input must contain log probabilities of each class
-        loss = torch.nn.functional.nll_loss(output, target)
+        # loss = torch.nn.functional.nll_loss(output, target)
+        loss = label_smoothing_loss(output, target)
 
         # Backpropagation
         optimizer.zero_grad(set_to_none=True)
@@ -180,7 +189,7 @@ def main(args):
             weight_decay=args.weight_decay,
             nesterov="nesterov" in opt_name,
         )
-    elif opt_name == "adamw":
+    elif opt_name == "adam":
         optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.weight_decay)
     else:
         raise RuntimeError(f"Invalid optimizer {args.opt}. Only SGD and AdamW are supported.")
