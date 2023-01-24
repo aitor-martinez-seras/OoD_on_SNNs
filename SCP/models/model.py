@@ -8,7 +8,7 @@ from norse.torch import ConstantCurrentLIFEncoder
 from norse.torch import LIFParameters
 
 from SCP.models.fc import FCSNN1, FCSNN2
-from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6
+from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet
 
 
 def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler=None):
@@ -223,6 +223,18 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 ),
                 decoder=decode_last
             )
+
+        elif n_hidden_layers == 7:
+            model = Model(
+                encoder=encoder,
+                snn=LIFConvNet(
+                    seq_length=n_time_steps,
+                    input_size=input_size,
+                    alpha=100
+                ),
+                decoder=decode_last
+            )
+
 
         else:
             raise NameError('Wrong number of layers')

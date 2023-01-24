@@ -836,3 +836,60 @@ class ConvSNN6(nn.Module):
                 voltages[ts, :, :] = v
 
             return voltages, hdn_spk_last_layer
+
+
+class LIFConvNet(nn.Module):
+    def __init__(
+        self, seq_length, input_size, alpha=100
+    ):
+        from norse.torch.module import SequentialState
+        super().__init__()
+        self.seq_length = seq_length
+        self.p = LIFParameters(v_th=torch.tensor(0.1), alpha=alpha)
+
+        c = 64
+        c = [c, 2 * c, 4 * c, 4 * c]
+
+        self.features = SequentialState(
+            # preparation
+            nn.Conv2d(
+                input_size[0], c[0], kernel_size=3, stride=1, padding=1, bias=False
+            ),
+            LIFCell(self.p),
+            # block 1
+            nn.Conv2d(c[0], c[1], kernel_size=3, stride=1, padding=1, bias=False),
+            LIFCell(self.p),
+            nn.MaxPool2d(2),
+            # block 2
+            nn.Conv2d(c[1], c[2], kernel_size=3, stride=1, padding=1, bias=False),
+            LIFCell(self.p),
+            nn.MaxPool2d(2),
+            # block 3
+            nn.Conv2d(c[2], c[3], kernel_size=3, stride=1, padding=1, bias=False),
+            LIFCell(self.p),
+            nn.MaxPool2d(2),
+            nn.Flatten(),
+        )
+
+        self.classification = SequentialState(
+            # Classification
+            nn.Linear(4096, 10, bias=False),
+            LICell(),
+        )
+
+    def forward(self, x):
+        voltages = torch.empty(
+            self.seq_length, x.shape[1], 10, device=x.device, dtype=x.dtype
+        )
+        sf = None
+        sc = None
+        for ts in range(self.seq_length):
+            out_f, sf = self.features(x[ts], sf)
+            # print(out_f.shape)
+            out_c, sc = self.classification(out_f, sc)
+            voltages[ts, :, :] = out_c + 0.001 * torch.randn(
+                x.shape[1], 10, device=x.device
+            )
+
+        y_hat, _ = torch.max(voltages, 0)
+        return y_hat
