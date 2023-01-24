@@ -45,8 +45,8 @@ def get_args_parser():
     parser.add_argument("--opt", default="Adam", type=str, help="optimizer. Options: AdamW and SGD")
     parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
     parser.add_argument(
-        "--wd", "--weight-decay", default=0.0005, type=float, metavar="W",
-        help="weight decay (default: 5e-4)", dest="weight_decay",
+        "--wd", "--weight-decay", default=0.00001, type=float, metavar="W",
+        help="weight decay (default: 1e-5)", dest="weight_decay",
     )
     parser.add_argument("--lr-decay-milestones", default=[], type=int, nargs='+',
                         dest="lr_decay_milestones", help="lr decay milestones")
@@ -77,8 +77,7 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
 
         # Negative loglikelihoog loss, for classification problems.
         # The input must contain log probabilities of each class
-        # loss = torch.nn.functional.nll_loss(output, target)
-        loss = label_smoothing_loss(output, target)
+        loss = torch.nn.functional.nll_loss(output, target)
 
         # Backpropagation
         optimizer.zero_grad(set_to_none=True)
