@@ -338,12 +338,14 @@ class ConvSNN3(nn.Module):
 
 
 class SpikingNN(torch.autograd.Function):
-    def forward(self, input):
-        self.save_for_backward(input)
+    @staticmethod
+    def forward(ctx, input):
+        ctx.save_for_backward(input)
         return input.gt(0).type(torch.cuda.FloatTensor)
 
-    def backward(self, grad_output):
-        input, = self.saved_tensors
+    @staticmethod
+    def backward(ctx, grad_output):
+        input, = ctx.saved_tensors
         grad_input = grad_output.clone()
         grad_input[input <= 0.0] = 0
         return grad_input
@@ -354,7 +356,7 @@ def Pooling_sNeuron(membrane_potential, threshold, i):
     ex_membrane = nn.functional.threshold(membrane_potential, threshold, 0)
     membrane_potential = membrane_potential - ex_membrane
     # generate spike
-    out = SpikingNN()(ex_membrane)
+    out = SpikingNN.apply(ex_membrane)
     return membrane_potential, out
 
 
@@ -368,20 +370,20 @@ class ConvSNN4(nn.Module):
         self.ftmaps_h = int(((input_size[1] - 2) / 2) - 2 - 2)
         self.ftmaps_v = int(((input_size[2] - 2) / 2) - 2 - 2)
 
-        self.cnn11 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
-        self.cnn12 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv11 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv12 = nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=1, bias=False)
         self.avgpool1 = nn.AvgPool2d(kernel_size=2)
 
-        self.cnn21 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False)
-        self.cnn22 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv21 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv22 = nn.Conv2d(in_channels=128, out_channels=128, kernel_size=3, stride=1, padding=1, bias=False)
         self.avgpool2 = nn.AvgPool2d(kernel_size=2)
 
-        self.cnn31 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
-        self.cnn32 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
-        self.cnn33 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv31 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv32 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv33 = nn.Conv2d(in_channels=256, out_channels=256, kernel_size=3, stride=1, padding=1, bias=False)
         self.avgpool3 = nn.AvgPool2d(kernel_size=2)
 
-        self.fc0 = nn.Linear(256 * 4 * 4, 1024, bias=False)
+        self.fc0 = nn.Linear(4*4*256, 1024, bias=False)
         self.fc1 = nn.Linear(1024, 100, bias=False)
         self.fc_out = nn.Linear(100, 10, bias=False)
 
@@ -412,27 +414,27 @@ class ConvSNN4(nn.Module):
         # Dropout
         drop = nn.Dropout(p=0.2, inplace=True)
 
-        mask_11 = Variable(torch.ones(seq_length, 64, 32, 32).cuda(), requires_grad=False)
+        mask_11 = Variable(torch.ones(batch_size, 64, 32, 32).cuda(), requires_grad=False)
         mask_11 = drop(mask_11)
-        mask_12 = Variable(torch.ones(seq_length, 64, 32, 32).cuda(), requires_grad=False)
+        mask_12 = Variable(torch.ones(batch_size, 64, 32, 32).cuda(), requires_grad=False)
         mask_12 = drop(mask_12)
-        mask_21 = Variable(torch.ones(seq_length, 128, 16, 16).cuda(), requires_grad=False)
+        mask_21 = Variable(torch.ones(batch_size, 128, 16, 16).cuda(), requires_grad=False)
         mask_21 = drop(mask_21)
-        mask_22 = Variable(torch.ones(seq_length, 128, 16, 16).cuda(), requires_grad=False)
+        mask_22 = Variable(torch.ones(batch_size, 128, 16, 16).cuda(), requires_grad=False)
         mask_22 = drop(mask_22)
-        mask_31 = Variable(torch.ones(seq_length, 256, 8, 8).cuda(), requires_grad=False)
+        mask_31 = Variable(torch.ones(batch_size, 256, 8, 8).cuda(), requires_grad=False)
         mask_31 = drop(mask_31)
-        mask_32 = Variable(torch.ones(seq_length, 256, 8, 8).cuda(), requires_grad=False)
+        mask_32 = Variable(torch.ones(batch_size, 256, 8, 8).cuda(), requires_grad=False)
         mask_32 = drop(mask_32)
-        mask_33 = Variable(torch.ones(seq_length, 256, 8, 8).cuda(), requires_grad=False)
+        mask_33 = Variable(torch.ones(batch_size, 256, 8, 8).cuda(), requires_grad=False)
         mask_33 = drop(mask_33)
 
-        mask_f0 = Variable(torch.ones(seq_length, 1024).cuda(), requires_grad=False)
+        mask_f0 = Variable(torch.ones(batch_size, 1024).cuda(), requires_grad=False)
         mask_f0 = drop(mask_f0)
 
-        mem_1s = Variable(torch.zeros(seq_length, 64, 16, 16).cuda(), requires_grad=False)
-        mem_2s = Variable(torch.zeros(seq_length, 128, 8, 8).cuda(), requires_grad=False)
-        mem_3s = Variable(torch.zeros(seq_length, 256, 4, 4).cuda(), requires_grad=False)
+        mem_1s = Variable(torch.zeros(batch_size, 64, 16, 16).cuda(), requires_grad=False)
+        mem_2s = Variable(torch.zeros(batch_size, 128, 8, 8).cuda(), requires_grad=False)
+        mem_3s = Variable(torch.zeros(batch_size, 256, 4, 4).cuda(), requires_grad=False)
 
         # specify the initial states
         sconv11 = sconv12 = sconv21 = sconv22 = sconv31 = sconv32 = sconv33 = sfc0 = sfc1 = so = None
@@ -445,35 +447,52 @@ class ConvSNN4(nn.Module):
                 # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
                 z = self.conv11(x[ts, :])
                 z, sconv11 = self.lif_conv11(z, sconv11)
-                out = torch.mul(out, mask_11)
+                z = torch.mul(z, mask_11)
                 z = self.conv12(z)
                 z, sconv12 = self.lif_conv12(z, sconv12)
-                out = torch.mul(out, mask_12)
+                z = torch.mul(z, mask_12)
                 # pooling Layer
-                mem_1s = mem_1s + self.avgpool1(out)
-                mem_1s, out = Pooling_sNeuron(mem_1s, 0.75, i)
-                z = nn.functional.avg_pool2d(z, 2)
+                mem_1s = mem_1s + self.avgpool1(z)
+                mem_1s, z = Pooling_sNeuron(mem_1s, 0.75, ts)
+                # z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Second convolution
                 z = self.conv21(z)
                 z, sconv21 = self.lif_conv21(z, sconv21)
+                z = torch.mul(z, mask_21)
                 z = self.conv22(z)
                 z, sconv22 = self.lif_conv22(z, sconv22)
-                z = nn.functional.avg_pool2d(z, 2)
+                z = torch.mul(z, mask_22)
+                # z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+                # pooling Layer
+                mem_2s = mem_2s + self.avgpool2(z)
+                mem_2s, z = Pooling_sNeuron(mem_2s, 0.75, ts)
 
-                # Second convolution
+                # Third convolution
                 z = self.conv31(z)
                 z, sconv31 = self.lif_conv31(z, sconv31)
+                z = torch.mul(z, mask_31)
                 z = self.conv32(z)
                 z, sconv32 = self.lif_conv32(z, sconv32)
+                z = torch.mul(z, mask_32)
+                z = self.conv33(z)
+                z, sconv33 = self.lif_conv32(z, sconv33)
+                z = torch.mul(z, mask_33)
                 # print(f'After conv3: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+                # pooling Layer
+                mem_3s = mem_3s + self.avgpool3(z)
+                mem_3s, z = Pooling_sNeuron(mem_3s, 0.75, ts)
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
 
                 # First FC
+                z = self.fc0(z)
+                z, sfc0 = self.lif_fc1(z, sfc0)
+
+                # Second FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
 
@@ -575,7 +594,7 @@ class ConvSNN5(nn.Module):
                 z, sconv11 = self.lif_conv11(z, sconv11)
                 z = self.conv12(z)
                 z, sconv12 = self.lif_conv12(z, sconv12)
-                z = self.avgpool1(z)
+                # z = self.avgpool1(z)
                 # z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
@@ -584,7 +603,7 @@ class ConvSNN5(nn.Module):
                 z, sconv21 = self.lif_conv21(z, sconv21)
                 z = self.conv22(z)
                 z, sconv22 = self.lif_conv22(z, sconv22)
-                z = self.avgpool2(z)
+                # z = self.avgpool2(z)
                 # z = nn.functional.avg_pool2d(z, 2)
                 # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
