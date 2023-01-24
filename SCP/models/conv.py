@@ -845,7 +845,7 @@ class LIFConvNet(nn.Module):
         from norse.torch.module import SequentialState
         super().__init__()
         self.seq_length = seq_length
-        self.p = LIFParameters(v_th=torch.tensor(0.1), alpha=alpha)
+        self.p = LIFParameters(v_th=torch.tensor(0.4), alpha=alpha)
 
         c = 64
         c = [c, 2 * c, 4 * c, 4 * c]
