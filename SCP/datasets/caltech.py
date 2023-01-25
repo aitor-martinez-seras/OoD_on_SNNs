@@ -5,11 +5,18 @@ import torchvision
 import torchvision.transforms as transforms
 
 from SCP.datasets.presets import load_test_presets
+from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
 def load_caltech101(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32), *args, **kwargs):
 
     test_transform = load_test_presets(img_shape=image_shape)
+    test_transform = transforms.Compose(
+        [
+            test_transform,
+            transforms.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
+        ]
+    )
     test_data = torchvision.datasets.Caltech101(
         root=datasets_path,
         target_type='category',
@@ -24,13 +31,15 @@ def load_caltech101(batch_size, datasets_path: Path, test_only=False, image_shap
         train_transform = transforms.Compose(
             [
                 # transforms.ToTensor(),
-                transforms.Resize((224, 224)),
+
                 # transforms.RandomRotation(30, ),
                 # transforms.RandomCrop(400),
+                transforms.Resize((32, 32)),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 # To represent gray images as RGB images
                 transforms.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
+
             ]
         )
         train_data = torchvision.datasets.Caltech101(
@@ -56,13 +65,5 @@ if __name__ == "__main__":
     dataset, train_loader, test_loader = load_caltech101(
         64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False
     )
-    images, targets = next(iter(train_loader))
-    # images, targets = next(iter(test_loader))
-    n = 25
-    print(images[n].max(), images[n].min())
-    plt.imshow(images[n].permute(1, 2, 0))
-    plt.show()
-    grid = torchvision.utils.make_grid(images)
-    print(targets)
-    plt.imshow(grid.permute(1, 2, 0))
-    plt.show()
+    show_img_from_dataloader(test_loader, img_pos=0, number_of_iterations=10)
+    show_grid_from_dataloader(test_loader)
