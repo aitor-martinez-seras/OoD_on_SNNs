@@ -8,7 +8,7 @@ from torch.optim import Optimizer
 import numpy as np
 
 from SCP.datasets import in_distribution_datasets_loader
-from SCP.utils.common import load_paths_config, load_config
+from SCP.utils.common import load_config
 from SCP.utils.plots import plot_loss_history
 from SCP.models.model import load_model, load_weights, load_checkpoint
 from test import validate_one_epoch
@@ -54,14 +54,6 @@ def get_args_parser():
     parser.add_argument("--lr-decay-rate", default=0, type=float, dest="lr_decay_rate", help="lr decay rate")
 
     return parser
-
-
-def label_smoothing_loss(y_hat, y, alpha=0.2):
-    log_probs = torch.nn.functional.log_softmax(y_hat, dim=1, _stacklevel=5)
-    xent = torch.nn.functional.nll_loss(log_probs, y, reduction="none")
-    KL = -log_probs.mean(dim=1)
-    loss = (1 - alpha) * xent + alpha * KL
-    return loss.sum()
 
 
 def train_one_epoch(model, device, train_loader, optimizer, epoch):
@@ -143,7 +135,7 @@ def main(args):
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
     # Paths
-    config_pth = load_paths_config()
+    config_pth = load_config('paths')
     logs_path = Path(config_pth["paths"]["logs"])
     figures_path = Path(config_pth["paths"]["figures"])
     weights_path = Path(config_pth["paths"]["weights"])
