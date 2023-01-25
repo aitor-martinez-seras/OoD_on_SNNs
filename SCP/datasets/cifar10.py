@@ -50,7 +50,7 @@ def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, *args, **kwar
     test_loader_CIFAR10 = torch.utils.data.DataLoader(
         test_data_CIFAR10,
         batch_size=batch_size,
-        shuffle=False
+        shuffle=False,
     )
 
     if test_only is False:

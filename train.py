@@ -125,7 +125,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
             lr_scheduler.step()
 
         if save_every_n_epochs:
-            if epoch % save_every_n_epochs == 0:
+            if (epoch + 1)  % save_every_n_epochs == 0:
                 file_path = datasets_path / f'checkpoint{epoch+1}_{file_name}.pth'
                 save_checkpoint(file_path, model, optimizer, args, epoch, lr_scheduler)
                 print(' ----------------------------------')
@@ -215,6 +215,9 @@ def main(args):
 
     # Move model to device after resuming it
     model = model.to(device)
+    print('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
+    print(model)
+    print('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
     fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}' \
             f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers'

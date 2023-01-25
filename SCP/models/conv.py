@@ -938,14 +938,14 @@ class ConvSNN9(nn.Module):
         # self.ftmaps_v = int(((input_size[2] - 2 - 2) - 2 - 2) - 2 - 2)
 
         # Convolutions
-        self.conv1 = nn.Conv2d(input_size[0], 16, 3, 1, padding=1, bias=False)
-        self.conv2 = nn.Conv2d(16, 32, 3, 1, padding=1, bias=False)
-        self.conv3 = nn.Conv2d(32, 64, 3, 1, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(input_size[0], 32, 3, 1, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(64, 128, 3, 1, padding=1, bias=False)
         self.avgpool = nn.AvgPool2d(kernel_size=2)
         self.maxpool = nn.MaxPool2d(kernel_size=2)
 
         # Linear part
-        self.fc1 = nn.Linear(4 * 4 * 64, 512, bias=False)
+        self.fc1 = nn.Linear(4 * 4 * 128, 512, bias=False)
         self.fc2 = nn.Linear(512, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
@@ -1007,9 +1007,9 @@ class ConvSNN9(nn.Module):
 
         # specify the initial states
         sconv1 = sconv2 = sconv3 = sfc1 = sfc2 = so = None
-        voltages = torch.zeros(
-            seq_length, batch_size, self.output_neurons, device=x.device, dtype=x.dtype
-        )
+        # voltages = torch.zeros(
+        #     seq_length, batch_size, self.output_neurons, device=x.device, dtype=x.dtype
+        # )
         if flag is None:
             for ts in range(seq_length):
                 # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
