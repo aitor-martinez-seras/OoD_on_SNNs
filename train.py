@@ -94,8 +94,8 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
     return losses, mean_loss
 
 
-def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, optimizer: Optimizer,
-          lr_scheduler, save_every_n_epochs=0, weights_pth=Path('.'), file_name='', args=None):
+def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, start_epoch:int,
+          optimizer: Optimizer, lr_scheduler, save_every_n_epochs=0, weights_pth=Path('.'), file_name='', args=None):
     training_losses = []
     test_losses = []
     accuracies = []
@@ -104,7 +104,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
     if save_every_n_epochs > 0:
         assert weights_pth != '.' and file_name != '' and args is not None, 'datasets_path, file_path ' \
                                                                              'and args must be passed to the function'
-    for epoch in range(epochs):
+    for epoch in range(start_epoch, epochs):
         print(f'\nEpoch {epoch + 1}:')
         # Train
         _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer, epoch)
@@ -210,8 +210,9 @@ def main(args):
     else:
         print('No LR scheduler used')
 
+    start_epoch = 0
     if args.resume:
-        load_checkpoint(model, args.resume, optimizer, lr_scheduler)
+        start_epoch = load_checkpoint(model, args.resume, optimizer, lr_scheduler)
 
     # Move model to device after resuming it
     model = model.to(device)
@@ -230,6 +231,7 @@ def main(args):
         train_loader=train_loader,
         test_loader=test_loader,
         epochs=args.epochs,
+        start_epoch=start_epoch,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
         save_every_n_epochs=args.save_every,

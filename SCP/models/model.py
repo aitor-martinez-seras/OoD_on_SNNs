@@ -11,18 +11,25 @@ from SCP.models.fc import FCSNN1, FCSNN2
 from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, Net, ConvSNN9
 
 
-def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler=None):
+def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler):
 
     if lr_scheduler:
-        lr_scheduler.state_dict()
 
-    checkpoint = {
-        "model": model.state_dict(),
-        "optimizer": optimizer.state_dict(),
-        "lr_scheduler": lr_scheduler,
-        "args": args,
-        "epoch": epoch,
-    }
+        checkpoint = {
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "lr_scheduler": lr_scheduler.state_dict(),
+            "args": args,
+            "epoch": epoch,
+        }
+    else:
+        checkpoint = {
+            "model": model.state_dict(),
+            "optimizer": optimizer.state_dict(),
+            "lr_scheduler": None,
+            "args": args,
+            "epoch": epoch,
+        }
     torch.save(checkpoint, fpath)
 
 
@@ -62,7 +69,11 @@ def load_checkpoint(model, weights_path, optimizer, lr_scheduler):
         print(model.load_state_dict(checkpoint["model"]))
         optimizer.load_state_dict(checkpoint["optimizer"])
         if lr_scheduler:
-            lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            if checkpoint["lr_scheduler"]:
+                lr_scheduler.load_state_dict(checkpoint["lr_scheduler"])
+            else:
+                lr_scheduler = None
+                print('WARNING: LR SCHEDULER not loaded as it was not present in the checkpoint file')
         start_epoch = checkpoint["epoch"] + 1
     else:
         raise TypeError(f"Loaded file has wrong type: {type(checkpoint)}")
