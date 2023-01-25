@@ -280,7 +280,7 @@ def main(args):
                 else:
                     test_loader_ood = out_of_distribution_datasets_loader[ood_dataset](
                         batch_size_ood, datasets_path,
-                        test_only=True, resize_to=datasets_conf[in_dataset]['input_size'][1:]
+                        test_only=True, image_shape=datasets_conf[in_dataset]['input_size']
                     )
 
                 # Extract the spikes and logits for OoD
