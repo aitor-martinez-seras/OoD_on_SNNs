@@ -46,7 +46,6 @@ def validate_one_epoch(model, device, test_loader, return_logits=False):
 
     with torch.no_grad():
         for data, target in test_loader:
-            # n = n + 1
             data, target = data.to(device), target.to(device)
 
             if return_logits is True:
@@ -127,7 +126,7 @@ def main(args):
         mean_test_loss, accuracy, _ = validate_one_epoch(model, device, test_loader)
 
         # Accumulate losses
-        print(f"\nThe mean loss of the model for epoch {epoch + 1} is {mean_test_loss}%")
+        print(f"\nThe mean loss of the model for epoch {epoch + 1} is {mean_test_loss}")
         print(f"\nThe accuracy of the model for epoch {epoch + 1} is {accuracy}%")
 
 

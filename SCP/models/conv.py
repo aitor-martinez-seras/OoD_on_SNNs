@@ -978,27 +978,6 @@ class ConvSNN9(nn.Module):
         #         # define threshold
         #         # m.threshold = 1
 
-    def extract_fatures(self, z, sconv1, sconv2, sconv3):
-
-        # First convolution
-        z = self.conv1(z)
-        z, sconv1 = self.lif_conv1(z, sconv1)
-        z = self.avgpool(z)
-
-        # Second convolution
-        z = self.conv2(z)
-        z, sconv2 = self.lif_conv2(z, sconv2)
-        z = self.avgpool(z)
-        # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
-
-        # Third convolution
-        z = self.conv3(z)
-        z, sconv3 = self.lif_conv3(z, sconv3)
-        z = self.avgpool(z)
-        # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
-
-        return z
-
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
         batch_size = x.shape[1]
@@ -1077,7 +1056,24 @@ class ConvSNN9(nn.Module):
             )
             for ts in range(seq_length):
 
-                z = self.extract_fatures(x[ts], sconv1, sconv2, sconv3)
+                # z = self.extract_fatures(x[ts], sconv1, sconv2, sconv3)
+
+                # First convolution
+                z = self.conv1(x[ts])
+                z, sconv1 = self.lif_conv1(z, sconv1)
+                z = self.avgpool(z)
+
+                # Second convolution
+                z = self.conv2(z)
+                z, sconv2 = self.lif_conv2(z, sconv2)
+                z = self.avgpool(z)
+                # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+                # Third convolution
+                z = self.conv3(z)
+                z, sconv3 = self.lif_conv3(z, sconv3)
+                z = self.avgpool(z)
+                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)

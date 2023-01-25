@@ -154,8 +154,16 @@ def main(args):
             input_size = datasets_conf[in_dataset]['input_size']
             hidden_neurons = model_archs[model_name][in_dataset][0]
             output_neurons = datasets_conf[in_dataset]['classes']
-            model = load_model(model_arch=model_name, input_size=input_size, hidden_neurons=hidden_neurons,
-                               output_neurons=output_neurons, n_hidden_layers=args.n_hidden_layers)
+            model = load_model(
+                model_arch=model_name,
+                input_size=input_size,
+                hidden_neurons=hidden_neurons,
+                output_neurons=output_neurons,
+                n_hidden_layers=args.n_hidden_layers,
+                f_max=200,
+                encoder='poisson',
+                n_time_steps=32,
+            )
             model = model.to(device)
 
             # TODO: Mejorar la forma de acceder al dataset... El argumento hidden layers podría empezar a llamarse
