@@ -1,3 +1,4 @@
+# If classes are 0, means the dataset is only used as OOD
 [MNIST]
 input_size = [1, 28, 28]
 classes = 10
@@ -15,12 +16,24 @@ input_size = [1, 28, 28]
 classes = 26
 
 [Flowers102]
-input_size = [3, 400, 400]
+input_size = [3, 224, 224]
 classes = 102
 
 [CIFAR10]
 input_size = [3, 32, 32]
 classes = 10
+
+[Caltech101]
+input_size = [3, 224, 224]
+classes = 101
+
+[Food101]
+input_size = [3, 224, 224]
+classes = 101
+
+[FGVCAircraft]
+input_size = [3, 112, 224]
+classes = 0
 
 [noMNIST]
 input_size = [1, 28, 28]

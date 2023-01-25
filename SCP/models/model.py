@@ -74,7 +74,7 @@ def load_checkpoint(model, weights_path, optimizer, lr_scheduler):
             else:
                 lr_scheduler = None
                 print('WARNING: LR SCHEDULER not loaded as it was not present in the checkpoint file')
-        start_epoch = checkpoint["epoch"] + 1
+        start_epoch = checkpoint["epoch"]
     else:
         raise TypeError(f"Loaded file has wrong type: {type(checkpoint)}")
     print("Loading checkpoint finished!")

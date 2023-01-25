@@ -2,20 +2,15 @@ from pathlib import Path
 
 import torch
 import torchvision
-import torchvision.transforms as transforms
+import torchvision.transforms as T
 
+from SCP.datasets.presets import load_test_presets
 from SCP.utils.common import load_config
 from SCP.utils.plots import plot_image, plot_grid
 
 
 def load_CIFAR10_BW(batch_size, datasets_path: Path, *args, **kwargs):
-    transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Grayscale(num_output_channels=1),
-            torchvision.transforms.Resize((28, 28))
-        ]
-    )
+    transform = load_test_presets(option='bw', resize_to=[28, 28])
 
     test_data_CIFAR10 = torchvision.datasets.CIFAR10(
         root=datasets_path,
@@ -31,21 +26,14 @@ def load_CIFAR10_BW(batch_size, datasets_path: Path, *args, **kwargs):
     return test_loader_CIFAR10
 
 
-def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
-    transform = transforms.Compose(
-        [
-            # transforms.RandomRotation(15, ),
-            # transforms.RandomCrop(400),
-            transforms.RandomHorizontalFlip(),
-            # transforms.RandomVerticalFlip(),
-            transforms.ToTensor()
-        ]
-    )
+def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32), *args, **kwargs):
+
+    test_transform = load_test_presets(img_shape=image_shape)
     test_data_CIFAR10 = torchvision.datasets.CIFAR10(
         root=datasets_path,
         train=False,
         download=True,
-        transform=transform,
+        transform=test_transform,
     )
     test_loader_CIFAR10 = torch.utils.data.DataLoader(
         test_data_CIFAR10,
@@ -54,11 +42,20 @@ def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, *args, **kwar
     )
 
     if test_only is False:
+        train_transform = T.Compose(
+            [
+                # T.RandomRotation(15, ),
+                # T.RandomCrop(400),
+                T.RandomHorizontalFlip(),
+                # T.RandomVerticalFlip(),
+                T.ToTensor()
+            ]
+        )
         train_data_CIFAR10 = torchvision.datasets.CIFAR10(
             root=datasets_path,
             train=True,
             download=True,
-            transform=transform,
+            transform=train_transform,
         )
 
         train_loader_CIFAR10 = torch.utils.data.DataLoader(

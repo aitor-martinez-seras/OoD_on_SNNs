@@ -1,0 +1,22 @@
+in_distribution_datasets = ['CIFAR10']
+out_of_distribution_datasets = [
+    'Flowers102', 'FVGCAircraft', 'Caltech101'
+]
+
+[hyperparameters]
+# In case you want to use a different batch size for a certain dataset, use the name of the dataset
+# as the variable to define the batch size
+batch_size = 64
+
+[model_arch]
+    [model_arch.Fully_connected]
+        'MNIST' = [200, 10]
+        'Fashion_MNIST' = [200, 10]
+        'KMNIST' = [200, 10]
+        'Letters' = [200, 26]
+
+    [model_arch.ConvNet]
+        'MNIST' = [300, 10]
+        'Fashion_MNIST' = [300, 10]
+        'KMNIST' = [300, 10]
+        'Letters' = [300, 26]

@@ -118,14 +118,15 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         accuracies.append(accuracy)
         print(f"\tTraining loss:\t{mean_training_loss}", end="\n\t")
         print(f"Test loss:\t {mean_test_loss}", end="\n\t")
-        print(f"Accuracy test:\t{accuracies[-1]}%", end="\n\t")
+        print(f"Accuracy test:\t{accuracies[-1]}%")
 
         # Update the learning rate
         if lr_scheduler:
+            print('\t', end='')
             lr_scheduler.step()
 
         if save_every_n_epochs:
-            if (epoch + 1)  % save_every_n_epochs == 0:
+            if (epoch + 1) % save_every_n_epochs == 0:
                 file_path = weights_pth / f'checkpoint{epoch+1}_{file_name}.pth'
                 save_checkpoint(file_path, model, optimizer, args, epoch, lr_scheduler)
                 print(' ---------------------------------')

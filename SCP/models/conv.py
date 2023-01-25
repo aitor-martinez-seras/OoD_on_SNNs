@@ -1039,7 +1039,7 @@ class ConvSNN9(nn.Module):
                 z, sfc1 = self.lif_fc1(z, sfc1)
                 z = torch.mul(z, mask_f1)
 
-                # First FC
+                # Second FC
                 z = self.fc2(z)
                 z, sfc2 = self.lif_fc1(z, sfc2)
                 z = torch.mul(z, mask_f2)

@@ -1,47 +1,55 @@
 from pathlib import Path
 
-import torch
+from torch.utils.data import DataLoader
 import torchvision
 import torchvision.transforms as transforms
 
+from SCP.datasets.presets import load_test_presets
 
-# This datasets needs Scipy to load target files form .mat format
-def load_flowers(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
+
+# This dataset needs Scipy to load target files form .mat format
+def load_flowers(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 224, 224),
+                 workers=2, *args, **kwargs):
     import ssl
     ssl._create_default_https_context = ssl._create_unverified_context
-    transform = transforms.Compose(
-        [
-            transforms.Resize((500, 500)),
-            transforms.RandomRotation(30, ),
-            transforms.RandomCrop(400),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomVerticalFlip(),
-            transforms.ToTensor(),
-        ]
-    )
+    test_transform = load_test_presets(img_shape=image_shape)
 
     test_data = torchvision.datasets.Flowers102(
         root=datasets_path,
         split='val',
         download=True,
-        transform=transform,
+        transform=test_transform,
     )
-    test_loader = torch.utils.data.DataLoader(
+    test_loader = DataLoader(
         test_data,
-        batch_size=batch_size
+        batch_size=batch_size,
+        num_workers=workers,
+        pin_memory=True,
     )
     if test_only is False:
+        train_transform = transforms.Compose(
+            [
+                transforms.Resize((500, 500)),
+                transforms.RandomRotation(30, ),
+                transforms.RandomCrop(400),
+                transforms.RandomHorizontalFlip(),
+                transforms.RandomVerticalFlip(),
+                transforms.ToTensor(),
+            ]
+        )
         train_data = torchvision.datasets.Flowers102(
             root=datasets_path,
             split='train',
             download=True,
-            transform=transform,
+            transform=train_transform,
         )
 
-        train_loader = torch.utils.data.DataLoader(
+        train_loader = DataLoader(
             train_data,
             batch_size=batch_size,
-            shuffle=True
+            shuffle=True,
+            num_workers=workers,
+            pin_memory=True,
         )
         return train_data, train_loader, test_loader
     else:

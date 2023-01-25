@@ -10,10 +10,24 @@ def plot_grid(images, size=8):
     plt.show()
 
 
-
 def plot_image(image, height=6, width=6):
     plt.subplots(1, 1, figsize=(width, height))
     plt.imshow(image)
+    plt.show()
+
+
+def show_img_from_dataloader(data_loader, img_pos=0, number_of_iterations=1):
+    images, targets = _iterate_dataloader(data_loader, number_of_iterations)
+    print('Max:', images[img_pos].max(), 'Min:', images[img_pos].min())
+    plt.imshow(images[img_pos].permute(1, 2, 0))
+    plt.show()
+
+
+def show_grid_from_dataloader(data_loader, number_of_iterations=1):
+    images, targets = _iterate_dataloader(data_loader, number_of_iterations)
+    print('Targets:', targets)
+    grid = make_grid(images, nrow=8)
+    plt.imshow(grid.permute(1, 2, 0))
     plt.show()
 
 
@@ -109,3 +123,10 @@ def plot_ax(ax, img, plt_range, cmap, alpha=1, title=None, fontsize=8, xlabel=No
     if xlabel is not None:
         ax.set_xlabel(xlabel, fontsize=fontsize)
     return im
+
+
+def _iterate_dataloader(data_loader, number_of_iterations):
+    assert number_of_iterations >= 1, 'number_of_iterations must be greater or equal than 1'
+    for _ in range(number_of_iterations):
+        images, targets = next(iter(data_loader))
+    return images, targets

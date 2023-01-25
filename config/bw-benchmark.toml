@@ -13,11 +13,6 @@ out_of_distribution_datasets = [
 batch_size = 64
 
 [model_arch]
-    [model_arch.input_features]  # Input features must be the first key
-        'MNIST' = 784
-        'Fashion_MNIST' = 784
-        'KMNIST' = 784
-        'Letters' = 784
     [model_arch.Fully_connected]
         'MNIST' = [200, 10]
         'Fashion_MNIST' = [200, 10]

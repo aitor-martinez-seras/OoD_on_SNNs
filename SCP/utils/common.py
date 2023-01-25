@@ -31,14 +31,12 @@ def find_idx_of_class(searched_class, labels, n=0, initial_pos=0):
 
 
 def load_config(conf_name):
+    """
+    Loads the configuration file in .toml format
+    """
     with open(Path(rf"config/{conf_name}.toml"), mode="rb") as fp:
         conf = tomli.load(fp)
     return conf
-
-
-def load_paths_config() -> dict:
-    print(f'Loading path from paths.toml')
-    return load_config('paths')
 
 
 def get_batch_size(config: dict, in_dataset: str, logger: logging.Logger):

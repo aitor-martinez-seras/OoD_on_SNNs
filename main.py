@@ -17,7 +17,7 @@ from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_da
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
-from SCP.utils.common import load_paths_config, load_config, get_batch_size
+from SCP.utils.common import load_config, get_batch_size
 from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood, \
     thresholds_for_each_TPR_likelihood, likelihood_method_compute_precision_tpr_fpr_for_test_and_ood
 from SCP.benchmark import MSP, ODIN, EnergyOOD
@@ -85,11 +85,15 @@ def main(args):
     config = load_config(args.conf)
 
     # Paths
-    config_pth = load_paths_config()
-    results_path = Path(config_pth["paths"]["results"])
-    logs_path = Path(config_pth["paths"]["logs"])
-    pretrained_weights_path = Path(config_pth["paths"]["pretrained_weights"])
-    datasets_path = Path(config_pth["paths"]["datasets"])
+    paths_conf = load_config('paths')
+    results_path = Path(paths_conf["paths"]["results"])
+    logs_path = Path(paths_conf["paths"]["logs"])
+    weights_folder_path = Path(paths_conf["paths"]["weights"])
+    pretrained_weights_folder_path = Path(paths_conf["paths"]["pretrained_weights"])
+    datasets_path = Path(paths_conf["paths"]["datasets"])
+
+    # Datasets config
+    datasets_conf = load_config('datasets')
 
     # Datasets to test
     in_dist_dataset_to_test = config["in_distribution_datasets"]
@@ -111,7 +115,7 @@ def main(args):
                 )
                 if not weights_path.exists():
                     print(f'As {weights_path} does not exist, pretrained weights will be downloaded')
-                    download_pretrained_weights(pretrained_weights_path=pretrained_weights_path)
+                    download_pretrained_weights(pretrained_weights_path=pretrained_weights_folder_path)
                 else:
                     exist = True
         if exist:
@@ -146,20 +150,23 @@ def main(args):
 
             logger.info(f'Logs for benchmark with the model {model_name}')
 
-            # TODO: CAMBIAR TODO A USAR EL INPUT SIZE
             # Load model arch
-            input_features = model_archs['input_features'][in_dataset]
+            input_size = datasets_conf[in_dataset]['input_size']
             hidden_neurons = model_archs[model_name][in_dataset][0]
-            output_neurons = model_archs[model_name][in_dataset][1]
-            model = load_model(model_arch=model_name, input_size=input_features, hidden_neurons=hidden_neurons,
+            output_neurons = datasets_conf[in_dataset]['classes']
+            model = load_model(model_arch=model_name, input_size=input_size, hidden_neurons=hidden_neurons,
                                output_neurons=output_neurons, n_hidden_layers=args.n_hidden_layers)
 
+            # TODO: Mejorar la forma de acceder al dataset... El argumento hidden layers podría empezar a llamarse
+            #   de otra manera quiza...
             # Load weights
             weights_path = Path(
                 f'state_dict_{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers.pth'
             )
             if args.pretrained:
-                weights_path = pretrained_weights_path / weights_path
+                weights_path = pretrained_weights_folder_path / weights_path
+            else:
+                weights_path = weights_folder_path / weights_path
             model.load_state_dict(torch.load(weights_path))
 
             # Show test accuracy and extract the test logits and spikes
@@ -259,7 +266,8 @@ def main(args):
                     )
                 else:
                     test_loader_ood = out_of_distribution_datasets_loader[ood_dataset](
-                        batch_size_ood, datasets_path, test_only=True
+                        batch_size_ood, datasets_path,
+                        test_only=True, resize_to=datasets_conf[in_dataset]['input_size'][1:]
                     )
 
                 # Extract the spikes and logits for OoD
