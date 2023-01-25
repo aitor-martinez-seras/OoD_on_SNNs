@@ -7,7 +7,7 @@ import numpy as np
 
 from SCP.datasets import in_distribution_datasets_loader
 from SCP.models.model import load_model, load_weights
-from SCP.utils.common import load_config, load_paths_config
+from SCP.utils.common import load_config
 
 
 def get_args_parser():
@@ -86,7 +86,7 @@ def main(args):
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
     # Paths
-    config_pth = load_paths_config()
+    config_pth = load_config('datasets')
     logs_path = Path(config_pth["paths"]["logs"])
     weights_path = Path(config_pth["paths"]["weights"])
     datasets_path = Path(config_pth["paths"]["datasets"])
