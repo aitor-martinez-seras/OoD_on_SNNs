@@ -13,8 +13,7 @@ from SCP.utils.common import load_config
 def get_args_parser():
     parser = argparse.ArgumentParser(description="Training SNN", add_help=True)
 
-    parser.add_argument("--dataset", default="", type=str, help="dataset to train on")
-    parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
+    parser.add_argument("--dataset", required=True, type=str, help="dataset to train on")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("-b", "--batch-size", dest='batch_size', default=16, type=int, help="batch size")
     parser.add_argument("--model", default="", type=str, help="name of the model")
@@ -86,7 +85,7 @@ def main(args):
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
     # Paths
-    config_pth = load_config('datasets')
+    config_pth = load_config('paths')
     logs_path = Path(config_pth["paths"]["logs"])
     weights_path = Path(config_pth["paths"]["weights"])
     datasets_path = Path(config_pth["paths"]["datasets"])

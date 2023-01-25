@@ -101,7 +101,7 @@ class Model(torch.nn.Module):
 
         elif flag == "hidden_spikes_and_logits":
             x, hdd_spks = self.snn(x, flag)
-            x, _ = torch.max(x, 0)
+            # x, _ = torch.max(x, 0)
             return x, hdd_spks
 
 

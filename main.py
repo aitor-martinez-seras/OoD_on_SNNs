@@ -156,6 +156,7 @@ def main(args):
             output_neurons = datasets_conf[in_dataset]['classes']
             model = load_model(model_arch=model_name, input_size=input_size, hidden_neurons=hidden_neurons,
                                output_neurons=output_neurons, n_hidden_layers=args.n_hidden_layers)
+            model = model.to(device)
 
             # TODO: Mejorar la forma de acceder al dataset... El argumento hidden layers podría empezar a llamarse
             #   de otra manera quiza...
@@ -167,7 +168,11 @@ def main(args):
                 weights_path = pretrained_weights_folder_path / weights_path
             else:
                 weights_path = weights_folder_path / weights_path
-            model.load_state_dict(torch.load(weights_path))
+
+            state_dict = torch.load(weights_path)
+            if 'model' in state_dict.keys():  # Handle the case where it has been saved in the updated version
+                state_dict = state_dict['model']
+            model.load_state_dict(state_dict)
 
             # Show test accuracy and extract the test logits and spikes
             model.eval()

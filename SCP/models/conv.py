@@ -978,6 +978,27 @@ class ConvSNN9(nn.Module):
         #         # define threshold
         #         # m.threshold = 1
 
+    def extract_fatures(self, z, sconv1, sconv2, sconv3):
+
+        # First convolution
+        z = self.conv1(z)
+        z, sconv1 = self.lif_conv1(z, sconv1)
+        z = self.avgpool(z)
+
+        # Second convolution
+        z = self.conv2(z)
+        z, sconv2 = self.lif_conv2(z, sconv2)
+        z = self.avgpool(z)
+        # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+        # Third convolution
+        z = self.conv3(z)
+        z, sconv3 = self.lif_conv3(z, sconv3)
+        z = self.avgpool(z)
+        # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+        return z
+
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
         batch_size = x.shape[1]
@@ -1049,3 +1070,31 @@ class ConvSNN9(nn.Module):
                 v, so = self.out(z, so)
 
             return v
+
+        elif flag == "hidden_spikes_and_logits":
+            hidden_spks = torch.zeros(
+                seq_length, batch_size, self.hidden_neurons, device=x.device, dtype=torch.int8
+            )
+            for ts in range(seq_length):
+
+                z = self.extract_fatures(x[ts], sconv1, sconv2, sconv3)
+
+                # Fully connected part
+                z = z.flatten(start_dim=1)
+
+                # First FC
+                z = self.fc1(z)
+                z, sfc1 = self.lif_fc1(z, sfc1)
+                z = torch.mul(z, mask_f1)
+
+                # Second FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc1(z, sfc2)
+                z = torch.mul(z, mask_f2)
+                hidden_spks[ts, :, :] = z
+
+                # Fc out
+                z = self.fc_out(z)
+                v, so = self.out(z, so)
+
+            return v, hidden_spks
