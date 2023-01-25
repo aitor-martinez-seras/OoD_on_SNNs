@@ -173,6 +173,7 @@ def main(args):
         n_time_steps=args.n_time_steps,
         f_max=args.f_max
     )
+    model = model.to(device)
 
     if args.load_weights:
         load_weights(model, args.load_weights)
@@ -214,8 +215,6 @@ def main(args):
     if args.resume:
         start_epoch = load_checkpoint(model, args.resume, optimizer, lr_scheduler)
 
-    # Move model to device after resuming it
-    model = model.to(device)
     print('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
     print(model)
     print('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
