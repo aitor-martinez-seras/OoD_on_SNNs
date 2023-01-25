@@ -95,14 +95,14 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
 
 
 def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, optimizer: Optimizer,
-          lr_scheduler, save_every_n_epochs=0, datasets_path=Path('.'), file_name='', args=None):
+          lr_scheduler, save_every_n_epochs=0, weights_pth=Path('.'), file_name='', args=None):
     training_losses = []
     test_losses = []
     accuracies = []
     assert save_every_n_epochs >= 0 and isinstance(save_every_n_epochs, int), f'save_every must be ' \
                                                             f'an integer greater than 0, not {save_every_n_epochs}'
     if save_every_n_epochs > 0:
-        assert datasets_path != '.' and file_name != '' and args is not None, 'datasets_path, file_path ' \
+        assert weights_pth != '.' and file_name != '' and args is not None, 'datasets_path, file_path ' \
                                                                              'and args must be passed to the function'
     for epoch in range(epochs):
         print(f'\nEpoch {epoch + 1}:')
@@ -126,10 +126,10 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
 
         if save_every_n_epochs:
             if (epoch + 1)  % save_every_n_epochs == 0:
-                file_path = datasets_path / f'checkpoint{epoch+1}_{file_name}.pth'
+                file_path = weights_pth / f'checkpoint{epoch+1}_{file_name}.pth'
                 save_checkpoint(file_path, model, optimizer, args, epoch, lr_scheduler)
-                print(' ----------------------------------')
-                print(f'- Checkpoint saved for epoch {epoch+1} -')
+                print(' ---------------------------------')
+                print(f'  - Checkpoint saved for epoch {epoch+1} -')
                 print(' ---------------------------------')
 
     return training_losses, test_losses
@@ -211,7 +211,7 @@ def main(args):
         print('No LR scheduler used')
 
     if args.resume:
-        load_checkpoint(model, weights_path, optimizer, lr_scheduler)
+        load_checkpoint(model, args.resume, optimizer, lr_scheduler)
 
     # Move model to device after resuming it
     model = model.to(device)
@@ -222,6 +222,7 @@ def main(args):
     fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}' \
             f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers'
 
+    # TODO: Logger of the training
     # Train the model
     train_losses, test_losses = train(
         model,
@@ -232,7 +233,7 @@ def main(args):
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
         save_every_n_epochs=args.save_every,
-        datasets_path=datasets_path,
+        weights_pth=weights_path,
         file_name=fname,
         args=args
     )
