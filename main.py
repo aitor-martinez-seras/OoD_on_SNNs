@@ -102,6 +102,9 @@ def main(args):
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
+
     for in_dataset in tqdm(in_dist_dataset_to_test, desc=f'In-Distribution dataset loop'):
 
         # For each in dataset we reset the results list, previously saving the results
