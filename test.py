@@ -74,8 +74,7 @@ def validate_one_epoch(model, device, test_loader, return_logits=False, return_t
     accuracy = 100.0 * correct / len(test_loader.dataset)
     if return_logits is True:
         if return_targets:
-            return accuracy, np.concatenate(preds).squeeze(), np.concatenate(all_logits), np.hstack(
-                hidden_spikes), targets.append(target_as_prediction)
+            return accuracy, np.concatenate(preds).squeeze(), np.concatenate(all_logits), np.hstack(hidden_spikes), targets.append(target_as_prediction)
         return accuracy, np.concatenate(preds).squeeze(), np.concatenate(all_logits), np.hstack(hidden_spikes)
     else:
         # Concatenate is used to attach each batch to the previous one
