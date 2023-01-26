@@ -10,7 +10,8 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 def load_food101(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32),
                  workers=4, *args, **kwargs):
-
+    import ssl
+    ssl._create_default_https_context = ssl._create_unverified_context
     test_transform = load_test_presets(img_shape=image_shape)
     test_data = torchvision.datasets.Food101(
         root=datasets_path,

@@ -5,7 +5,6 @@ import torchvision
 import torchvision.transforms as T
 
 from SCP.datasets.presets import load_test_presets
-from SCP.utils.common import load_config
 from SCP.utils.plots import plot_image, plot_grid, show_img_from_dataloader, show_grid_from_dataloader
 
 
