@@ -8,7 +8,7 @@ from torch.optim import Optimizer
 import numpy as np
 
 from SCP.datasets import in_distribution_datasets_loader
-from SCP.utils.common import load_config
+from SCP.utils.common import load_config, my_custom_logger
 from SCP.utils.plots import plot_loss_history
 from SCP.models.model import load_model, load_weights, load_checkpoint
 from test import validate_one_epoch
@@ -87,7 +87,8 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
 
 
 def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, start_epoch:int,
-          optimizer: Optimizer, lr_scheduler, save_every_n_epochs=0, weights_pth=Path('.'), file_name='', args=None):
+          optimizer: Optimizer, lr_scheduler, logger, save_every_n_epochs=0, weights_pth=Path('.'), file_name='',
+          args=None):
     training_losses = []
     test_losses = []
     accuracies = []
@@ -97,7 +98,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         assert weights_pth != '.' and file_name != '' and args is not None, 'datasets_path, file_path ' \
                                                                              'and args must be passed to the function'
     for epoch in range(start_epoch, epochs):
-        print(f'\nEpoch {epoch + 1}:')
+        logger.info(f'\nEpoch {epoch + 1}:')
         # Train
         _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer, epoch)
 
@@ -108,29 +109,28 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         training_losses.append(mean_training_loss)
         test_losses.append(mean_test_loss)
         accuracies.append(accuracy)
-        print(f"\tTraining loss:\t{mean_training_loss}", end="\n\t")
-        print(f"Test loss:\t {mean_test_loss}", end="\n\t")
-        print(f"Accuracy test:\t{accuracies[-1]}%")
+        logger.info(f"\tTraining loss:\t{mean_training_loss}", end="\n\t")
+        logger.info(f"Test loss:\t {mean_test_loss}", end="\n\t")
+        logger.info(f"Accuracy test:\t{accuracies[-1]}%")
 
         # Update the learning rate
         if lr_scheduler:
-            print('\t', end='')
+            logger.info('\t', end='')
             lr_scheduler.step()
 
         if save_every_n_epochs:
             if (epoch + 1) % save_every_n_epochs == 0:
                 file_path = weights_pth / f'checkpoint{epoch+1}_{file_name}.pth'
                 save_checkpoint(file_path, model, optimizer, args, epoch, lr_scheduler)
-                print(' ---------------------------------')
-                print(f'  - Checkpoint saved for epoch {epoch+1} -')
-                print(' ---------------------------------')
+                logger.info(' ---------------------------------')
+                logger.info(f'  - Checkpoint saved for epoch {epoch+1} -')
+                logger.info(' ---------------------------------')
 
     return training_losses, test_losses
 
 
 def main(args):
     print('****************** Starting training script ******************')
-    print(args)
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
@@ -154,6 +154,11 @@ def main(args):
         args.batch_size, datasets_path,
     )
     print(f'Load of {args.dataset} completed!')
+
+    fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}' \
+            f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers'
+    logger = my_custom_logger(logger_name=f'train_{fname}.txt', logs_pth=logs_path)
+    logger.info(args)
 
     # Load model
     model = load_model(
@@ -202,20 +207,16 @@ def main(args):
             optimizer, step_size=args.lr_decay_step, gamma=args.lr_decay_rate, verbose=True
         )
     else:
-        print('No LR scheduler used')
+        logger.info('No LR scheduler used')
 
     start_epoch = 0
     if args.resume:
         start_epoch = load_checkpoint(model, args.resume, optimizer, lr_scheduler)
 
-    print('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
-    print(model)
-    print('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
+    logger.info('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
+    logger.info(model)
+    logger.info('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
-    fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}' \
-            f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers'
-
-    # TODO: Logger of the training
     # Train the model
     train_losses, test_losses = train(
         model,
@@ -226,13 +227,14 @@ def main(args):
         start_epoch=start_epoch,
         optimizer=optimizer,
         lr_scheduler=lr_scheduler,
+        logger=logger,
         save_every_n_epochs=args.save_every,
         weights_pth=weights_path,
         file_name=fname,
         args=args
     )
 
-    print('Saving model...')
+    logger.info('Saving model...')
     save_checkpoint(
         fpath=weights_path / f'state_dict_{fname}.pth',
         model=model,
@@ -241,7 +243,7 @@ def main(args):
         args=args,
         epoch=args.epochs,
     )
-    print('Model saved!')
+    logger.info('Model saved!')
     plot_loss_history(train_losses, test_losses, fpath=figures_path / f'history_{fname}.jpg')
 
 

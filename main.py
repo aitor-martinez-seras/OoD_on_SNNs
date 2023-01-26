@@ -17,7 +17,7 @@ from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_da
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
-from SCP.utils.common import load_config, get_batch_size
+from SCP.utils.common import load_config, get_batch_size, my_custom_logger
 from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood, \
     thresholds_for_each_TPR_likelihood, likelihood_method_compute_precision_tpr_fpr_for_test_and_ood
 from SCP.benchmark import MSP, ODIN, EnergyOOD
@@ -39,35 +39,6 @@ def get_args_parser():
     parser.add_argument("--samples-for-thr-per-class", default=1000, type=int,
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
     return parser
-
-
-def my_custom_logger(logger_name, logs_pth, level=logging.INFO):
-    """
-    Method to return a custom logger with the given name and level
-    """
-    # Create logger
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.DEBUG)
-
-    # Create handlers
-    console_handler = logging.StreamHandler(sys.stdout)
-    file_handler = logging.FileHandler(logs_pth / f"{logger_name}.log", mode='w')
-
-    # Set handler levels
-    console_handler.setLevel(level)
-    file_handler.setLevel(level)
-
-    # Create formatter and assign to handlers
-    format_string = "%(asctime)s — %(levelname)s — %(message)s"
-    log_format = logging.Formatter(format_string)
-    console_handler.setFormatter(log_format)
-    file_handler.setFormatter(log_format)
-
-    # Add handlers to the logger
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
-
-    return logger
 
 
 def main(args):
@@ -287,7 +258,8 @@ def main(args):
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(
                     model, device, test_loader_ood, return_logits=True
                 )
-                logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood:.3f} %')
+                accuracy_ood = f'{accuracy_ood:.3f}'
+                logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood} %')
 
                 # Convert spikes to counts
                 if isinstance(_spk_count_ood, tuple):

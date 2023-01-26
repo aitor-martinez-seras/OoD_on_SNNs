@@ -48,5 +48,30 @@ def get_batch_size(config: dict, in_dataset: str, logger: logging.Logger):
     return batch_size
 
 
+def my_custom_logger(logger_name, logs_pth, level=logging.INFO):
+    """
+    Method to return a custom logger with the given name and level
+    """
+    # Create logger
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)
 
+    # Create handlers
+    console_handler = logging.StreamHandler(sys.stdout)
+    file_handler = logging.FileHandler(logs_pth / f"{logger_name}.log", mode='w')
 
+    # Set handler levels
+    console_handler.setLevel(level)
+    file_handler.setLevel(level)
+
+    # Create formatter and assign to handlers
+    format_string = "%(asctime)s — %(levelname)s — %(message)s"
+    log_format = logging.Formatter(format_string)
+    console_handler.setFormatter(log_format)
+    file_handler.setFormatter(log_format)
+
+    # Add handlers to the logger
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    return logger
