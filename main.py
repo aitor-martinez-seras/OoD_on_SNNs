@@ -190,9 +190,9 @@ def main(args):
             )
             logger.info(f'Accuracy for the train clusters subset is {accuracy_subset_train_clusters:.3f} %')
 
-            if args.clusters_mode == "predictions":
+            if args.cluster_mode == "predictions":
                 labels_for_clustering = preds_train_clusters
-            elif args.clusters_mode == "labels":
+            elif args.cluster_mode == "labels":
                 labels_for_clustering = labels_subset_train_clusters
 
             # Train subset to create the thresholds
