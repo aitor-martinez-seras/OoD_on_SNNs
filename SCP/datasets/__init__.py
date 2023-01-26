@@ -33,4 +33,5 @@ out_of_distribution_datasets_loader = {
     'FVGCAircraft': load_FGVCAircraft,
     'Caltech101': load_caltech101,
     'Food101': load_caltech101,
+    'CIFAR100': load_CIFAR100,
 }
