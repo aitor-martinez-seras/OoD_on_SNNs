@@ -73,7 +73,7 @@ def main(args):
 
     # Model architectures
     model_archs = config["model_arch"]
-    archs_to_test = [k for k in model_archs.keys()][1:]  # First key is the input features
+    archs_to_test = [k for k in model_archs.keys()]
 
     # Check if pretrained weights are downloaded when required
     if args.pretrained:
