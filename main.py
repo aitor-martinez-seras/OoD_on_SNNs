@@ -29,6 +29,10 @@ def get_args_parser():
                         help="Can only be set if no SNN is used, and in that case the pretrained weights for"
                              "RPN and Detector will be used")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
+    parser.add_argument("--f-max", default=100, type=int, dest='f_max',
+                        help="max frecuency of the input neurons per second")
+    parser.add_argument("--n-time-steps", default=50, type=int, dest='n_time_steps',
+                        help="number of timesteps for the simulation")
     parser.add_argument("--n-hidden-layers", default=1, type=int,
                         dest="n_hidden_layers", help="number of hidden layers of the models")
     parser.add_argument("--samples-for-cluster-per-class", default=1200, type=int,
@@ -122,15 +126,17 @@ def main(args):
             input_size = datasets_conf[in_dataset]['input_size']
             hidden_neurons = model_archs[model_name][in_dataset][0]
             output_neurons = datasets_conf[in_dataset]['classes']
+            # TODO: Voy a tener que cambiar la forma de cargarlo ya que si finalmente metemos mas datasets
+            #   entonces el caso para reproducir resultados va a ser diferente para color y para no color
             model = load_model(
                 model_arch=model_name,
                 input_size=input_size,
                 hidden_neurons=hidden_neurons,
                 output_neurons=output_neurons,
                 n_hidden_layers=args.n_hidden_layers,
-                f_max=200,
+                f_max=args.f_max,  # Default value is for reproducing results
                 encoder='poisson',
-                n_time_steps=32,
+                n_time_steps=args.n_time_steps,  # Default value is for reproducing results
             )
             model = model.to(device)
 
