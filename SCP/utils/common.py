@@ -72,7 +72,7 @@ def my_custom_logger(logger_name, logs_pth, level=logging.INFO):
     file_handler.setFormatter(log_format)
 
     # Add handlers to the logger
-    logger.addHandler(console_handler)
+    # logger.addHandler(console_handler)
     logger.addHandler(file_handler)
 
     return logger

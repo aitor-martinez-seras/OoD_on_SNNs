@@ -98,7 +98,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         assert weights_pth != '.' and file_name != '' and args is not None, 'datasets_path, file_path ' \
                                                                              'and args must be passed to the function'
     for epoch in range(start_epoch, epochs):
-        logger.info(f'\nEpoch {epoch + 1}:')
+        logger.info(f'Epoch {epoch + 1}:')
         # Train
         _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer, epoch)
 
