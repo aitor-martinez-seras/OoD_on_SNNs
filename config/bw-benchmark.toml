@@ -10,6 +10,7 @@ out_of_distribution_datasets = [
 [hyperparameters]
 # In case you want to use a different batch size for a certain dataset, use the name of the dataset
 # as the variable to define the batch size
+# 50 TIMESTEPS used in the paper
 batch_size = 64
 
 [model_arch]
