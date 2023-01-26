@@ -92,3 +92,14 @@ def isolate_model(df, option):
         raise ValueError('Empty dataframe, probably wrong model name selected')
 
     return df
+
+
+class RMOverlappingClasses:
+
+    def __init__(self, classes_to_remove):
+        self.classes_to_remove = classes_to_remove
+
+    def __call__(self, *args, **kwargs):
+        pass
+
+

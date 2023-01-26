@@ -23,6 +23,10 @@ classes = 102
 input_size = [3, 32, 32]
 classes = 10
 
+[CIFAR100]
+input_size = [3, 32, 32]
+classes = 100
+
 [Caltech101]
 input_size = [3, 224, 224]
 classes = 101

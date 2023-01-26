@@ -76,3 +76,14 @@ def my_custom_logger(logger_name, logs_pth, level=logging.INFO):
     logger.addHandler(file_handler)
 
     return logger
+
+
+def create_str_for_ood_method_results(method_name, auroc, aupr, fpr95, fpr80, temp='No temp'):
+    string = f""" Results for {method_name}:
+    \tAUROC:\t{auroc}
+    \tAUPR:\t{aupr}
+    \tFPR95:\t{fpr95}
+    \tFPR80:\t{fpr80}
+    \tTemp:\t{temp}
+    """
+    return string

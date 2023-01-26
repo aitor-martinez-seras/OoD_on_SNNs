@@ -14,7 +14,7 @@ from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_da
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
-from SCP.utils.common import load_config, get_batch_size, my_custom_logger
+from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results
 from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood, \
     thresholds_for_each_TPR_likelihood, likelihood_method_compute_precision_tpr_fpr_for_test_and_ood
 from SCP.benchmark import MSP, ODIN, EnergyOOD
@@ -309,6 +309,8 @@ def main(args):
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
                                      test_accuracy, accuracy_ood, 'Ours', auroc, aupr, fpr95, fpr80, 0.0])
+                results_log = create_str_for_ood_method_results('SPC', auroc, aupr, fpr95, fpr80)
+                logger.info(results_log)
 
                 # ------ Other approaches ------
                 # TODO: For every approach, move code to benchmark and define in configs the methods to test
@@ -316,7 +318,8 @@ def main(args):
                 # --- Baseline method ---
                 baseline = MSP()
                 auroc, aupr, fpr95, fpr80 = baseline(logits_train, logits_test, logits_ood)
-
+                results_log = create_str_for_ood_method_results('Baseline', auroc, aupr, fpr95, fpr80)
+                logger.info(results_log)
                 # Save results to list
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
@@ -325,6 +328,8 @@ def main(args):
                 # --- ODIN ---
                 odin = ODIN()
                 auroc, aupr, fpr95, fpr80, temp = odin(logits_train, logits_test, logits_ood)
+                results_log = create_str_for_ood_method_results('ODIN', auroc, aupr, fpr95, fpr80,temp)
+                logger.info(results_log)
                 # Save results to list
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
@@ -333,6 +338,8 @@ def main(args):
                 # --- Energy ---
                 energy = EnergyOOD()
                 auroc, aupr, fpr95, fpr80, temp = energy(logits_train, logits_test, logits_ood)
+                results_log = create_str_for_ood_method_results('Energy', auroc, aupr, fpr95, fpr80, temp)
+                logger.info(results_log)
                 # Save results to list
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,

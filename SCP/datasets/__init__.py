@@ -1,7 +1,6 @@
 from SCP.datasets.mnist import load_MNIST, load_MNIST_square, load_MNIST_C
 from SCP.datasets.fashion_mnist import load_Fashion_MNIST
-from SCP.datasets.cifar import load_CIFAR10, load_CIFAR10_BW, \
-    load_CIFAR100, load_CIFAR100_BW, load_CIFAR100_non_overlapping
+from SCP.datasets.cifar import load_CIFAR10, load_CIFAR10_BW, load_CIFAR100, load_CIFAR100_BW
 from SCP.datasets.letters import load_MNIST_Letters
 from SCP.datasets.kmnist import load_KMNIST
 from SCP.datasets.not_mnist import load_notMNIST
