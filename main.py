@@ -39,6 +39,8 @@ def get_args_parser():
                         dest="samples_for_cluster_per_class", help="number of samples for validation per class")
     parser.add_argument("--samples-for-thr-per-class", default=1000, type=int,
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
+    parser.add_argument("--cluster-mode", default="predictions", type=str, dest='cluster_mode',
+                        help="device (Use cuda or cpu Default: cuda)")
     return parser
 
 
@@ -55,6 +57,11 @@ def main(args):
     # Load config
     print(f'Loading configuration from {args.conf}.toml')
     config = load_config(args.conf)
+
+    # Checks
+    assert args.cluster_mode in ["predictions", "labels", "correct-predictions"], f"Options for cluster-mode are: " \
+                                                                                  f"labels or correct-predictions, " \
+                                                                                  f"not {args.cluster_mode}"
 
     # Paths
     paths_conf = load_config('paths')
@@ -102,6 +109,7 @@ def main(args):
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
+    # To enable downloading some datasets from pytorch
     import ssl
     ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -177,10 +185,15 @@ def main(args):
             subset_train_loader_clusters = DataLoader(
                 training_subset_clusters, batch_size=batch_size, shuffle=False
             )
-            accuracy_subset_train_clusters, preds_train_clusters, _, _spk_count_train_clusters = validate_one_epoch(
-                model, device, subset_train_loader_clusters, return_logits=True
+            accuracy_subset_train_clusters, preds_train_clusters, _, _spk_count_train_clusters, labels_subset_train_clusters = validate_one_epoch(
+                model, device, subset_train_loader_clusters, return_logits=True, return_targets=True
             )
             logger.info(f'Accuracy for the train clusters subset is {accuracy_subset_train_clusters:.3f} %')
+
+            if args.clusters_mode == "predictions":
+                labels_for_clustering = preds_train_clusters
+            elif args.clusters_mode == "labels":
+                labels_for_clustering = labels_subset_train_clusters
 
             # Train subset to create the thresholds
             # Introduce a the init_pos parameters to not select the same indices that for
@@ -228,7 +241,7 @@ def main(args):
             #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
             #   para cuando se ejecute
             clusters_per_class, logging_info = create_clusters(
-                preds_train_clusters,
+                labels_for_clustering,
                 spk_count_train_clusters,
                 class_names,
                 distance_for_clustering=dist_clustering,
@@ -276,7 +289,7 @@ def main(args):
                 # Create the median aggregations for each cluster of each class
                 agg_counts_per_class_cluster = average_per_class_and_cluster(
                     spk_count_train_clusters,
-                    preds_train_clusters,
+                    labels_for_clustering,
                     clusters_per_class,
                     n_classes,
                     n_samples=1000, option='median'

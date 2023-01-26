@@ -34,12 +34,13 @@ def get_args_parser():
     return parser
 
 
-def validate_one_epoch(model, device, test_loader, return_logits=False):
+def validate_one_epoch(model, device, test_loader, return_logits=False, return_targets=False):
     # To accumulate all the spikes across different batches
     preds = []
     all_logits = []
     hidden_spikes = []
     losses = []
+    targets = []
     correct = 0
 
     model.eval()
@@ -51,6 +52,7 @@ def validate_one_epoch(model, device, test_loader, return_logits=False):
             if return_logits is True:
                 logits, hdd_spk = model(data, flag="hidden_spikes_and_logits")
                 output = torch.nn.functional.log_softmax(logits, dim=1)
+
                 all_logits.append(logits.cpu().numpy())
                 hidden_spikes.append(hdd_spk.detach().cpu().numpy())
 
@@ -62,12 +64,18 @@ def validate_one_epoch(model, device, test_loader, return_logits=False):
 
             # Get the index of the max log-probability
             pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
+            target_as_prediction = target.view_as(pred)
+            correct += pred.eq(target_as_prediction).sum().item()
             # Extract the labels, predictions and the hidden layer spikes
             preds.append(pred.cpu().numpy())
+            if return_targets:
+                targets.append(target_as_prediction)
 
     accuracy = 100.0 * correct / len(test_loader.dataset)
     if return_logits is True:
+        if return_targets:
+            return accuracy, np.concatenate(preds).squeeze(), np.concatenate(all_logits), np.hstack(
+                hidden_spikes), targets.append(target_as_prediction)
         return accuracy, np.concatenate(preds).squeeze(), np.concatenate(all_logits), np.hstack(hidden_spikes)
     else:
         # Concatenate is used to attach each batch to the previous one
