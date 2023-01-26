@@ -109,13 +109,13 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         training_losses.append(mean_training_loss)
         test_losses.append(mean_test_loss)
         accuracies.append(accuracy)
-        logger.info(f"\tTraining loss:\t{mean_training_loss}", end="\n\t")
-        logger.info(f"Test loss:\t {mean_test_loss}", end="\n\t")
-        logger.info(f"Accuracy test:\t{accuracies[-1]}%")
+        logger.info(f"\tTraining loss:\t{mean_training_loss}")
+        logger.info(f"\tTest loss:\t {mean_test_loss}")
+        logger.info(f"\tAccuracy test:\t{accuracies[-1]}%")
 
         # Update the learning rate
         if lr_scheduler:
-            logger.info('\t', end='')
+            # logger.info('\t')
             lr_scheduler.step()
 
         if save_every_n_epochs:
