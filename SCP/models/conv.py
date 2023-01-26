@@ -1152,7 +1152,7 @@ class ConvSNN10(nn.Module):
 
         # Dropout
         drop = nn.Dropout(p=0.5, inplace=True)
-        mask_f1 = Variable(torch.ones(batch_size, 512).cuda(), requires_grad=False)
+        mask_f1 = Variable(torch.ones(batch_size, self.hidden_neurons).cuda(), requires_grad=False)
         mask_f1 = drop(mask_f1)
 
         # specify the initial states
