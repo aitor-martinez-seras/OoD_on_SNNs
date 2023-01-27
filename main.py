@@ -41,6 +41,9 @@ def get_args_parser() -> argparse.ArgumentParser:
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
     parser.add_argument("--cluster-mode", default="predictions", type=str, dest='cluster_mode',
                         help="device (Use cuda or cpu Default: cuda)")
+    parser.add_argument("--use-test-labels", action='store_true', type=bool, dest='use_test_labels',
+                        help="if passed, the labels used to determine which aggregated clusters to compare to"
+                             "are the real labels, not the predictions as in real world scenario")
     return parser
 
 
@@ -196,8 +199,6 @@ def main(args: argparse.Namespace):
             else:
                 raise NameError(f"Wrong cluster mode {args.cluster_mode}")
 
-
-
             # Create clusters
             '''
             if hidden_neurons == 200:
@@ -251,13 +252,15 @@ def main(args: argparse.Namespace):
             results_list = []
 
             # ---------------------------------------------------------------
-            # Extract predicitons and hidden spikes from test InD data
+            # Extract predictions and hidden spikes from test InD data
             # ---------------------------------------------------------------
 
             model.eval()
             test_accuracy, preds_test, logits_test, _spk_count_test, test_labels = validate_one_epoch(
                 model, device, test_loader, return_logits=True, return_targets=True
             )
+            if args.use_test_labels:
+                preds_test = test_labels
             logger.info(f"The accuracy of the model with loaded weights of {in_dataset} is {test_accuracy} %")
             # Convert spikes to counts
             spk_count_test = np.sum(_spk_count_test, axis=0, dtype='uint16')
