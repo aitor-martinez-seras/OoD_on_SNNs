@@ -120,7 +120,7 @@ def main(args):
         # results_list = []
 
         # New logger for each In-Distribution Dataset
-        logger = my_custom_logger(in_dataset, logs_path)
+        logger = my_custom_logger(logger_name=f'{in_dataset}_{args.cluster_mode}', logs_pth=logs_path)
 
         # Load in-distribution data from the dictionary
         batch_size = get_batch_size(config, in_dataset, logger)

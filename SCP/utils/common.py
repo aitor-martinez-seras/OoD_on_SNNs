@@ -84,6 +84,5 @@ def create_str_for_ood_method_results(method_name, auroc, aupr, fpr95, fpr80, te
     \tAUPR:\t{aupr}
     \tFPR95:\t{fpr95}
     \tFPR80:\t{fpr80}
-    \tTemp:\t{temp}
-    """
+    \tTemp:\t{temp}"""
     return string
