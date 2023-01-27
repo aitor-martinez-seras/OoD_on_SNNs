@@ -11,11 +11,14 @@ class MSP(_OODMethod):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, logits_train, logits_test, logits_ood):
+    def __call__(self, logits_train, logits_test, logits_ood, save_histogram=False, name='', *args, **kwargs):
         # Softmax
         softmax_train_winners = np.max(scysp.softmax(logits_train, axis=1), axis=1)
         softmax_test_winners = np.max(scysp.softmax(logits_test, axis=1), axis=1)
         softmax_ood_winners = np.max(scysp.softmax(logits_ood, axis=1), axis=1)
+
+        if save_histogram:
+            super().save_histogram_fig(logits_train, logits_test, logits_ood, name=f'{name}_baseline')
 
         # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
         likelihood_thresholds_train = thresholds_for_each_TPR_likelihood(softmax_train_winners)

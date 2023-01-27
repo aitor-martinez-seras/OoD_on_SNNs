@@ -12,13 +12,17 @@ class EnergyOOD(_OODMethod):
     def __init__(self):
         super().__init__()
 
-    def __call__(self, logits_train, logits_test, logits_ood):
+    def __call__(self, logits_train, logits_test, logits_ood, save_histogram=False, name='', *args, **kwargs):
         prelim_results = []
         for temp in [1, 10, 100, 1000, 10000, 100000]:
             # Compute the energies
             energy_train = -(-temp * torch.logsumexp(torch.Tensor(logits_train) / temp, dim=1)).numpy()
             energy_test = -(-temp * torch.logsumexp(torch.Tensor(logits_test) / temp, dim=1)).numpy()
             energy_ood = -(-temp * torch.logsumexp(torch.Tensor(logits_ood) / temp, dim=1)).numpy()
+
+            if save_histogram:
+                super().save_histogram_fig(logits_train, logits_test, logits_ood, name=f'{name}_Energy_temp{temp}')
+
             # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
             distance_thresholds_train = thresholds_for_each_TPR_likelihood(energy_train)
             # Conmputing precision, tpr and fpr

@@ -44,6 +44,11 @@ def get_args_parser() -> argparse.ArgumentParser:
     parser.add_argument("--use-test-labels", action='store_true', dest='use_test_labels',
                         help="if passed, the labels used to determine which aggregated clusters to compare to"
                              "are the real labels, not the predictions as in real world scenario")
+    parser.add_argument("--use-only-correct-test-images", action='store_true', dest='use_only_correct_test_images',
+                        help="if passed, the labels used to determine which aggregated clusters to compare to are"
+                             "only correctly predicted images, not all the predictions as in real world scenario")
+    parser.add_argument("--save-histograms-for", default=[], type=str, nargs='+', dest="save_histograms_for",
+                        help="saves histogram plots for the specified methods. Options: SCP, Baseline, ODIN, Energy")
     return parser
 
 
@@ -57,9 +62,20 @@ def main(args: argparse.Namespace):
     print(f'Loading configuration from {args.conf}.toml')
     config = load_config(args.conf)
 
-    # Checks
+    # Parsing some options
     if args.cluster_mode not in ["predictions", "labels", "correct-predictions"]:
         raise AssertionError(f"Options for cluster-mode are: labels or correct-predictions, not {args.cluster_mode}")
+
+    save_scp_hist = save_baseline_hist = save_odin_hist = save_energy_hist = False
+    args.save_histograms_for = [method.lower() for method in args.save_histograms_for]
+    if "scp" in args.save_histograms_for:
+        save_scp_hist = True
+    if "baseline" in args.save_histograms_for:
+        save_baseline_hist = True
+    if "odin" in args.save_histograms_for:
+        save_odin_hist = True
+    if "energy" in args.save_histograms_for:
+        save_energy_hist = True
 
     # Paths
     paths_conf = load_config('paths')
@@ -265,14 +281,22 @@ def main(args: argparse.Namespace):
             # Convert spikes to counts
             spk_count_test = np.sum(_spk_count_test, axis=0, dtype='uint16')
             logger.info(f'Test set: {spk_count_test.shape}')
+            
+            if args.use_only_correct_test_images:
+                preds_test = np.where(preds_test == test_labels)[0]
+                new_number_of_samples_for_metrics = len(preds_test)
+                spk_count_test = spk_count_test[:new_number_of_samples_for_metrics]
+                logger.info(f'Only using correctly classified samples... '
+                            f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
 
             # ---------------------------------------------------------------
-            # Evaluate OOD perfomance
+            # Evaluate OOD performance
             # ---------------------------------------------------------------
             for ood_dataset in tqdm(ood_datasets_to_test, desc='Out-of-Distribution dataset loop'):
 
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
+                hist_name = f'{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
@@ -298,6 +322,10 @@ def main(args: argparse.Namespace):
                 )
                 accuracy_ood = f'{accuracy_ood:.3f}'
                 logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood} %')
+
+                if args.use_only_correct_test_images:
+                    preds_ood = preds_ood[:new_number_of_samples_for_metrics]
+                    _spk_count_ood = _spk_count_ood[:new_number_of_samples_for_metrics]
 
                 # ---------------------------------------------------------------
                 # OOD Detection
@@ -356,7 +384,9 @@ def main(args: argparse.Namespace):
 
                 # *************** Baseline method ***************
                 baseline = MSP()
-                auroc, aupr, fpr95, fpr80 = baseline(logits_train_thr, logits_test, logits_ood)
+                auroc, aupr, fpr95, fpr80 = baseline(
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_baseline_hist, name=hist_name,
+                )
                 results_log = create_str_for_ood_method_results('Baseline', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
                 # Save results to list
@@ -366,7 +396,9 @@ def main(args: argparse.Namespace):
 
                 # *************** ODIN ***************
                 odin = ODIN()
-                auroc, aupr, fpr95, fpr80, temp = odin(logits_train_thr, logits_test, logits_ood)
+                auroc, aupr, fpr95, fpr80, temp = odin(
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_odin_hist, name=hist_name,
+                )
                 results_log = create_str_for_ood_method_results('ODIN', auroc, aupr, fpr95, fpr80,temp)
                 logger.info(results_log)
                 # Save results to list
@@ -376,7 +408,9 @@ def main(args: argparse.Namespace):
 
                 # *************** Energy ***************
                 energy = EnergyOOD()
-                auroc, aupr, fpr95, fpr80, temp = energy(logits_train_thr, logits_test, logits_ood)
+                auroc, aupr, fpr95, fpr80, temp = energy(
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_energy_hist, name=hist_name,
+                )
                 results_log = create_str_for_ood_method_results('Energy', auroc, aupr, fpr95, fpr80, temp)
                 logger.info(results_log)
                 # Save results to list

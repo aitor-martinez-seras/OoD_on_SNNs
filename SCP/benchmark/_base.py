@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class _OODMethod:
@@ -22,7 +23,16 @@ class _OODMethod:
         fpr80 = round(fpr_values_auroc[80] * 100, 2)
         return auroc, aupr, fpr95, fpr80
 
-    def __call__(self, logits_train, logits_test, logits_ood):
+    def __call__(self, score_train, score_test, score_ood, save_histogram=False, name='', *args, **kwargs):
         # This class must be overridden by the child
         pass
 
+    def save_histogram_fig(self, score_train, score_test, score_ood, name, *args, **kwargs):
+        plt.figure(figsize=(10, 5), tight_layout=True)
+        plt.hist(score_train, bins=50, color='blue', alpha=0.6, density=True, label='Train')
+        plt.hist(score_test, bins=50, color='green', alpha=0.6, density=True, label='Test')
+        plt.hist(score_ood, bins=50, color='darkorange', alpha=0.6, density=True, label='ood')
+        # plt.ylim([0,10])
+        plt.legend(fontsize=18)
+        plt.savefig(f'{name}.png', dpi=200)
+        plt.close()
