@@ -21,7 +21,7 @@ class EnergyOOD(_OODMethod):
             energy_ood = -(-temp * torch.logsumexp(torch.Tensor(logits_ood) / temp, dim=1)).numpy()
 
             if save_histogram:
-                super().save_histogram_fig(logits_train, logits_test, logits_ood, name=f'{name}_Energy_temp{temp}')
+                super().save_histogram_fig(energy_train, energy_test, energy_ood, name=f'{name}_Energy_temp{temp}')
 
             # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
             distance_thresholds_train = thresholds_for_each_TPR_likelihood(energy_train)
