@@ -35,6 +35,10 @@ classes = 101
 input_size = [3, 224, 224]
 classes = 101
 
+[DTD]
+input_size = [3, 96, 96]
+classes = 47
+
 [FGVCAircraft]
 input_size = [3, 112, 224]
 classes = 0

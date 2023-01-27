@@ -1,6 +1,6 @@
 in_distribution_datasets = ['CIFAR10']
 out_of_distribution_datasets = [
-    'CIFAR100','Flowers102', 'FVGCAircraft', 'Caltech101'
+    'CIFAR100','Flowers102', 'FVGCAircraft', 'Caltech101', 'DTD'
 ]
 
 [hyperparameters]

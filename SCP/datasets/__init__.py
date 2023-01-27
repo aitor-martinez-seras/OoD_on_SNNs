@@ -8,6 +8,7 @@ from SCP.datasets.omniglot import load_omniglot
 from SCP.datasets.flowers import load_flowers
 from SCP.datasets.caltech import load_caltech101
 from SCP.datasets.fgvc_aircraft import load_FGVCAircraft
+from SCP.datasets.dtd import load_DTD
 
 
 in_distribution_datasets_loader = {
@@ -34,4 +35,5 @@ out_of_distribution_datasets_loader = {
     'Caltech101': load_caltech101,
     'Food101': load_caltech101,
     'CIFAR100': load_CIFAR100,
+    'DTD': load_DTD,
 }
