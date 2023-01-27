@@ -377,7 +377,8 @@ def main(args):
             # df_results.to_csv(results_path / f'Benchmark_results.csv')
 
     # Save all the results to excel
-    df_results.to_excel(results_path / 'benchmark_results_full.xlsx')
+    df_results.to_excel(results_path / f'benchmark_results_{args.cluster_mode}_fmax_{args.f_max}_'
+                                       f'timesteps_{args.n_time_steps}.xlsx')
 
 
 if __name__ == "__main__":
