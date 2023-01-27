@@ -45,10 +45,6 @@ def get_args_parser() -> argparse.ArgumentParser:
 
 
 def main(args: argparse.Namespace):
-    # TODO: 1.Change requirements.txt to not contain torch requirements
-    #   2. Modify change download of pretrained weights to benchmark and define the path to look for OoD_on_SNNs
-    #       to enable the automatic download from any platform
-
     # -----------------
     # Settings
     # -----------------
@@ -59,9 +55,8 @@ def main(args: argparse.Namespace):
     config = load_config(args.conf)
 
     # Checks
-    assert args.cluster_mode in ["predictions", "labels", "correct-predictions"], f"Options for cluster-mode are: " \
-                                                                                  f"labels or correct-predictions, " \
-                                                                                  f"not {args.cluster_mode}"
+    if args.cluster_mode not in ["predictions", "labels", "correct-predictions"]:
+        raise AssertionError(f"Options for cluster-mode are: labels or correct-predictions, not {args.cluster_mode}")
 
     # Paths
     paths_conf = load_config('paths')
