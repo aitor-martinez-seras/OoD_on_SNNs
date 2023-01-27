@@ -41,7 +41,7 @@ def get_args_parser() -> argparse.ArgumentParser:
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
     parser.add_argument("--cluster-mode", default="predictions", type=str, dest='cluster_mode',
                         help="device (Use cuda or cpu Default: cuda)")
-    parser.add_argument("--use-test-labels", action='store_true', type=bool, dest='use_test_labels',
+    parser.add_argument("--use-test-labels", action='store_true', dest='use_test_labels',
                         help="if passed, the labels used to determine which aggregated clusters to compare to"
                              "are the real labels, not the predictions as in real world scenario")
     return parser
