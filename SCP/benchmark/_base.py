@@ -25,3 +25,4 @@ class _OODMethod:
     def __call__(self, logits_train, logits_test, logits_ood):
         # This class must be overridden by the child
         pass
+

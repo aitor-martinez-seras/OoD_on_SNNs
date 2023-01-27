@@ -105,7 +105,7 @@ def plot_aupr(precision, tpr):
 
 
 def plot_histogram(train, test, ood):
-    fig = plt.figure(figsize=(10, 5), tight_layout=True)
+    plt.figure(figsize=(10, 5), tight_layout=True)
     plt.hist(train, bins=50, color='blue', alpha=0.6, density=True, label='Train')
     plt.hist(test, bins=50, color='green', alpha=0.6, density=True, label='Test')
     plt.hist(ood, bins=50, color='darkorange', alpha=0.6, density=True, label='ood')

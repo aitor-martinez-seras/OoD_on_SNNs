@@ -21,7 +21,7 @@ from SCP.benchmark import MSP, ODIN, EnergyOOD
 from test import validate_one_epoch
 
 
-def get_args_parser():
+def get_args_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="OOD detection on SNNs", add_help=True)
 
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
@@ -44,7 +44,7 @@ def get_args_parser():
     return parser
 
 
-def main(args):
+def main(args: argparse.Namespace):
     # TODO: 1.Change requirements.txt to not contain torch requirements
     #   2. Modify change download of pretrained weights to benchmark and define the path to look for OoD_on_SNNs
     #       to enable the automatic download from any platform
@@ -122,7 +122,9 @@ def main(args):
         # New logger for each In-Distribution Dataset
         logger = my_custom_logger(logger_name=f'{in_dataset}_{args.cluster_mode}', logs_pth=logs_path)
 
+        # ---------------------------------------------------------------
         # Load in-distribution data from the dictionary
+        # ---------------------------------------------------------------
         batch_size = get_batch_size(config, in_dataset, logger)
         train_data, train_loader, test_loader = in_distribution_datasets_loader[in_dataset](batch_size, datasets_path)
         class_names = train_loader.dataset.classes
@@ -132,8 +134,9 @@ def main(args):
         for model_name in tqdm(archs_to_test, desc='Model loop'):
 
             logger.info(f'Logs for benchmark with the model {model_name}')
-
-            # Load model arch
+            # ---------------------------------------------------------------
+            # Load model and its weights
+            # ---------------------------------------------------------------
             input_size = datasets_conf[in_dataset]['input_size']
             hidden_neurons = model_archs[model_name][in_dataset][0]
             output_neurons = datasets_conf[in_dataset]['classes']
@@ -167,15 +170,10 @@ def main(args):
                 state_dict = state_dict['model']
             model.load_state_dict(state_dict)
 
-            # Show test accuracy and extract the test logits and spikes
-            model.eval()
-            test_accuracy, preds_test, logits_test, _spk_count_test = validate_one_epoch(
-                model, device, test_loader, return_logits=True,
-            )
-            logger.info(f"The accuracy of the model with loaded weights of {in_dataset} is {test_accuracy} %")
-
-            # Train subset for creating the clusters
-            number_of_samples_per_class = 1200  # TODO: No se a que se debía el hecho de utilizar un subset
+            # ---------------------------------------------------------------
+            # Create clusters
+            # ---------------------------------------------------------------
+            number_of_samples_per_class = 1200
             selected_indices_per_class = indices_of_every_class_for_subset(
                 train_loader,
                 n_samples_per_class=args.samples_for_cluster_per_class,
@@ -189,42 +187,21 @@ def main(args):
                 model, device, subset_train_loader_clusters, return_logits=True, return_targets=True
             )
             logger.info(f'Accuracy for the train clusters subset is {accuracy_subset_train_clusters:.3f} %')
+            # Convert spikes to counts
+            spk_count_train_clusters = np.sum(_spk_count_train_clusters, axis=0, dtype='uint16')
+            logger.info(f'Train subset for clusters: {spk_count_train_clusters.shape}')
 
+            # Define cluster mode
             if args.cluster_mode == "predictions":
                 labels_for_clustering = preds_train_clusters
             elif args.cluster_mode == "labels":
                 labels_for_clustering = labels_subset_train_clusters
+            elif args.cluster_mode == "correct-predictions":
+                raise NotImplementedError("Not yet implemented the correct-predictions mode")
+            else:
+                raise NameError(f"Wrong cluster mode {args.cluster_mode}")
 
-            # Train subset to create the thresholds
-            # Introduce a the init_pos parameters to not select the same indices that for
-            # the subset for creating the clusters
-            selected_indices_per_class = indices_of_every_class_for_subset(
-                train_loader,
-                n_samples_per_class=args.samples_for_thr_per_class,
-                dataset_name=in_dataset,
-                init_pos=number_of_samples_per_class * n_classes
-            )
-            training_subset = Subset(train_data, [x for x in selected_indices_per_class])
-            subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
 
-            # Extract the logits and the hidden spikes
-            accuracy_subset_train, preds_train, logits_train, _spk_count_train = validate_one_epoch(
-                model, device, subset_train_loader, return_logits=True
-            )
-            logger.info(f'Accuracy for the train subset is {accuracy_subset_train_clusters:.3f} %')
-
-            # Convert spikes to counts
-            if isinstance(_spk_count_train_clusters, tuple):
-                logger.warning('He usado el ISINSTANCE')
-                _spk_count_train_clusters, _ = _spk_count_train_clusters
-                _spk_count_train, _ = _spk_count_train
-                _spk_count_test, _ = _spk_count_test
-            spk_count_train_clusters = np.sum(_spk_count_train_clusters, axis=0, dtype='uint16')
-            spk_count_train = np.sum(_spk_count_train, axis=0, dtype='uint16')
-            spk_count_test = np.sum(_spk_count_test, axis=0, dtype='uint16')
-            logger.info(f'Train subset for clusters: {spk_count_train_clusters.shape}')
-            logger.info(f'Train subset for threshold: {spk_count_train.shape}')
-            logger.info(f'Test set: {spk_count_test.shape}')
 
             # Create clusters
             '''
@@ -249,14 +226,58 @@ def main(args):
                 verbose=1
             )
             logger.info(logging_info)
+            
+            # ---------------------------------------------------------------
+            # Create a subset of training to calculate the thresholds
+            # ---------------------------------------------------------------
+            # Train subset to create the thresholds
+            # Introduce a the init_pos parameters to not select the same indices that for
+            # the subset for creating the clusters
+            # TODO: Handle cases where we don't have sufficient training data
+            selected_indices_per_class = indices_of_every_class_for_subset(
+                train_loader,
+                n_samples_per_class=args.samples_for_thr_per_class,
+                dataset_name=in_dataset,
+                init_pos=number_of_samples_per_class * n_classes
+            )
+            training_subset = Subset(train_data, [x for x in selected_indices_per_class])
+            subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
+
+            # Extract the logits and the hidden spikes
+            accuracy_subset_train_thr, preds_train_thr, logits_train_thr, _spk_count_train_thr = validate_one_epoch(
+                model, device, subset_train_loader, return_logits=True
+            )
+            logger.info(f'Accuracy for the train subset is {accuracy_subset_train_thr:.3f} %')
+            # Convert spikes to counts
+            spk_count_train_thr = np.sum(_spk_count_train_thr, axis=0, dtype='uint16')
+            logger.info(f'Train subset for threshold: {spk_count_train_thr.shape}')
 
             # Initialize for every model, as we save the results for every model
             results_list = []
 
+            # ---------------------------------------------------------------
+            # Extract predicitons and hidden spikes from test InD data
+            # ---------------------------------------------------------------
+
+            model.eval()
+            test_accuracy, preds_test, logits_test, _spk_count_test, test_labels = validate_one_epoch(
+                model, device, test_loader, return_logits=True, return_targets=True
+            )
+            logger.info(f"The accuracy of the model with loaded weights of {in_dataset} is {test_accuracy} %")
+            # Convert spikes to counts
+            spk_count_test = np.sum(_spk_count_test, axis=0, dtype='uint16')
+            logger.info(f'Test set: {spk_count_test.shape}')
+
+            # ---------------------------------------------------------------
+            # Evaluate OOD perfomance
+            # ---------------------------------------------------------------
             for ood_dataset in tqdm(ood_datasets_to_test, desc='Out-of-Distribution dataset loop'):
 
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
+                # ---------------------------------------------------------------
+                # Load dataset and extract spikes and logits
+                # ---------------------------------------------------------------
                 # Load OoD dataset from the dictionary. In case it is MNIST-C, load the
                 # selected option
                 batch_size_ood = get_batch_size(config, ood_dataset, logger)
@@ -280,6 +301,11 @@ def main(args):
                 accuracy_ood = f'{accuracy_ood:.3f}'
                 logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood} %')
 
+                # ---------------------------------------------------------------
+                # OOD Detection
+                # ---------------------------------------------------------------
+                # *************** SCP ***************
+                # TODO: Move code to class
                 # Convert spikes to counts
                 if isinstance(_spk_count_ood, tuple):
                     _spk_count_ood, _ = _spk_count_ood
@@ -294,10 +320,11 @@ def main(args):
                     n_classes,
                     n_samples=1000, option='median'
                 )
-
                 # Computation of the distances of train, test and ood
+                # TODO: Implement as class that inherits from _OODMethod
+                # TODO: Abstraer a un solo metodo dentro de la clase lo de las distancias
                 distances_train_per_class, _ = distance_to_clusters_averages(
-                    spk_count_train, preds_train, agg_counts_per_class_cluster, n_classes
+                    spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, n_classes
                 )
                 distances_test_per_class, _ = distance_to_clusters_averages(
                     spk_count_test, preds_test, agg_counts_per_class_cluster, n_classes
@@ -305,11 +332,6 @@ def main(args):
                 distances_ood_per_class, _ = distance_to_clusters_averages(
                     spk_count_ood, preds_ood, agg_counts_per_class_cluster, n_classes
                 )
-
-                # -----------
-                # Metrics
-                # -----------
-                # TODO: Implement as class that inherits from _OODMethod
                 # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
                 distance_thresholds_train = thresholds_per_class_for_each_TPR(
                     n_classes, distances_train_per_class
@@ -334,12 +356,9 @@ def main(args):
                 results_log = create_str_for_ood_method_results('SPC', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
 
-                # ------ Other approaches ------
-                # TODO: For every approach, move code to benchmark and define in configs the methods to test
-
-                # --- Baseline method ---
+                # *************** Baseline method ***************
                 baseline = MSP()
-                auroc, aupr, fpr95, fpr80 = baseline(logits_train, logits_test, logits_ood)
+                auroc, aupr, fpr95, fpr80 = baseline(logits_train_thr, logits_test, logits_ood)
                 results_log = create_str_for_ood_method_results('Baseline', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
                 # Save results to list
@@ -347,9 +366,9 @@ def main(args):
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
                                      test_accuracy, accuracy_ood, 'Baseline', auroc, aupr, fpr95, fpr80, 0.0])
 
-                # --- ODIN ---
+                # *************** ODIN ***************
                 odin = ODIN()
-                auroc, aupr, fpr95, fpr80, temp = odin(logits_train, logits_test, logits_ood)
+                auroc, aupr, fpr95, fpr80, temp = odin(logits_train_thr, logits_test, logits_ood)
                 results_log = create_str_for_ood_method_results('ODIN', auroc, aupr, fpr95, fpr80,temp)
                 logger.info(results_log)
                 # Save results to list
@@ -357,9 +376,9 @@ def main(args):
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
                                      test_accuracy, accuracy_ood, 'ODIN', auroc, aupr, fpr95, fpr80, temp])
 
-                # --- Energy ---
+                # *************** Energy ***************
                 energy = EnergyOOD()
-                auroc, aupr, fpr95, fpr80, temp = energy(logits_train, logits_test, logits_ood)
+                auroc, aupr, fpr95, fpr80, temp = energy(logits_train_thr, logits_test, logits_ood)
                 results_log = create_str_for_ood_method_results('Energy', auroc, aupr, fpr95, fpr80, temp)
                 logger.info(results_log)
                 # Save results to list
@@ -367,14 +386,14 @@ def main(args):
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
                                      test_accuracy, accuracy_ood, 'Free energy', auroc, aupr, fpr95, fpr80, temp])
 
-            # Save the results in the results list to a dataframe and the save it to
-            # a file
+            # ---------------------------------------------------------------
+            # Save results
+            # ---------------------------------------------------------------
+            # Save the results in the results list to a dataframe and the save it to a file
             df_results_one_run = pd.DataFrame(results_list, columns=COLUMNS)
-            # Save into .csv format
+            # Save checkpoint into .csv format
             df_results_one_run.to_csv(results_path / f'checkpoint_{in_dataset}.csv')
             df_results = pd.concat([df_results, df_results_one_run])
-            # Save into .csv
-            # df_results.to_csv(results_path / f'Benchmark_results.csv')
 
     # Save all the results to excel
     df_results.to_excel(results_path / f'benchmark_results_{args.cluster_mode}_fmax_{args.f_max}_'

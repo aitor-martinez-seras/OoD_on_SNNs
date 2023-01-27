@@ -58,19 +58,19 @@ def parse_size_of_dataloader(dataloader_obj: DataLoader, batch_size):
 
 
 def indices_of_every_class_for_subset(train_loader, n_samples_per_class, dataset_name, init_pos=0):
-  n_classes = len(train_loader.dataset.classes)
-  selected_indices_per_class = []
-  for cl_index in range(n_classes):
-    # The +1 is because the targets transformation does not happen
-    # when accesing the dataset object, only in the dataloader
-    if dataset_name == 'Letters':
-      cl_index = cl_index + 1
+    n_classes = len(train_loader.dataset.classes)
+    selected_indices_per_class = []
+    for cl_index in range(n_classes):
+        # The +1 is because the targets transformation does not happen
+        # when accesing the dataset object, only in the dataloader
+        if dataset_name == 'Letters':
+            cl_index = cl_index + 1
 
-    indices = find_idx_of_class(
-        cl_index, train_loader.dataset.targets, n=n_samples_per_class, initial_pos=init_pos
-    )
-    selected_indices_per_class += indices
-  return selected_indices_per_class
+        indices = find_idx_of_class(
+            cl_index, train_loader.dataset.targets, n=n_samples_per_class, initial_pos=init_pos
+        )
+        selected_indices_per_class += indices
+    return selected_indices_per_class
 
 
 def isolate_or_remove_mnistc(df, option):
@@ -101,5 +101,3 @@ class RMOverlappingClasses:
 
     def __call__(self, *args, **kwargs):
         pass
-
-

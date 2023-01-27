@@ -55,13 +55,13 @@ def average_per_class_and_cluster(spike_frecs, preds, clusters_per_class, n_clas
 
 
 def distance_to_clusters_averages(spike_frecs, predictions, avg_per_class, n_classes):
-    '''
-  Function that computes the distance of the introduced array to the
-  cluster's averages of the predicted class
-  Takes the frecuencies and the predictions of each sample of a subset (not ordered by class) and the averages of each cluster and class
-  Outputs the distance of each sample for each class
-  # TODO: Describe the dimensions of the inputs
-  '''
+    """
+    Function that computes the distance of the introduced array to the cluster's averages of the predicted class
+    Takes the frecuencies and the predictions of each sample of a subset (not ordered by class) and
+    the averages of each cluster and class
+    :returns distance of each sample to the cluster average for each class
+    # TODO: Describe the dimensions of the inputs
+    """
     # Order array by predicted class
     spike_frecs_per_class = []
     for class_index in range(n_classes):

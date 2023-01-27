@@ -2,12 +2,11 @@
 
 Repository containing the code and results for the paper *A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks*. The paper is currently being evaluated is Neural Networks, but a preprint is available at https://arxiv.org/abs/2210.00894.
 
-
 <img src="./figures/SCP.png"  width="100%" />
 
 <img src="./figures/attribution_workflow.png"  width="100%" />
 
-### Requirements and dependencies
+## Requirements and dependencies
 
 1. PyTorch 1.12.1 (vision 0.13.1) [https://github.com/pytorch/pytorch]
 2. Norse 0.0.7 [https://github.com/norse/norse]
@@ -20,7 +19,7 @@ For the bayesian test and the CD graph, the following resources are used:
 2. Bayesian test repository's bayesiantest.py [https://github.com/BayesianTestsML/tutorial/blob/master/Python/bayesiantests.py]
 
 
-### Usage:
+## Usage:
 
 For reproducing results in GPU and with one FC hidden layer models, run:
 ````shell
@@ -39,15 +38,15 @@ All the code is available in the jupyter notebook called [Explainable_OoD_detect
 
 Results are given in the folder named as such.
 
-### Contributing
+## Contributing
 
 If you find a bug, create a GitHub issue, or even better, submit a pull request. Similarly, if you have questions, simply post them as GitHub issues.
 
-### Citing this work:
+## Citing this work:
 
 *Aitor Martinez Seras, Javier Del Ser, Jesus L. Lobo, Pablo Garcia-Bringas, Nikola Kasabov, "A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks", under review, arXiv:2210.00894, 2022*
 
-**Abstract**
+### Abstract
 
 Research around Spiking Neural Networks has ignited during the last years due to their advantages when compared to traditional neural networks, including their efficient processing and inherent ability to model complex temporal dynamics. Despite these differences, Spiking Neural Networks face similar issues than other neural computation counterparts when deployed in real-world settings. This work addresses one of the practical circumstances that can hinder the trustworthiness of this family of models: the possibility of querying a trained model with samples far from the distribution of its training data (also referred to as Out-of-Distribution or OoD data). Specifically, this work presents a novel OoD detector that can identify whether test examples input to a Spiking Neural Network belong to the distribution of the data over which it was trained. For this purpose, we characterize the internal activations of the hidden layers of the network in the form of spike count patterns, which lay a basis for determining when the activations induced by a test instance is atypical. Furthermore, a local explanation method is devised to produce attribution maps revealing which parts of the input instance push most towards the detection of an example as an OoD sample. Experimental results are performed over several image classification datasets to compare the proposed detector to other OoD detection schemes from the literature. As the obtained results clearly show, the proposed detector performs competitively against such alternative schemes, and produces relevance attribution maps that conform to expectations for synthetically created OoD instances.
 
