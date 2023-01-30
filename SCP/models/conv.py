@@ -69,7 +69,9 @@ class ConvSNN1(nn.Module):
                 z = self.fc2(z)  # (batch_size, 10)
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
-
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
             return voltages
 
         elif flag == "hidden_spikes_and_logits":
@@ -98,6 +100,9 @@ class ConvSNN1(nn.Module):
                 z = self.fc2(z)  # (batch_size, 10)
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
 
             return voltages, hdn_spk_last_layer
 
@@ -192,6 +197,9 @@ class ConvSNN2(nn.Module):
                 z = self.fc_out(z)  # (batch_size, 10)
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
 
             return voltages
 
@@ -226,6 +234,9 @@ class ConvSNN2(nn.Module):
                 z = self.fc_out(z)  # (batch_size, 10)
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
 
             return voltages, hdn_spk_last_layer
 
@@ -244,7 +255,7 @@ class ConvSNN3(nn.Module):
         self.conv3 = nn.Conv2d(64, 128, 3, 1, bias=False)
 
         # Linear part
-        self.fc1 = nn.Linear(self.ftmaps_h * self.ftmaps_v * 128, 512, bias=False)
+        self.fc1 = nn.Linear(self.ftmaps_h * self.ftmaps_v * 128, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
@@ -300,6 +311,10 @@ class ConvSNN3(nn.Module):
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
 
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
+
             return voltages
 
         elif flag == "hidden_spikes_and_logits":
@@ -328,6 +343,10 @@ class ConvSNN3(nn.Module):
                 z = self.fc2(z)  # (batch_size, 10)
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
+
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
 
             return voltages, hdn_spk_last_layer
 

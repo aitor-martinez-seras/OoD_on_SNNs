@@ -102,21 +102,11 @@ class Model(torch.nn.Module):
 
         elif flag == "hidden_spikes_and_logits":
             x, hdd_spks = self.snn(x, flag)
-            # x, _ = torch.max(x, 0)
             return x, hdd_spks
 
 
 def decode(x):
-    # First take the max across all time steps, the first dimension
-    # [time_step, batch_size, output_neurons ]
-    x, _ = torch.max(x, 0)
     # Then compute the logsoftmax across the
-    log_p_y = torch.nn.functional.log_softmax(x, dim=1)
-    return log_p_y
-
-
-def decode_last(x):
-    # Then compute the logsoftmax across the batch dimension, as the last
     log_p_y = torch.nn.functional.log_softmax(x, dim=1)
     return log_p_y
 
@@ -222,7 +212,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     output_neurons=output_neurons,
                     alpha=100
                 ),
-                decoder=decode_last
+                decoder=decode
             )
         elif n_hidden_layers == 6:
             model = Model(
@@ -233,7 +223,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     output_neurons=output_neurons,
                     alpha=100
                 ),
-                decoder=decode_last
+                decoder=decode
             )
 
         elif n_hidden_layers == 7:
@@ -244,7 +234,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     input_size=input_size,
                     alpha=100
                 ),
-                decoder=decode_last
+                decoder=decode
             )
 
         elif n_hidden_layers == 8:
@@ -259,7 +249,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     output_neurons=output_neurons,
                     alpha=100
                 ),
-                decoder=decode_last
+                decoder=decode
             )
 
         elif n_hidden_layers == 10:
@@ -271,7 +261,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     output_neurons=output_neurons,
                     alpha=100
                 ),
-                decoder=decode_last
+                decoder=decode
             )
 
         elif n_hidden_layers == 11:
@@ -283,7 +273,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     output_neurons=output_neurons,
                     alpha=100
                 ),
-                decoder=decode_last
+                decoder=decode
             )
 
         else:

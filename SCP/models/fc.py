@@ -46,7 +46,9 @@ class FCSNN1(torch.nn.Module):
                 z = self.fc_out(z)
                 vo, so = self.out(z, so)
                 voltages[ts] = vo
-
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
             return voltages
 
         elif flag == "hidden_spikes_and_logits":
@@ -67,6 +69,10 @@ class FCSNN1(torch.nn.Module):
                 z = self.fc_out(z)
                 vo, so = self.out(z, so)
                 voltages[ts] = vo
+
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
         else:
             raise NameError('Wrong flag')
 
@@ -124,7 +130,9 @@ class FCSNN2(torch.nn.Module):
                 z = self.fc_out(z)
                 vo, so = self.out(z, so)
                 voltages[ts] = vo
-
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
             return voltages
 
         elif flag == "hidden_spikes_and_logits":
@@ -150,6 +158,9 @@ class FCSNN2(torch.nn.Module):
                 z = self.fc_out(z)
                 vo, so = self.out(z, so)
                 voltages[ts] = vo
+            # The max across all time steps is the logit, the first dimension
+            # [time_step, batch_size, output_neurons]
+            voltages, _ = torch.max(voltages, 0)
         else:
             raise NameError('Wrong flag')
 
