@@ -245,7 +245,6 @@ class ConvSNN3(nn.Module):
 
         # Linear part
         self.fc1 = nn.Linear(self.ftmaps_h * self.ftmaps_v * 128, 512, bias=False)
-        self.fc2 = nn.Linear(512, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
@@ -253,7 +252,6 @@ class ConvSNN3(nn.Module):
         self.lif_conv2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
         self.lif_conv3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
         self.lif_fc1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
-        self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
         self.out = LICell()
 
         # TODO: Abstraer los thrs the aqui (0.2, 0.2, 0.1)
@@ -266,7 +264,7 @@ class ConvSNN3(nn.Module):
         batch_size = x.shape[1]
 
         # specify the initial states
-        sconv1 = sconv2 = sconv3 = sfc1 = sfc2 = so = None
+        sconv1 = sconv2 = sconv3 = sfc1 = so = None
         voltages = torch.zeros(
             seq_length, batch_size, self.output_neurons, device=x.device, dtype=x.dtype
         )
@@ -296,10 +294,6 @@ class ConvSNN3(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
-
-                # Second FC
-                z = self.fc2(z)
-                z, sfc2 = self.lif_fc2(z, sfc2)
 
                 # Fc out
                 z = self.fc_out(z)

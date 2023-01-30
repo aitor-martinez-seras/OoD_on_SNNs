@@ -53,4 +53,4 @@ class SCP(_OODMethod):
                 f'{class_names[class_index]} // Number of samples ood = {len(preds_ood[find_idx_of_class(class_index, preds_ood)])}')
             ax.legend()
         fig.savefig(f'{name}.pdf')
-        fig.close()
+        plt.close(fig)
