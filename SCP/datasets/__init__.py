@@ -18,6 +18,8 @@ in_distribution_datasets_loader = {
     'Letters': load_MNIST_Letters,
     'MNIST_Square': load_MNIST_square,
     'CIFAR10': load_CIFAR10,
+    'CIFAR100': load_CIFAR100,
+    'DTD': load_DTD,
 }
 
 out_of_distribution_datasets_loader = {
