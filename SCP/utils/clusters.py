@@ -81,7 +81,7 @@ def distance_to_clusters_averages(spike_frecs, predictions, avg_per_class, n_cla
 
 
 def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names, size=1000,
-                    distance_for_clustering=None, verbose=2):
+                    distance_for_clustering=None, verbose=2, name=''):
     """
     Verbose = 0 -> No prints and plots neither loggin info
     verbose = 1 -> Returns loggin info only
@@ -151,7 +151,7 @@ def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names,
             ax.plot(dist_thrs, silhScoresPerClass[class_index], color='blue')
             ax.plot(opt_dist_thr_per_class[class_index], opt_silh_score_values_per_class[class_index], 'ro')
             ax.set_title(class_names[class_index])
-        plt.savefig('silhouetteScores.pdf')
+        plt.savefig(f'silhouetteScores_{name}.pdf')
 
     # Create the clusters by extracting the labels for every sample
     clusters_per_class = []

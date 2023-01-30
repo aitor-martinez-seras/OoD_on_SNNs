@@ -47,6 +47,8 @@ def get_args_parser() -> argparse.ArgumentParser:
     parser.add_argument("--use-only-correct-test-images", action='store_true', dest='use_only_correct_test_images',
                         help="if passed, the labels used to determine which aggregated clusters to compare to are"
                              "only correctly predicted images, not all the predictions as in real world scenario")
+    parser.add_argument("--random-samples-for-thr", action='store_true', dest='random_samples_for_thr',
+                        help="if passed, the thresholds are defined using a random subset of train")
     parser.add_argument("--save-histograms-for", default=[], type=str, nargs='+', dest="save_histograms_for",
                         help="saves histogram plots for the specified methods. Options: SCP, Baseline, ODIN, Energy")
     return parser
@@ -84,6 +86,7 @@ def main(args: argparse.Namespace):
     weights_folder_path = Path(paths_conf["paths"]["weights"])
     pretrained_weights_folder_path = Path(paths_conf["paths"]["pretrained_weights"])
     datasets_path = Path(paths_conf["paths"]["datasets"])
+    figures_path = Path(paths_conf["paths"]["figures"])
 
     # Datasets config
     datasets_conf = load_config('datasets')
@@ -229,13 +232,15 @@ def main(args: argparse.Namespace):
             #   antes de hacer el predict, y luego cuando se predice nos quedamos con menos.
             #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
             #   para cuando se ejecute
+            silh_scores_name = f'{figures_path.__str__()}_{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
             clusters_per_class, logging_info = create_clusters(
                 labels_for_clustering,
                 spk_count_train_clusters,
                 class_names,
                 distance_for_clustering=dist_clustering,
                 size=args.samples_for_cluster_per_class,
-                verbose=1
+                verbose=2,
+                name=silh_scores_name,
             )
             logger.info(logging_info)
             
@@ -246,14 +251,20 @@ def main(args: argparse.Namespace):
             # Introduce a the init_pos parameters to not select the same indices that for
             # the subset for creating the clusters
             # TODO: Handle cases where we don't have sufficient training data
-            selected_indices_per_class = indices_of_every_class_for_subset(
-                train_loader,
-                n_samples_per_class=args.samples_for_thr_per_class,
-                dataset_name=in_dataset,
-                init_pos=number_of_samples_per_class * n_classes
-            )
-            training_subset = Subset(train_data, [x for x in selected_indices_per_class])
-            subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
+            if args.random_samples_for_thr:
+                g = torch.Generator()
+                g.manual_seed(7)
+                training_subset = Subset(train_data, [x for x in range(args.samples_for_thr_per_class)])
+                subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=True, generator=g)
+            else:
+                selected_indices_per_class = indices_of_every_class_for_subset(
+                    train_loader,
+                    n_samples_per_class=args.samples_for_thr_per_class,
+                    dataset_name=in_dataset,
+                    init_pos=number_of_samples_per_class * n_classes
+                )
+                training_subset = Subset(train_data, [x for x in selected_indices_per_class])
+                subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
 
             # Extract the logits and the hidden spikes
             accuracy_subset_train_thr, preds_train_thr, logits_train_thr, _spk_count_train_thr = validate_one_epoch(
@@ -296,7 +307,7 @@ def main(args: argparse.Namespace):
 
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
-                hist_name = f'{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+                hist_name = f'{figures_path.__str__()}_{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
