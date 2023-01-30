@@ -9,6 +9,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Subset
 
+from SCP.benchmark.scp import SCP
 from SCP.benchmark.weights import download_pretrained_weights
 from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_datasets_loader
 from SCP.datasets.utils import indices_of_every_class_for_subset
@@ -18,6 +19,7 @@ from SCP.utils.common import load_config, get_batch_size, my_custom_logger, crea
 from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood, \
     thresholds_for_each_TPR_likelihood, likelihood_method_compute_precision_tpr_fpr_for_test_and_ood
 from SCP.benchmark import MSP, ODIN, EnergyOOD
+from SCP.utils.plots import plot_auroc, plot_aupr
 from test import validate_one_epoch
 
 
@@ -51,6 +53,8 @@ def get_args_parser() -> argparse.ArgumentParser:
                         help="if passed, the thresholds are defined using a random subset of train")
     parser.add_argument("--save-histograms-for", default=[], type=str, nargs='+', dest="save_histograms_for",
                         help="saves histogram plots for the specified methods. Options: SCP, Baseline, ODIN, Energy")
+    parser.add_argument("--save-metric-plots", action='store_true', dest='save_metric_plots',
+                        help="if passed, AUROC and AUPR Curves are saved")
     return parser
 
 
@@ -307,7 +311,7 @@ def main(args: argparse.Namespace):
 
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
-                hist_name = f'{figures_path.__str__()}_{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+                fig_name = f'{figures_path.__str__()}_{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
@@ -369,22 +373,32 @@ def main(args: argparse.Namespace):
                 distances_ood_per_class, _ = distance_to_clusters_averages(
                     spk_count_ood, preds_ood, agg_counts_per_class_cluster, n_classes
                 )
-                # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
-                distance_thresholds_train = thresholds_per_class_for_each_TPR(
-                    n_classes, distances_train_per_class
+
+                scp = SCP()
+                auroc, aupr, fpr95, fpr80 = scp(
+                    distances_train_per_class, distances_test_per_class, distances_ood_per_class,
+                    save_histogram=save_scp_hist, name=fig_name,
                 )
-                # Computing precision, tpr and fpr
-                precision, tpr_values, fpr_values = compute_precision_tpr_fpr_for_test_and_ood(
-                    distances_test_per_class, distances_ood_per_class, distance_thresholds_train
-                )
-                # Appending that when FPR = 1 the TPR is also 1:
-                tpr_values_auroc = np.append(tpr_values, 1)
-                fpr_values_auroc = np.append(fpr_values, 1)
-                # Metrics
-                auroc = round(np.trapz(tpr_values_auroc, fpr_values_auroc) * 100, 2)
-                aupr = round(np.trapz(precision, tpr_values) * 100, 2)
-                fpr95 = round(fpr_values_auroc[95] * 100, 2)
-                fpr80 = round(fpr_values_auroc[80] * 100, 2)
+                if args.save_metric_plots:
+                    scp.save_auroc_fig(fig_name)
+                    scp.save_aupr_fig(fig_name)
+
+                # # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
+                # distance_thresholds_train = thresholds_per_class_for_each_TPR(
+                #     n_classes, distances_train_per_class
+                # )
+                # # Computing precision, tpr and fpr
+                # precision, tpr_values, fpr_values = compute_precision_tpr_fpr_for_test_and_ood(
+                #     distances_test_per_class, distances_ood_per_class, distance_thresholds_train
+                # )
+                # # Appending that when FPR = 1 the TPR is also 1:
+                # tpr_values_auroc = np.append(tpr_values, 1)
+                # fpr_values_auroc = np.append(fpr_values, 1)
+                # # Metrics
+                # auroc = round(np.trapz(tpr_values_auroc, fpr_values_auroc) * 100, 2)
+                # aupr = round(np.trapz(precision, tpr_values) * 100, 2)
+                # fpr95 = round(fpr_values_auroc[95] * 100, 2)
+                # fpr80 = round(fpr_values_auroc[80] * 100, 2)
 
                 # Save results to list
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
@@ -396,8 +410,11 @@ def main(args: argparse.Namespace):
                 # *************** Baseline method ***************
                 baseline = MSP()
                 auroc, aupr, fpr95, fpr80 = baseline(
-                    logits_train_thr, logits_test, logits_ood, save_histogram=save_baseline_hist, name=hist_name,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_baseline_hist, name=fig_name,
                 )
+                if args.save_metric_plots:
+                    baseline.save_auroc_fig(fig_name)
+                    baseline.save_aupr_fig(fig_name)
                 results_log = create_str_for_ood_method_results('Baseline', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
                 # Save results to list
@@ -408,8 +425,11 @@ def main(args: argparse.Namespace):
                 # *************** ODIN ***************
                 odin = ODIN()
                 auroc, aupr, fpr95, fpr80, temp = odin(
-                    logits_train_thr, logits_test, logits_ood, save_histogram=save_odin_hist, name=hist_name,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_odin_hist, name=fig_name,
                 )
+                if args.save_metric_plots:
+                    odin.save_auroc_fig(fig_name)
+                    odin.save_aupr_fig(fig_name)
                 results_log = create_str_for_ood_method_results('ODIN', auroc, aupr, fpr95, fpr80,temp)
                 logger.info(results_log)
                 # Save results to list
@@ -420,8 +440,11 @@ def main(args: argparse.Namespace):
                 # *************** Energy ***************
                 energy = EnergyOOD()
                 auroc, aupr, fpr95, fpr80, temp = energy(
-                    logits_train_thr, logits_test, logits_ood, save_histogram=save_energy_hist, name=hist_name,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_energy_hist, name=fig_name,
                 )
+                if args.save_metric_plots:
+                    energy.save_auroc_fig(fig_name)
+                    energy.save_aupr_fig(fig_name)
                 results_log = create_str_for_ood_method_results('Energy', auroc, aupr, fpr95, fpr80, temp)
                 logger.info(results_log)
                 # Save results to list

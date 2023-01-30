@@ -211,7 +211,7 @@ def main(args):
 
     start_epoch = 0
     if args.resume:
-        start_epoch = load_checkpoint(model, args.resume, optimizer, lr_scheduler)
+        start_epoch = load_checkpoint(model, weights_path=args.resume, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     logger.info('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
     logger.info(model)

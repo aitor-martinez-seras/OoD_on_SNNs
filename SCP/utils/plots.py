@@ -67,7 +67,7 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 
-def plot_auroc(fpr, tpr):
+def plot_auroc(fpr, tpr, save=''):
     # AUC
     auc = np.trapz(tpr, fpr)
     # Plot
@@ -88,13 +88,17 @@ def plot_auroc(fpr, tpr):
     plt.plot([], [], ' ', label=f'FPR at 80% TPR = {round(fpr[80] * 100, 2)}%')
     plt.legend(fontsize=20, loc='upper left')
 
+    if save:
+        plt.savefig(f'{save}_AUPR.png', dpi=200)
+        plt.close()
 
-def plot_aupr(precision, tpr):
+
+def plot_aupr(precision, tpr, save=''):
     # AUPR
     auc = np.trapz(precision, tpr)
     # Plot
     plt.figure(figsize=(15, 12))
-    roc = plt.plot(tpr, precision, label='ROC curve', lw=3)
+    plt.plot(tpr, precision, label='ROC curve', lw=3)
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.xlabel('FPR', fontsize=20)
@@ -102,6 +106,9 @@ def plot_aupr(precision, tpr):
     plt.title('PR curve, AUC = %.3f' % auc, fontsize=25, pad=10)
     plt.fill_between(tpr, precision, alpha=0.3)
     plt.legend(fontsize=20, loc='upper left')
+    if save:
+        plt.savefig(f'{save}_AUPR.png', dpi=200)
+        plt.close()
 
 
 def plot_histogram(train, test, ood):
