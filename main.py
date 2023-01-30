@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, Subset
 from SCP.benchmark.scp import SCP
 from SCP.benchmark.weights import download_pretrained_weights
 from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_datasets_loader
+from SCP.datasets.presets import load_test_presets
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
@@ -148,6 +149,14 @@ def main(args: argparse.Namespace):
         # ---------------------------------------------------------------
         batch_size = get_batch_size(config, in_dataset, logger)
         train_data, train_loader, test_loader = in_distribution_datasets_loader[in_dataset](batch_size, datasets_path)
+        # TODO: Add generator and change the way of loading the dataloader and the dataset
+        #   This is to create the clusters from the same images as the one being tested
+        train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'])
+        train_loader = DataLoader(
+            train_data,
+            batch_size=batch_size,
+            shuffle=True
+        )
         class_names = train_loader.dataset.classes
         n_classes = len(class_names)
 
@@ -377,7 +386,7 @@ def main(args: argparse.Namespace):
                 scp = SCP()
                 auroc, aupr, fpr95, fpr80 = scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
-                    save_histogram=save_scp_hist, name=fig_name,
+                    save_histogram=save_scp_hist, name=fig_name, class_names=class_names, preds_ood=preds_ood
                 )
                 if args.save_metric_plots:
                     scp.save_auroc_fig(fig_name)

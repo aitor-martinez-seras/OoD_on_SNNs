@@ -716,7 +716,7 @@ class ConvSNN6(nn.Module):
         c = 64
         c = [c, 2 * c, 4 * c, 4 * c]
 
-        self.v_th = 0.4
+        self.v_th = 0.2
 
         # Convolutions
         self.conv1 = nn.Conv2d(input_size[0],  c[0], kernel_size=3, stride=1, padding=1, bias=False)
