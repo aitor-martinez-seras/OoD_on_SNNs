@@ -9,6 +9,14 @@ from .common import find_idx_of_class
 from .plots import plot_dendrogram
 
 
+def create_string_for_logger(clusters_per_class, class_names) -> str:
+    string_for_logger = 'Created clusters:\n' + '-' * 75 + '\n'
+    for class_index in range(len(class_names)):
+        unique, counts = np.unique(clusters_per_class[class_index].labels_, return_counts=True)
+        string_for_logger += f'Clase {class_names[class_index].ljust(15)} \t {dict(zip(unique, counts))}\n' + '-' * 75 + '\n'
+    return string_for_logger
+
+
 def print_created_clusters_per_class(clusters_per_class, class_names):
     print('')
     print('Created clusters:')
@@ -188,16 +196,12 @@ def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names,
             # ax[i,j].set_xlabel("Number of points in node",fontsize=h)
 
         plt.savefig(f'DendrogramPerClass.pdf')
-        fig.show()
-
-        print_created_clusters_per_class(clusters_per_class, class_names)
+        plt.close()
+        string_for_logger = create_string_for_logger(clusters_per_class, class_names)
+        return clusters_per_class, string_for_logger
 
     if verbose == 1:
-        string_for_logger = 'Created clusters:\n' + '-' * 75 + '\n'
-        for class_index in range(n_classes):
-            unique, counts = np.unique(clusters_per_class[class_index].labels_, return_counts=True)
-            string_for_logger += f'Clase {class_names[class_index].ljust(15)} \t {dict(zip(unique, counts))}\n' + '-' * 75 + '\n'
-
+        string_for_logger = create_string_for_logger(clusters_per_class, class_names)
         return clusters_per_class, string_for_logger
 
     return clusters_per_class
