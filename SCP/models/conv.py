@@ -728,8 +728,8 @@ class ConvSNN6(nn.Module):
         self.pool4 = nn.MaxPool2d(kernel_size=2)
 
         # Linear part
-        self.fc1 = nn.Linear(4096, hidden_neurons, bias=False)
-        self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
+        # self.fc1 = nn.Linear(4096, hidden_neurons, bias=False)
+        self.fc_out = nn.Linear(4096, output_neurons, bias=False)  # Out fc
 
         # LIF cells
         self.lif_conv1 = LIFCell(p=LIFParameters(v_th=torch.tensor(self.v_th), alpha=alpha))
