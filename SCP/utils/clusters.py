@@ -159,7 +159,8 @@ def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names,
             ax.plot(dist_thrs, silhScoresPerClass[class_index], color='blue')
             ax.plot(opt_dist_thr_per_class[class_index], opt_silh_score_values_per_class[class_index], 'ro')
             ax.set_title(class_names[class_index])
-        plt.savefig(f'{name}_silhouetteScores.pdf')
+        fig.savefig(f'{name}_silhouetteScores.pdf')
+        plt.close(fig)
 
     # Create the clusters by extracting the labels for every sample
     clusters_per_class = []
@@ -196,7 +197,7 @@ def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names,
             # ax[i,j].set_xlabel("Number of points in node",fontsize=h)
 
         fig.savefig(f'{name}_DendrogramPerClass.pdf')
-        fig.close()
+        plt.close(fig)
         string_for_logger = create_string_for_logger(clusters_per_class, class_names)
         return clusters_per_class, string_for_logger
 
