@@ -8,7 +8,7 @@ from norse.torch import ConstantCurrentLIFEncoder
 from norse.torch import LIFParameters
 
 from SCP.models.fc import FCSNN1, FCSNN2
-from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, Net, ConvSNN9, \
+from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, ConvSNN9, \
     ConvSNN10, ConvSNN11_no_dropout, ConvSNN8
 
 
