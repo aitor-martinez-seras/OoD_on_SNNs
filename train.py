@@ -20,7 +20,7 @@ def get_args_parser():
 
     parser.add_argument("--dataset", default="", type=str, help="dataset to train on")
     parser.add_argument("--save-every", default=25, type=int, dest='save_every')
-    parser.add_argument("--resume", type=str, default=False, help="load a checkpoint to resume training")
+    parser.add_argument("--resume", type=str, default='', help="path to the checkpoint to resume training")
     parser.add_argument("--load-weights", type=str, default=False, dest='load_weights',
                         help="load weights for a model")
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
