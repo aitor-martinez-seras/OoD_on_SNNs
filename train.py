@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torch.optim import Optimizer
 import numpy as np
 
-from SCP.datasets import in_distribution_datasets_loader
+from SCP.datasets import datasets_loader
 from SCP.utils.common import load_config, my_custom_logger
 from SCP.utils.plots import plot_loss_history
 from SCP.models.model import load_model, load_weights, load_checkpoint
@@ -150,7 +150,7 @@ def main(args):
     else:
         raise NotImplementedError(f'Dataset with name {args.dataset} is not implemented')
     print(f'Loading {args.dataset}...')
-    train_data, train_loader, test_loader = in_distribution_datasets_loader[args.dataset](
+    train_data, train_loader, test_loader = datasets_loader[args.dataset](
         args.batch_size, datasets_path,
     )
     print(f'Load of {args.dataset} completed!')
