@@ -5,7 +5,7 @@ from typing import Dict
 import torch
 import numpy as np
 
-from SCP.datasets import in_distribution_datasets_loader
+from SCP.datasets import datasets_loader
 from SCP.models.model import load_model, load_weights
 from SCP.utils.common import load_config
 
@@ -105,7 +105,7 @@ def main(args):
     else:
         raise NotImplementedError(f'Dataset with name {args.dataset} is not implemented')
     print(f'Loading {args.dataset}...')
-    train_data, train_loader, test_loader = in_distribution_datasets_loader[args.dataset](
+    train_data, train_loader, test_loader = datasets_loader[args.dataset](
         args.batch_size, datasets_path,
     )
     print(f'Load completed!')
