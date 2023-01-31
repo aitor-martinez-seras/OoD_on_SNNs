@@ -11,17 +11,6 @@ from SCP.datasets.fgvc_aircraft import load_FGVCAircraft
 from SCP.datasets.dtd import load_DTD
 
 
-in_distribution_datasets_loader = {
-    'MNIST': load_MNIST,
-    'Fashion_MNIST': load_Fashion_MNIST,
-    'KMNIST': load_KMNIST,
-    'Letters': load_MNIST_Letters,
-    'MNIST_Square': load_MNIST_square,
-    'CIFAR10': load_CIFAR10,
-    'CIFAR100': load_CIFAR100,
-    'DTD': load_DTD,
-}
-
 datasets_loader = {
     'MNIST': load_MNIST,
     'Fashion_MNIST': load_Fashion_MNIST,
