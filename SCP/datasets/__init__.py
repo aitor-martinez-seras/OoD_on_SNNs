@@ -34,7 +34,7 @@ datasets_loader = {
     'MNIST_Square': load_MNIST_square,
     'CIFAR10': load_CIFAR10,
     'Flowers102': load_flowers,
-    'FVGCAircraft': load_FGVCAircraft,
+    'FGVCAircraft': load_FGVCAircraft,
     'Caltech101': load_caltech101,
     'Food101': load_caltech101,
     'CIFAR100': load_CIFAR100,

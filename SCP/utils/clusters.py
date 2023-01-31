@@ -88,6 +88,7 @@ def distance_to_clusters_averages(spike_frecs, predictions, avg_per_class, n_cla
     return distances_per_class, closest_clusters_per_class
 
 
+# TODO: Refactor this function to enable multiprocessing
 def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names, size=1000,
                     distance_for_clustering=None, verbose=2, name=''):
     """

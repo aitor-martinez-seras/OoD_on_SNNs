@@ -148,12 +148,15 @@ def main(args: argparse.Namespace):
         train_data, train_loader, test_loader = datasets_loader[in_dataset](batch_size, datasets_path)
         # TODO: Add generator and change the way of loading the dataloader and the dataset
         #   This is to create the clusters from the same images as the one being tested
+        g_ind = torch.Generator()
+        g_ind = g_ind.manual_seed(6)
         train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'])
         train_loader = DataLoader(
             train_data,
             batch_size=batch_size,
             shuffle=True,
             pin_memory=True,
+            generator=g_ind,
         )
         class_names = train_loader.dataset.classes
         n_classes = len(class_names)
@@ -203,7 +206,7 @@ def main(args: argparse.Namespace):
             # ---------------------------------------------------------------
             number_of_samples_per_class = 1200
             selected_indices_per_class = indices_of_every_class_for_subset(
-                train_loader,
+                train_loader,  # Here is generated the variability in the cluster creation if no generator is defined
                 n_samples_per_class=args.samples_for_cluster_per_class,
                 dataset_name=in_dataset
             )
@@ -327,19 +330,25 @@ def main(args: argparse.Namespace):
                 # selected option
                 batch_size_ood = get_batch_size(config, ood_dataset, logger)
                 if ood_dataset.split('/')[0] == 'MNIST-C':
-                    test_loader_ood = datasets_loader[ood_dataset.split('/')[0]](
+                    ood_loader = datasets_loader[ood_dataset.split('/')[0]](
                         batch_size_ood,
                         datasets_path,
                         test_only=True,
                         option=ood_dataset.split('/')[1]
                     )
                 else:
-                    test_loader_ood = datasets_loader[ood_dataset](
+                    ood_loader = datasets_loader[ood_dataset](
                         batch_size_ood, datasets_path,
                         test_only=True, image_shape=datasets_conf[in_dataset]['input_size']
                     )
                     # TODO: Test for BW datasets if causes errors, as test_only is not present in some datasets
-                    if len(test_loader_ood.dataset) < len(test_loader.dataset):
+                    size_test_data = len(test_loader.dataset)
+                    size_ood_data = len(ood_loader.dataset)
+
+                    if size_ood_data == size_test_data:
+                        pass
+
+                    elif size_ood_data < size_test_data:
                         logger.info(f"Using training data as test OOD data for {ood_dataset} dataset")
                         ood_train_data, _, _ = datasets_loader[ood_dataset](
                             batch_size_ood, datasets_path,
@@ -349,14 +358,23 @@ def main(args: argparse.Namespace):
                         g_ood = torch.Generator()
                         g_ood.manual_seed(8)
                         rnd_idxs = torch.randint(
-                            high=len(train_data), size=(args.samples_for_thr_per_class,), generator=g_ood)
-                        ood_training_data = Subset(train_data, [x for x in rnd_idxs.numpy()])
-                        test_loader_ood = DataLoader(ood_training_data, batch_size=batch_size_ood, shuffle=False)
+                            high=len(ood_train_data), size=(size_test_data,), generator=g_ood)
+                        ood_subset = Subset(ood_train_data, [x for x in rnd_idxs.numpy()])
+                        ood_loader = DataLoader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
+                    else:  # size_ood_data > size_test_data
+                        logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match"
+                                    f"the number of samples of test data, equal to {size_test_data}")
+                        g_ood = torch.Generator()
+                        g_ood.manual_seed(8)
+                        rnd_idxs = torch.randint(
+                            high=len(ood_loader.dataset), size=(size_test_data,), generator=g_ood)
+                        ood_subset = Subset(ood_loader.dataset, [x for x in rnd_idxs.numpy()])
+                        ood_loader = DataLoader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
                 # Extract the spikes and logits for OoD
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(
-                    model, device, test_loader_ood, return_logits=True
+                    model, device, ood_loader, return_logits=True
                 )
                 accuracy_ood = f'{accuracy_ood:.3f}'
                 logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood} %')
@@ -369,7 +387,6 @@ def main(args: argparse.Namespace):
                 # OOD Detection
                 # ---------------------------------------------------------------
                 # *************** SCP ***************
-                # TODO: Move code to class
                 # Convert spikes to counts
                 if isinstance(_spk_count_ood, tuple):
                     _spk_count_ood, _ = _spk_count_ood
