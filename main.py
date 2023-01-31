@@ -320,7 +320,7 @@ def main(args: argparse.Namespace):
 
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
-                fig_name = f'{figures_path.__str__()}_{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+                new_figures_path = figures_path / f'{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
@@ -386,11 +386,11 @@ def main(args: argparse.Namespace):
                 scp = SCP()
                 auroc, aupr, fpr95, fpr80 = scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
-                    save_histogram=save_scp_hist, name=fig_name, class_names=class_names, preds_ood=preds_ood
+                    save_histogram=save_scp_hist, name=new_figures_path, class_names=class_names, preds_ood=preds_ood
                 )
                 if args.save_metric_plots:
-                    scp.save_auroc_fig(fig_name)
-                    scp.save_aupr_fig(fig_name)
+                    scp.save_auroc_fig(new_figures_path)
+                    scp.save_aupr_fig(new_figures_path)
 
                 # # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
                 # distance_thresholds_train = thresholds_per_class_for_each_TPR(
@@ -419,11 +419,11 @@ def main(args: argparse.Namespace):
                 # *************** Baseline method ***************
                 baseline = MSP()
                 auroc, aupr, fpr95, fpr80 = baseline(
-                    logits_train_thr, logits_test, logits_ood, save_histogram=save_baseline_hist, name=fig_name,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_baseline_hist, name=new_figures_path,
                 )
                 if args.save_metric_plots:
-                    baseline.save_auroc_fig(fig_name)
-                    baseline.save_aupr_fig(fig_name)
+                    baseline.save_auroc_fig(new_figures_path)
+                    baseline.save_aupr_fig(new_figures_path)
                 results_log = create_str_for_ood_method_results('Baseline', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
                 # Save results to list
@@ -434,11 +434,11 @@ def main(args: argparse.Namespace):
                 # *************** ODIN ***************
                 odin = ODIN()
                 auroc, aupr, fpr95, fpr80, temp = odin(
-                    logits_train_thr, logits_test, logits_ood, save_histogram=save_odin_hist, name=fig_name,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_odin_hist, name=new_figures_path,
                 )
                 if args.save_metric_plots:
-                    odin.save_auroc_fig(fig_name)
-                    odin.save_aupr_fig(fig_name)
+                    odin.save_auroc_fig(new_figures_path)
+                    odin.save_aupr_fig(new_figures_path)
                 results_log = create_str_for_ood_method_results('ODIN', auroc, aupr, fpr95, fpr80,temp)
                 logger.info(results_log)
                 # Save results to list
@@ -449,11 +449,11 @@ def main(args: argparse.Namespace):
                 # *************** Energy ***************
                 energy = EnergyOOD()
                 auroc, aupr, fpr95, fpr80, temp = energy(
-                    logits_train_thr, logits_test, logits_ood, save_histogram=save_energy_hist, name=fig_name,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_energy_hist, name=new_figures_path,
                 )
                 if args.save_metric_plots:
-                    energy.save_auroc_fig(fig_name)
-                    energy.save_aupr_fig(fig_name)
+                    energy.save_auroc_fig(new_figures_path)
+                    energy.save_aupr_fig(new_figures_path)
                 results_log = create_str_for_ood_method_results('Energy', auroc, aupr, fpr95, fpr80, temp)
                 logger.info(results_log)
                 # Save results to list
