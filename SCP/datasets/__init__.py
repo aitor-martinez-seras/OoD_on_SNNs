@@ -32,6 +32,7 @@ datasets_loader = {
     'CIFAR10-BW': load_CIFAR10_BW,
     'MNIST-C': load_MNIST_C,
     'MNIST_Square': load_MNIST_square,
+    'CIFAR10': load_CIFAR10,
     'Flowers102': load_flowers,
     'FVGCAircraft': load_FGVCAircraft,
     'Caltech101': load_caltech101,
