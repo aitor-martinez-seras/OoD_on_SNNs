@@ -1576,7 +1576,7 @@ class ConvSNN12(nn.Module):
 
                 # First FC
                 z = self.fc2(z)
-                z, sfc12 = self.lif_fc2(z, sfc2)
+                z, sfc2 = self.lif_fc2(z, sfc2)
 
                 # Fc out
                 z = self.fc_out(z)
