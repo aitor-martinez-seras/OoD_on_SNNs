@@ -36,12 +36,12 @@ class ODIN(_OODMethod):
             likelihood_thresholds_train = thresholds_for_each_TPR_likelihood(temp_softmax_train_winners)
 
             # Conmputing precision, tpr and fpr
-            precision, tpr_values, fpr_values = likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(
+            self.precision, self.tpr_values, self.fpr_values = likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(
                 temp_softmax_test_winners, temp_softmax_ood_winners, likelihood_thresholds_train)
 
             auroc, aupr, fpr95, fpr80 = super().compute_metrics()
             prelim_results.append([auroc, aupr, fpr95, fpr80, temp])
-            prec_tpr_fpr.append((precision, tpr_values, fpr_values))
+            prec_tpr_fpr.append((self.precision, self.tpr_values, self.fpr_values))
 
         # Extrac the best AUROC result between the different temperatures
         prelim_results = np.array(prelim_results)

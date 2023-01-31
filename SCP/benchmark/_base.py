@@ -21,6 +21,7 @@ class _OODMethod:
         aupr = round(np.trapz(self.precision, self.tpr_values) * 100, 2)
         fpr95 = round(fpr_values_auroc[95] * 100, 2)
         fpr80 = round(fpr_values_auroc[80] * 100, 2)
+        
         return auroc, aupr, fpr95, fpr80
 
     def __call__(self, score_train, score_test, score_ood, save_histogram=False, name='', *args, **kwargs):
