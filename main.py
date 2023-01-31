@@ -11,16 +11,13 @@ from torch.utils.data import DataLoader, Subset
 
 from SCP.benchmark.scp import SCP
 from SCP.benchmark.weights import download_pretrained_weights
-from SCP.datasets import in_distribution_datasets_loader, out_of_distribution_datasets_loader
+from SCP.datasets import datasets_loader
 from SCP.datasets.presets import load_test_presets
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
 from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results
-from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood, \
-    thresholds_for_each_TPR_likelihood, likelihood_method_compute_precision_tpr_fpr_for_test_and_ood
 from SCP.benchmark import MSP, ODIN, EnergyOOD
-from SCP.utils.plots import plot_auroc, plot_aupr
 from test import validate_one_epoch
 
 
@@ -148,14 +145,15 @@ def main(args: argparse.Namespace):
         # Load in-distribution data from the dictionary
         # ---------------------------------------------------------------
         batch_size = get_batch_size(config, in_dataset, logger)
-        train_data, train_loader, test_loader = in_distribution_datasets_loader[in_dataset](batch_size, datasets_path)
+        train_data, train_loader, test_loader = datasets_loader[in_dataset](batch_size, datasets_path)
         # TODO: Add generator and change the way of loading the dataloader and the dataset
         #   This is to create the clusters from the same images as the one being tested
         train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'])
         train_loader = DataLoader(
             train_data,
             batch_size=batch_size,
-            shuffle=True
+            shuffle=True,
+            pin_memory=True,
         )
         class_names = train_loader.dataset.classes
         n_classes = len(class_names)
@@ -245,7 +243,7 @@ def main(args: argparse.Namespace):
             #   antes de hacer el predict, y luego cuando se predice nos quedamos con menos.
             #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
             #   para cuando se ejecute
-            silh_scores_name = f'{figures_path.__str__()}_{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+            silh_scores_name = figures_path / f'{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
             clusters_per_class, logging_info = create_clusters(
                 labels_for_clustering,
                 spk_count_train_clusters,
@@ -265,10 +263,11 @@ def main(args: argparse.Namespace):
             # the subset for creating the clusters
             # TODO: Handle cases where we don't have sufficient training data
             if args.random_samples_for_thr:
-                g = torch.Generator()
-                g.manual_seed(7)
-                training_subset = Subset(train_data, [x for x in range(args.samples_for_thr_per_class)])
-                subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=True, generator=g)
+                g_thr = torch.Generator()
+                g_thr.manual_seed(7)
+                rnd_idxs = torch.randint(high=len(train_data), size=(args.samples_for_thr_per_class,), generator=g_thr)
+                training_subset = Subset(train_data, [x for x in rnd_idxs.numpy()])
+                subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
             else:
                 selected_indices_per_class = indices_of_every_class_for_subset(
                     train_loader,
@@ -328,17 +327,32 @@ def main(args: argparse.Namespace):
                 # selected option
                 batch_size_ood = get_batch_size(config, ood_dataset, logger)
                 if ood_dataset.split('/')[0] == 'MNIST-C':
-                    test_loader_ood = out_of_distribution_datasets_loader[ood_dataset.split('/')[0]](
+                    test_loader_ood = datasets_loader[ood_dataset.split('/')[0]](
                         batch_size_ood,
                         datasets_path,
                         test_only=True,
                         option=ood_dataset.split('/')[1]
                     )
                 else:
-                    test_loader_ood = out_of_distribution_datasets_loader[ood_dataset](
+                    test_loader_ood = datasets_loader[ood_dataset](
                         batch_size_ood, datasets_path,
                         test_only=True, image_shape=datasets_conf[in_dataset]['input_size']
                     )
+                    # TODO: Test for BW datasets if causes errors, as test_only is not present in some datasets
+                    if len(test_loader_ood.dataset) < len(test_loader.dataset):
+                        logger.info(f"Using training data as test OOD data for {ood_dataset} dataset")
+                        ood_train_data, _, _ = datasets_loader[ood_dataset](
+                            batch_size_ood, datasets_path,
+                            test_only=False, image_shape=datasets_conf[ood_dataset]['input_size']
+                        )
+                        ood_train_data.transform = load_test_presets(datasets_conf[ood_dataset]['input_size'])
+                        g_ood = torch.Generator()
+                        g_ood.manual_seed(8)
+                        rnd_idxs = torch.randint(
+                            high=len(train_data), size=(args.samples_for_thr_per_class,), generator=g_ood)
+                        ood_training_data = Subset(train_data, [x for x in rnd_idxs.numpy()])
+                        test_loader_ood = DataLoader(ood_training_data, batch_size=batch_size_ood, shuffle=False)
+
 
                 # Extract the spikes and logits for OoD
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(
@@ -371,8 +385,6 @@ def main(args: argparse.Namespace):
                     n_samples=1000, option='median'
                 )
                 # Computation of the distances of train, test and ood
-                # TODO: Implement as class that inherits from _OODMethod
-                # TODO: Abstraer a un solo metodo dentro de la clase lo de las distancias
                 distances_train_per_class, _ = distance_to_clusters_averages(
                     spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, n_classes
                 )

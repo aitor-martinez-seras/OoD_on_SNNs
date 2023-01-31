@@ -22,7 +22,7 @@ in_distribution_datasets_loader = {
     'DTD': load_DTD,
 }
 
-out_of_distribution_datasets_loader = {
+datasets_loader = {
     'MNIST': load_MNIST,
     'Fashion_MNIST': load_Fashion_MNIST,
     'KMNIST': load_KMNIST,

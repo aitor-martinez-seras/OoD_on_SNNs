@@ -21,7 +21,7 @@ class _OODMethod:
         aupr = round(np.trapz(self.precision, self.tpr_values) * 100, 2)
         fpr95 = round(fpr_values_auroc[95] * 100, 2)
         fpr80 = round(fpr_values_auroc[80] * 100, 2)
-        
+
         return auroc, aupr, fpr95, fpr80
 
     def __call__(self, score_train, score_test, score_ood, save_histogram=False, name='', *args, **kwargs):
@@ -70,7 +70,7 @@ class _OODMethod:
         plt.plot(self.tpr_values, self.precision, label='ROC curve', lw=3)
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
-        plt.xlabel('FPR', fontsize=20)
+        plt.xlabel('Recall (TPR)', fontsize=20)
         plt.ylabel('Precision', fontsize=20)
         plt.title('PR curve, AUC = %.3f' % auc, fontsize=25, pad=10)
         plt.fill_between(self.tpr_values, self.precision, alpha=0.3)
