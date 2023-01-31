@@ -1513,13 +1513,10 @@ class ConvSNN12(nn.Module):
     As Conv11 but with one more linear layer
     """
     def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
-        # super(ConvNet, self).__init__()
         super().__init__()
 
         self.ftmaps_h = int(((input_size[1] / 2) / 2) - 2 - 2)
         self.ftmaps_v = int(((input_size[1] / 2) / 2) - 2 - 2)
-        # self.ftmaps_h = int(((input_size[1] - 2 - 2) - 2 - 2) - 2 - 2)
-        # self.ftmaps_v = int(((input_size[2] - 2 - 2) - 2 - 2) - 2 - 2)
 
         # Convolutions
         self.conv1 = nn.Conv2d(input_size[0], 32, 3, 1, padding=1, bias=False)
@@ -1531,7 +1528,7 @@ class ConvSNN12(nn.Module):
 
         # Linear part
         self.fc1 = nn.Linear(4 * 4 * 128, 256, bias=False)  # 2048 to 256
-        self.fc1 = nn.Linear(256, hidden_neurons, bias=False)
+        self.fc2 = nn.Linear(256, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
@@ -1540,47 +1537,21 @@ class ConvSNN12(nn.Module):
         self.lif_conv3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
 
         self.lif_fc1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
-        # self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
         self.out = LICell()
 
         self.hidden_neurons = hidden_neurons
         self.output_neurons = output_neurons
 
-        # for m in self.modules():
-        #     import math
-        #     if isinstance(m, nn.Conv2d):
-        #         n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
-        #         variance1 = math.sqrt(2.0 / n)
-        #         m.weight.data.normal_(0, variance1)
-        #         # define threshold
-        #         # m.threshold = 1
-        #
-        #     elif isinstance(m, nn.Linear):
-        #         size = m.weight.size()
-        #         fan_in = size[1]  # number of columns
-        #         variance2 = math.sqrt(2.0 / fan_in)
-        #         m.weight.data.normal_(0.0, variance2)
-        #         # define threshold
-        #         # m.threshold = 1
-
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
         batch_size = x.shape[1]
 
-        # # Dropout
-        # drop = nn.Dropout(p=0.5, inplace=True)
-        # mask_f1 = Variable(torch.ones(batch_size, self.hidden_neurons).cuda(), requires_grad=False)
-        # mask_f1 = drop(mask_f1)
-
         # specify the initial states
-        sconv1 = sconv2 = sconv3 = sfc1 = so = None
-        # voltages = torch.zeros(
-        #     seq_length, batch_size, self.output_neurons, device=x.device, dtype=x.dtype
-        # )
+        sconv1 = sconv2 = sconv3 = sfc1 = sfc2 = so = None
+
         if flag is None:
             for ts in range(seq_length):
-                # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
-
                 # First convolution
                 z = self.conv1(x[ts, :])
                 z, sconv1 = self.lif_conv1(z, sconv1)
@@ -1590,13 +1561,11 @@ class ConvSNN12(nn.Module):
                 z = self.conv2(z)
                 z, sconv2 = self.lif_conv2(z, sconv2)
                 z = self.pool2(z)
-                # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Third convolution
                 z = self.conv3(z)
                 z, sconv3 = self.lif_conv3(z, sconv3)
                 z = self.pool3(z)
-                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
@@ -1604,7 +1573,10 @@ class ConvSNN12(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
-                # z = torch.mul(z, mask_f1)
+
+                # First FC
+                z = self.fc2(z)
+                z, sfc12 = self.lif_fc2(z, sfc2)
 
                 # Fc out
                 z = self.fc_out(z)
@@ -1617,9 +1589,6 @@ class ConvSNN12(nn.Module):
                 seq_length, batch_size, self.hidden_neurons, device=x.device, dtype=torch.int8
             )
             for ts in range(seq_length):
-
-                # z = self.extract_fatures(x[ts], sconv1, sconv2, sconv3)
-
                 # First convolution
                 z = self.conv1(x[ts])
                 z, sconv1 = self.lif_conv1(z, sconv1)
@@ -1629,13 +1598,11 @@ class ConvSNN12(nn.Module):
                 z = self.conv2(z)
                 z, sconv2 = self.lif_conv2(z, sconv2)
                 z = self.avgpool(z)
-                # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Third convolution
                 z = self.conv3(z)
                 z, sconv3 = self.lif_conv3(z, sconv3)
                 z = self.avgpool(z)
-                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
@@ -1643,7 +1610,10 @@ class ConvSNN12(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
-                # z = torch.mul(z, mask_f1)
+
+                # First FC
+                z = self.fc2(z)
+                z, sfc12 = self.lif_fc2(z, sfc2)
                 hidden_spks[ts, :, :] = z
 
                 # Fc out
