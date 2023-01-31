@@ -67,8 +67,6 @@ def main(args: argparse.Namespace):
     # -----------------
     # Settings
     # -----------------
-    print(args)
-
     # Load config
     print(f'Loading configuration from {args.conf}.toml')
     config = load_config(args.conf)
@@ -147,6 +145,7 @@ def main(args: argparse.Namespace):
 
         # New logger for each In-Distribution Dataset
         logger = my_custom_logger(logger_name=f'{in_dataset}_{args.cluster_mode}', logs_pth=logs_path)
+        logger.info(args)
 
         # ---------------------------------------------------------------
         # Load in-distribution data from the dictionary
