@@ -297,6 +297,18 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
+        elif n_hidden_layers == 13:
+            model = Model(
+                encoder=encoder,
+                snn=ConvSNN12(
+                    input_size=input_size,
+                    hidden_neurons=hidden_neurons,
+                    output_neurons=output_neurons,
+                    alpha=100
+                ),
+                decoder=decode
+            )
+
         else:
             raise NameError('Wrong number of layers')
     else:
