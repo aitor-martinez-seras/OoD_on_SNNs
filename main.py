@@ -354,7 +354,7 @@ def main(args: argparse.Namespace):
                             batch_size_ood, datasets_path,
                             test_only=False, image_shape=datasets_conf[ood_dataset]['input_size']
                         )
-                        ood_train_data.transform = load_test_presets(datasets_conf[ood_dataset]['input_size'])
+                        ood_train_data.transform = load_test_presets(datasets_conf[in_dataset]['input_size'])
                         g_ood = torch.Generator()
                         g_ood.manual_seed(8)
                         rnd_idxs = torch.randint(
