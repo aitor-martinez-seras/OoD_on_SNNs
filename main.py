@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Subset
+from torchvision.transforms import Compose, Lambda
 
 from SCP.benchmark.scp import SCP
 from SCP.benchmark.weights import download_pretrained_weights
@@ -354,7 +355,15 @@ def main(args: argparse.Namespace):
                             batch_size_ood, datasets_path,
                             test_only=False, image_shape=datasets_conf[ood_dataset]['input_size']
                         )
-                        ood_train_data.transform = load_test_presets(datasets_conf[in_dataset]['input_size'])
+                        ood_transform = load_test_presets(datasets_conf[in_dataset]['input_size'])
+                        if ood_dataset == 'Caltech101':  # TODO: Find a better way to do this
+                            ood_transform = Compose(
+                                [
+                                    ood_transform,
+                                    Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
+                                ]
+                            )
+                        ood_train_data.transform = ood_transform
                         g_ood = torch.Generator()
                         g_ood.manual_seed(8)
                         rnd_idxs = torch.randint(
