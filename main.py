@@ -54,6 +54,12 @@ def get_args_parser() -> argparse.ArgumentParser:
                         help="saves histogram plots for the specified methods. Options: SCP, Baseline, ODIN, Energy")
     parser.add_argument("--save-metric-plots", action='store_true', dest='save_metric_plots',
                         help="if passed, AUROC and AUPR Curves are saved")
+    parser.add_argument("--ind-seed", default=6, type=int, dest='ind_seed',
+                        help="seed for the In-Distribution dataset")
+    parser.add_argument("--thr-seed", default=7, type=int, dest='thr_seed',
+                        help="seed for the selection of the instances for creating the thresholds")
+    parser.add_argument("--ood-seed", default=8, type=int, dest='ood_seed',
+                        help="seed for the selection of ood instances in case train instances are needed")
     return parser
 
 
@@ -150,7 +156,7 @@ def main(args: argparse.Namespace):
         # TODO: Add generator and change the way of loading the dataloader and the dataset
         #   This is to create the clusters from the same images as the one being tested
         g_ind = torch.Generator()
-        g_ind = g_ind.manual_seed(6)
+        g_ind = g_ind.manual_seed(args.ind_seed)
         train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'])
         train_loader = DataLoader(
             train_data,
@@ -268,7 +274,7 @@ def main(args: argparse.Namespace):
             # TODO: Handle cases where we don't have sufficient training data
             if args.random_samples_for_thr:
                 g_thr = torch.Generator()
-                g_thr.manual_seed(7)
+                g_thr.manual_seed(args.thr_seed)
                 rnd_idxs = torch.randint(high=len(train_data), size=(args.samples_for_thr_per_class,), generator=g_thr)
                 training_subset = Subset(train_data, [x for x in rnd_idxs.numpy()])
                 subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
@@ -375,7 +381,7 @@ def main(args: argparse.Namespace):
                         logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match"
                                     f"the number of samples of test data, equal to {size_test_data}")
                         g_ood = torch.Generator()
-                        g_ood.manual_seed(8)
+                        g_ood.manual_seed(args.ood_seed)
                         rnd_idxs = torch.randint(
                             high=len(ood_loader.dataset), size=(size_test_data,), generator=g_ood)
                         ood_subset = Subset(ood_loader.dataset, [x for x in rnd_idxs.numpy()])
