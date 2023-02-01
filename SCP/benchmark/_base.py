@@ -59,7 +59,7 @@ class _OODMethod:
         plt.plot([], [], ' ', label=f'FPR at 95% TPR = {round(fpr_values_auroc[95] * 100, 2)}%')
         plt.plot([], [], ' ', label=f'FPR at 80% TPR = {round(fpr_values_auroc[80] * 100, 2)}%')
         plt.legend(fontsize=20, loc='upper left')
-        plt.savefig(f'{save}_AUPR.png', dpi=200)
+        plt.savefig(f'{save}_AUROC.png', dpi=200)
         plt.close()
 
     def save_aupr_fig(self, save=''):
@@ -67,7 +67,7 @@ class _OODMethod:
         auc = np.trapz(self.precision, self.tpr_values)
         # Plot
         plt.figure(figsize=(15, 12))
-        plt.plot(self.tpr_values, self.precision, label='ROC curve', lw=3)
+        plt.plot(self.tpr_values, self.precision, label='PR curve', lw=3)
         plt.xticks(fontsize=15)
         plt.yticks(fontsize=15)
         plt.xlabel('Recall (TPR)', fontsize=20)
