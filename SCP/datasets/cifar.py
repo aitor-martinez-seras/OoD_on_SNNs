@@ -145,12 +145,12 @@ if __name__ == "__main__":
     current_file_path = Path(os.path.dirname(__file__))
     datasets_path = current_file_path.parent.parent / 'datasets'
 
-    dat = 100
+    dat = 10
     if dat == 10:
-        loader = load_CIFAR10(64, datasets_path, test_only=True)
-        imgs, targets = next(iter(loader))
-        print(imgs.max())
-        plot_grid(imgs)
+        dataset, train_loader, test_loader = load_CIFAR10(64, datasets_path, test_only=False)
+        # imgs, targets = next(iter(train_loader))
+        show_img_from_dataloader(train_loader, img_pos=0, number_of_iterations=1)
+        show_grid_from_dataloader(train_loader)
         # plot_image(imgs[1].permute(1, 2, 0))
     elif dat == 100:
         dataset, train_loader, test_loader = load_CIFAR100(64, datasets_path)

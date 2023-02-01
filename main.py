@@ -444,7 +444,7 @@ def main(args: argparse.Namespace):
                     for class_index in range(10):
                         preds_test_per_predicted_class.append(preds_test[find_idx_of_class(class_index, preds_test)])
                     preds_test_reordered = np.concatenate(preds_test_per_predicted_class)
-                    # Compare predictions and labels and output True where is correctly predicted
+                    # Compare predictions and labels and output 1 where is correctly predicted, 0 where not
                     correct_incorrect_clasification = np.where(preds_test_reordered == test_labels_reordered, 1, 0)
 
                     # Obrain array with ind or ood decision for test instances and for specifict TPR values
@@ -457,17 +457,11 @@ def main(args: argparse.Namespace):
                         distances_test_per_class,
                         dist_thresholds)
                     # Extract the list with only the TPR values we are interested in: 25, 50, 75 and 95 per cent
-                    in_or_out_distribution_per_tpr_test = in_or_out_distribution_per_tpr_test[(25, 50, 75, 95), :]
-
-                    # Crear un dataframe a partir de un diccionario donde para cada key (columna) represente
-                    # un resultado que quiero obtener y cada fila sea el TPR
-                    # Columnas: % the FN (para comprobar que coincide con el TPR), % the FN que están mal predichos
-                    # Lo primero se consigue midiendo la longitud del array y lo segundo obteniendo
-                    # la longitud de nonzero que tenemos respecto de la longitud total del array
-                    # Hay que hacer esto por cada posicion de la lista
+                    tprs_to_extract = (25, 50, 75, 95)
+                    in_or_out_distribution_per_tpr_test = in_or_out_distribution_per_tpr_test[tprs_to_extract, :]
 
                     # Now compare the test labels with the InD or OoD decision and obtain a [4, number_of_samples]
-                    # list, where True will mean the False Negative was correctly classified and False will mean
+                    # list, where 1 will mean the False Negative was correctly classified and 0 will mean
                     # the False Negative was misclassified
                     fn_correct_vs_incorrect_per_tpr = []
                     for idx, in_or_out_one_tpr in enumerate(in_or_out_distribution_per_tpr_test):
@@ -476,10 +470,23 @@ def main(args: argparse.Namespace):
                             np.where(correct_incorrect_clasification[fn_position] == 1, 1, 0)
                         )
 
-
-                    tp_fn_test = tp_fn_fp_tn_computation(in_or_out_distribution_per_tpr_test)
-                    print()
-
+                    # Crear un dataframe a partir de un diccionario donde para cada key (columna) represente
+                    # un resultado que quiero obtener y cada fila sea el TPR
+                    # Columnas: % the FN (para comprobar que coincide con el TPR), % the FN que están mal predichos
+                    # Lo primero se consigue midiendo la longitud del array y lo segundo obteniendo
+                    # la longitud de nonzero que tenemos respecto de la longitud total del array
+                    # Hay que hacer esto por cada posicion de la lista
+                    columns = ['TPR [%]', 'FN [%]', 'FN correctly classified [%]', 'FN misclassified [%]']
+                    df_fn_incorrect_vs_correct = pd.DataFrame(columns=columns)
+                    for i, fn_correct_vs_incorrect in enumerate(fn_correct_vs_incorrect_per_tpr):
+                        df_fn_incorrect_vs_correct.loc[len(df_fn_incorrect_vs_correct)] = [
+                            tprs_to_extract[i],
+                            len(fn_correct_vs_incorrect) / len(preds_test),
+                            len(np.nonzero(fn_correct_vs_incorrect)[0]),
+                            len(fn_correct_vs_incorrect) - len(np.nonzero(fn_correct_vs_incorrect)[0]),
+                        ]
+                    df_fn_incorrect_vs_correct.to_excel(results_path / f'fn_misclassified_{args.cluster_mode}_fmax_'
+                                                                       f'{args.f_max}_timesteps_{args.n_time_steps}.xlsx')
 
                 auroc, aupr, fpr95, fpr80 = scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
