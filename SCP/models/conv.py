@@ -1643,7 +1643,7 @@ class ConvSNN13(nn.Module):
         self.pool4 = nn.AvgPool2d(kernel_size=2)
 
         # Linear part
-        self.fc1 = nn.Linear(2 * 2 * 128, hidden_neurons, bias=False)
+        self.fc1 = nn.Linear(4 * 4 * 128, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
