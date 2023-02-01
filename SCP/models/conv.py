@@ -1574,7 +1574,7 @@ class ConvSNN12(nn.Module):
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
 
-                # First FC
+                # Second FC
                 z = self.fc2(z)
                 z, sfc2 = self.lif_fc2(z, sfc2)
 
@@ -1590,19 +1590,19 @@ class ConvSNN12(nn.Module):
             )
             for ts in range(seq_length):
                 # First convolution
-                z = self.conv1(x[ts])
+                z = self.conv1(x[ts, :])
                 z, sconv1 = self.lif_conv1(z, sconv1)
-                z = self.avgpool(z)
+                z = self.pool1(z)
 
                 # Second convolution
                 z = self.conv2(z)
                 z, sconv2 = self.lif_conv2(z, sconv2)
-                z = self.avgpool(z)
+                z = self.pool2(z)
 
                 # Third convolution
                 z = self.conv3(z)
                 z, sconv3 = self.lif_conv3(z, sconv3)
-                z = self.avgpool(z)
+                z = self.pool3(z)
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
@@ -1611,9 +1611,9 @@ class ConvSNN12(nn.Module):
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
 
-                # First FC
+                # Second FC
                 z = self.fc2(z)
-                z, sfc12 = self.lif_fc2(z, sfc2)
+                z, sfc2 = self.lif_fc2(z, sfc2)
                 hidden_spks[ts, :, :] = z
 
                 # Fc out
