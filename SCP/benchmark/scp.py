@@ -54,3 +54,8 @@ class SCP(_OODMethod):
             ax.legend()
         fig.savefig(f'{name}.pdf')
         plt.close(fig)
+
+
+if __name__ == "__main__":
+    scp = SCP()
+    scp.save_auroc_fig()

@@ -39,6 +39,7 @@ class _OODMethod:
         plt.close()
 
     def save_auroc_fig(self, save=''):
+        print()
         # Appending that when FPR = 1 the TPR is also 1
         tpr_values_auroc = np.append(self.tpr_values, 1)
         fpr_values_auroc = np.append(self.fpr_values, 1)
@@ -59,7 +60,7 @@ class _OODMethod:
         plt.plot([], [], ' ', label=f'FPR at 95% TPR = {round(fpr_values_auroc[95] * 100, 2)}%')
         plt.plot([], [], ' ', label=f'FPR at 80% TPR = {round(fpr_values_auroc[80] * 100, 2)}%')
         plt.legend(fontsize=20, loc='upper left')
-        plt.savefig(f'{save}_AUROC.png', dpi=200)
+        plt.savefig(f'{save}_AUROC_{self.__class__.__name__}.png', dpi=200)  # To save each OOD method by its name
         plt.close()
 
     def save_aupr_fig(self, save=''):
@@ -75,6 +76,6 @@ class _OODMethod:
         plt.title('PR curve, AUC = %.3f' % auc, fontsize=25, pad=10)
         plt.fill_between(self.tpr_values, self.precision, alpha=0.3)
         plt.legend(fontsize=20, loc='upper left')
-        plt.savefig(f'{save}_AUPR.png', dpi=200)
+        plt.savefig(f'{save}_AUPR_{self.__class__.__name__}.png', dpi=200)  # To save each OOD method by its name
         plt.close()
 
