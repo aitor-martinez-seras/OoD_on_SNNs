@@ -17,6 +17,7 @@ class SCP(_OODMethod):
         distance_thresholds_train = thresholds_per_class_for_each_TPR(
             len(class_names), distances_train_per_class
         )
+
         # Computing precision, tpr and fpr
         self.precision, self.tpr_values, self.fpr_values = compute_precision_tpr_fpr_for_test_and_ood(
             distances_test_per_class, distances_ood_per_class, distance_thresholds_train

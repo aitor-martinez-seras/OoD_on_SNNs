@@ -56,8 +56,12 @@ def load_FGVCAircraft(batch_size, datasets_path: Path, test_only=False, image_sh
 
 
 if __name__ == "__main__":
-    dataset, train_loader, test_loader = load_FGVCAircraft(
+    dataset, _, test_loader = load_FGVCAircraft(
         64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False
     )
+    test_transform = load_test_presets(img_shape=[3, 32, 32])
+    dataset.transform = test_transform
+
+    train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
     show_img_from_dataloader(train_loader, img_pos=0, number_of_iterations=1)
     show_grid_from_dataloader(train_loader)

@@ -49,9 +49,11 @@ def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, image_shape=(
             [
                 # T.RandomRotation(15, ),
                 # T.RandomCrop(400),
+                T.ToTensor(),
+                T.RandomCrop(32, padding=4),
                 T.RandomHorizontalFlip(),
                 # T.RandomVerticalFlip(),
-                T.ToTensor()
+
             ]
         )
         train_data_CIFAR10 = torchvision.datasets.CIFAR10(

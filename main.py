@@ -17,8 +17,11 @@ from SCP.datasets.presets import load_test_presets
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
-from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results
+from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
+    find_idx_of_class
 from SCP.benchmark import MSP, ODIN, EnergyOOD
+from SCP.utils.metrics import compare_distances_per_class_to_distance_thr_per_class, thresholds_per_class_for_each_TPR, \
+    tp_fn_fp_tn_computation
 from test import validate_one_epoch
 
 
@@ -60,6 +63,8 @@ def get_args_parser() -> argparse.ArgumentParser:
                         help="seed for the selection of the instances for creating the thresholds")
     parser.add_argument("--ood-seed", default=8, type=int, dest='ood_seed',
                         help="seed for the selection of ood instances in case train instances are needed")
+    parser.add_argument("--fn-vs-bad-clasification", action='store_true', dest='fn_vs_bad_clasification',
+                        help="if passed, obtain a new result where info about False Negative is present")
     return parser
 
 
@@ -334,8 +339,8 @@ def main(args: argparse.Namespace):
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
-                # Load OoD dataset from the dictionary. In case it is MNIST-C, load the
-                # selected option
+                # Load OoD dataset from the dictionary. In case it is MNIST-C, load the selected option
+                # In case the OOD test dataset has not enought instances, the train dataset is loaded
                 batch_size_ood = get_batch_size(config, ood_dataset, logger)
                 if ood_dataset.split('/')[0] == 'MNIST-C':
                     ood_loader = datasets_loader[ood_dataset.split('/')[0]](
@@ -360,7 +365,7 @@ def main(args: argparse.Namespace):
                         logger.info(f"Using training data as test OOD data for {ood_dataset} dataset")
                         ood_train_data, _, _ = datasets_loader[ood_dataset](
                             batch_size_ood, datasets_path,
-                            test_only=False, image_shape=datasets_conf[ood_dataset]['input_size']
+                            test_only=False, image_shape=datasets_conf[in_dataset]['input_size']
                         )
                         ood_transform = load_test_presets(datasets_conf[in_dataset]['input_size'])
                         if ood_dataset == 'Caltech101':  # TODO: Find a better way to do this
@@ -429,6 +434,53 @@ def main(args: argparse.Namespace):
                 )
 
                 scp = SCP()
+                if args.fn_vs_bad_clasification:
+                    # Reorder preds and test labels to match the order of in_or_out_distribution_per_tpr_test
+                    test_labels_per_predicted_class = []
+                    for class_index in range(10):
+                        test_labels_per_predicted_class.append(test_labels[find_idx_of_class(class_index, preds_test)])
+                    test_labels_reordered = np.concatenate(test_labels_per_predicted_class)
+                    preds_test_per_predicted_class = []
+                    for class_index in range(10):
+                        preds_test_per_predicted_class.append(preds_test[find_idx_of_class(class_index, preds_test)])
+                    preds_test_reordered = np.concatenate(preds_test_per_predicted_class)
+                    # Compare predictions and labels and output True where is correctly predicted
+                    correct_incorrect_clasification = np.where(preds_test_reordered == test_labels_reordered, 1, 0)
+
+                    # Obrain array with ind or ood decision for test instances and for specifict TPR values
+                    # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
+                    dist_thresholds = thresholds_per_class_for_each_TPR(
+                        len(class_names), distances_train_per_class
+                    )
+                    # Compute if test instances are classified as InD or OoD for every tpr
+                    in_or_out_distribution_per_tpr_test = compare_distances_per_class_to_distance_thr_per_class(
+                        distances_test_per_class,
+                        dist_thresholds)
+                    # Extract the list with only the TPR values we are interested in: 25, 50, 75 and 95 per cent
+                    in_or_out_distribution_per_tpr_test = in_or_out_distribution_per_tpr_test[(25, 50, 75, 95), :]
+
+                    # Crear un dataframe a partir de un diccionario donde para cada key (columna) represente
+                    # un resultado que quiero obtener y cada fila sea el TPR
+                    # Columnas: % the FN (para comprobar que coincide con el TPR), % the FN que están mal predichos
+                    # Lo primero se consigue midiendo la longitud del array y lo segundo obteniendo
+                    # la longitud de nonzero que tenemos respecto de la longitud total del array
+                    # Hay que hacer esto por cada posicion de la lista
+
+                    # Now compare the test labels with the InD or OoD decision and obtain a [4, number_of_samples]
+                    # list, where True will mean the False Negative was correctly classified and False will mean
+                    # the False Negative was misclassified
+                    fn_correct_vs_incorrect_per_tpr = []
+                    for idx, in_or_out_one_tpr in enumerate(in_or_out_distribution_per_tpr_test):
+                        fn_position = np.where(in_or_out_one_tpr == 0)[0]
+                        fn_correct_vs_incorrect_per_tpr.append(
+                            np.where(correct_incorrect_clasification[fn_position] == 1, 1, 0)
+                        )
+
+
+                    tp_fn_test = tp_fn_fp_tn_computation(in_or_out_distribution_per_tpr_test)
+                    print()
+
+
                 auroc, aupr, fpr95, fpr80 = scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     save_histogram=save_scp_hist, name=new_figures_path, class_names=class_names, preds_ood=preds_ood
