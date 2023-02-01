@@ -262,7 +262,8 @@ def main(args: argparse.Namespace):
                 verbose=2,
                 name=silh_scores_name,
             )
-            logger.info(f'Median number of clusters in total: {np.median([len(cl) for cl in clusters_per_class])}')
+            logger.info(f'Median number of clusters in total: '
+                        f'{np.median([cl.n_clusters_ for cl in clusters_per_class])}')
             logger.info(logging_info)
             
             # ---------------------------------------------------------------
