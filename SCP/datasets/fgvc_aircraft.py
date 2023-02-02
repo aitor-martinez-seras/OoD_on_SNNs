@@ -9,7 +9,7 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
 def load_FGVCAircraft(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32),
-                      workers=4, *args, **kwargs):
+                      workers=1, *args, **kwargs):
 
     test_transform = load_test_presets(img_shape=image_shape)
     test_data = torchvision.datasets.FGVCAircraft(

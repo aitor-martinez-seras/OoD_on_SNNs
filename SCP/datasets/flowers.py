@@ -9,7 +9,7 @@ from SCP.datasets.presets import load_test_presets
 
 # This dataset needs Scipy to load target files form .mat format
 def load_flowers(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32),
-                 workers=2, *args, **kwargs):
+                 workers=1, *args, **kwargs):
     import ssl
     ssl._create_default_https_context = ssl._create_unverified_context
     test_transform = load_test_presets(img_shape=image_shape)

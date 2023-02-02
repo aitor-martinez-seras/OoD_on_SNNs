@@ -476,14 +476,18 @@ def main(args: argparse.Namespace):
                     # Lo primero se consigue midiendo la longitud del array y lo segundo obteniendo
                     # la longitud de nonzero que tenemos respecto de la longitud total del array
                     # Hay que hacer esto por cada posicion de la lista
-                    columns = ['TPR [%]', 'FN [%]', 'FN correctly classified [%]', 'FN misclassified [%]']
+                    columns = ['Total test samples', 'TPR [%]', 'FN [%]', 'FN [Total]',
+                               'FN correctly classified [%]', 'FN misclassified [%]', 'Accuracy of the model']
                     df_fn_incorrect_vs_correct = pd.DataFrame(columns=columns)
                     for i, fn_correct_vs_incorrect in enumerate(fn_correct_vs_incorrect_per_tpr):
                         df_fn_incorrect_vs_correct.loc[len(df_fn_incorrect_vs_correct)] = [
+                            len(preds_test),
                             tprs_to_extract[i],
                             len(fn_correct_vs_incorrect) / len(preds_test),
-                            len(np.nonzero(fn_correct_vs_incorrect)[0]),
-                            len(fn_correct_vs_incorrect) - len(np.nonzero(fn_correct_vs_incorrect)[0]),
+                            len(fn_correct_vs_incorrect),
+                            len(np.nonzero(fn_correct_vs_incorrect)[0]) / len(fn_correct_vs_incorrect),
+                            (len(fn_correct_vs_incorrect) - len(np.nonzero(fn_correct_vs_incorrect)[0])) / len(fn_correct_vs_incorrect),
+                            test_accuracy,
                         ]
                     df_fn_incorrect_vs_correct.to_excel(results_path / f'fn_misclassified_{args.cluster_mode}_fmax_'
                                                                        f'{args.f_max}_timesteps_{args.n_time_steps}.xlsx')
@@ -576,7 +580,7 @@ def main(args: argparse.Namespace):
 
     # Save all the results to excel
     df_results.to_excel(results_path / f'benchmark_results_{args.cluster_mode}_fmax_{args.f_max}_'
-                                       f'timesteps_{args.n_time_steps}.xlsx')
+                                       f'timesteps_{args.n_time_steps}_.xlsx')
 
 
 if __name__ == "__main__":
