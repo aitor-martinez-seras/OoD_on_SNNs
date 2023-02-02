@@ -2116,19 +2116,19 @@ class ConvSNN17(nn.Module):
         self.pool3 = nn.AvgPool2d(kernel_size=2)
 
         # Linear part
-        self.fc1 = nn.Linear(4 * 4 * 128, 512, bias=False)  # 2048 to 256
-        self.fc2 = nn.Linear(512, 128, bias=False)
-        self.fc3 = nn.Linear(128, hidden_neurons, bias=False)
+        self.fc1 = nn.Linear(4 * 4 * 128, 512, bias=False)  # 2048 / 4 = 512
+        self.fc2 = nn.Linear(512, 128, bias=False)  # 512 / 4 = 128
+        self.fc3 = nn.Linear(128, hidden_neurons, bias=False)  # 128 / 4 = 32
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
-        self.lif_conv1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.25), alpha=alpha))
+        self.lif_conv1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
         self.lif_conv2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
         self.lif_conv3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
 
         self.lif_fc1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
-        self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
-        self.lif_fc3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
+        self.lif_fc3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.05), alpha=alpha))
         self.out = LICell()
 
         self.hidden_neurons = hidden_neurons
