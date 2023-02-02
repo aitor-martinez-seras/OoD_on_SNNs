@@ -1,6 +1,7 @@
 from pathlib import Path
 import argparse
 
+from torch.optim.lr_scheduler import LinearLR
 from tqdm import tqdm, trange
 import torch
 from torch.utils.data import DataLoader
@@ -97,6 +98,9 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
     if save_every_n_epochs > 0:
         assert weights_pth != '.' and file_name != '' and args is not None, 'datasets_path, file_path ' \
                                                                              'and args must be passed to the function'
+
+    lr_scheduler_2 = LinearLR(optimizer, start_factor=0.25, total_iters=4, verbose=True)
+
     for epoch in range(start_epoch, epochs):
         logger.info(f'Epoch {epoch + 1}:')
         # Train
@@ -117,6 +121,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         if lr_scheduler:
             # logger.info('\t')
             lr_scheduler.step()
+            lr_scheduler_2.step()
 
         if save_every_n_epochs:
             if (epoch + 1) % save_every_n_epochs == 0:

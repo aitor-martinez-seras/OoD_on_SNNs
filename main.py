@@ -131,7 +131,7 @@ def main(args: argparse.Namespace):
 
     # Dataframe to store the results
     COLUMNS = ['Timestamp', 'In-Distribution', 'Out-Distribution', 'Model',
-               'Training accuracy', 'Accuracy in OOD test set', 'OoD Method',
+               'Test set accuracy', 'Accuracy in OOD test set', 'OoD Method',
                'AUROC', 'AUPR', 'FPR95', 'FPR80', 'Temperature']
     df_results = pd.DataFrame(columns=COLUMNS)
 
