@@ -1234,7 +1234,7 @@ class ConvSNN9(nn.Module):
 
 class ConvSNN10(nn.Module):
     """
-    As Conv5 but with last voltage decoding and dropout in the conv layer
+    As Conv5 but with last voltage decoding and dropout in the FC layer
     """
     def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
         # super(ConvNet, self).__init__()
@@ -1290,7 +1290,7 @@ class ConvSNN10(nn.Module):
         batch_size = x.shape[1]
 
         # Dropout
-        drop = nn.Dropout(p=0.5, inplace=True)
+        drop = nn.Dropout(p=0.2, inplace=True)
         mask_f1 = Variable(torch.ones(batch_size, self.hidden_neurons).cuda(), requires_grad=False)
         mask_f1 = drop(mask_f1)
 
