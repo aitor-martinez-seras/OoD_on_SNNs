@@ -1891,7 +1891,7 @@ class ConvSNN15(nn.Module):
         batch_size = x.shape[1]
 
         # specify the initial states
-        sconv1 = sconv2 = sconv3 = sfc1 = so = None
+        sconv1 = sconv2 = sconv3 = sfc1 = sfc2 = so = None
 
         if flag is None:
             for ts in range(seq_length):
