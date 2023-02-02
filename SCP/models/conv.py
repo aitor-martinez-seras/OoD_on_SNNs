@@ -1851,7 +1851,7 @@ class ConvSNN14(nn.Module):
 
 class ConvSNN15(nn.Module):
     """
-    As Conv14 but less channels and no pooling in the last conv
+    As Conv14 but less channels, no pooling in the last conv and one more fc
     """
     def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
         super().__init__()
@@ -1917,6 +1917,10 @@ class ConvSNN15(nn.Module):
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
 
+                # Second FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc2(z, sfc2)
+
                 # Fc out
                 z = self.fc_out(z)
                 v, so = self.out(z, so)
@@ -1949,6 +1953,10 @@ class ConvSNN15(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
+
+                # Second FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc2(z, sfc2)
                 hidden_spks[ts, :, :] = z
 
                 # Fc out
