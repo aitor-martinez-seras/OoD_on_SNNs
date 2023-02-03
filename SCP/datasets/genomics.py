@@ -55,7 +55,7 @@ class OODGenomicsDataset(IterableDataset):
     def full_transform(self, item, transform, target_transform):
         dec = np.array([int(i) for i in item["x"].tobytes().decode("utf-8").split(" ")])
         x = torch.from_numpy(transform(dec.copy())).float()
-        x = self.spike_transformation(x)
+        # x = self.spike_transformation(x)
         y = torch.from_numpy(target_transform(item["y"].copy())).long().squeeze()
         return x, y
 
