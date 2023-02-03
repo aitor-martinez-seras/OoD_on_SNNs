@@ -113,7 +113,7 @@ if __name__ == "__main__":
         ds = OODGenomicsDataset(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets', "train")
     loader = DataLoader(ds, batch_size=4, num_workers=0)
     custom_loader = CustomDataloader(ds, batch_size=4)
-    # for data, targets in loader:
-    #     print(len(data))
+    for data, targets in loader:
+        print(len(data))
     print(next(iter(ds)))
     print(ds.label_dict)
