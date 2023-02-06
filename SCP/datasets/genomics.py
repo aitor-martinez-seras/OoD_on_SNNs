@@ -79,7 +79,7 @@ class OODGenomicsDataset(IterableDataset):
             # The position in the sequence where the possible input occurs must have a spike
             # in his category the last position of the tensor
             spike_encoded_data[pos, i] = 1  # TODO: Maybe slow???
-        return torch.from_numpy(spike_encoded_data)
+        return torch.from_numpy(spike_encoded_data).float()
 
 
 def custom_collate(batch):
