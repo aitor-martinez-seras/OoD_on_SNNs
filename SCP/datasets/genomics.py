@@ -84,7 +84,7 @@ class OODGenomicsDataset(IterableDataset):
         #     temp_data[pos, 0, i] = 1
 
         # Create the array to store the new form of data
-        temp_data = torch.zeros(len(x), 4, dtype=torch.int32)
+        temp_data = torch.zeros(len(x), 4, dtype=torch.float)
         for i in range(4):
             pos = np.where(x == i)
             # The position in the sequence where the possible input occurs must have a spike
