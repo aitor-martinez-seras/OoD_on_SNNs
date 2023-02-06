@@ -188,16 +188,12 @@ class FCSNN3(torch.nn.Module):
 
     def forward(self, x, flag=None):
         # Input shape = [time_step,batch_size, ... , ... , ... ]
-        seq_length, batch_size, _, _, _ = x.shape
+        seq_length, batch_size, _ = x.shape
         s1 = s2 = so = None
-        # voltages = torch.zeros(
-        #     seq_length, batch_size, self.output_neurons,
-        #     device=x.device, dtype=x.dtype
-        # )
         if flag is None:
             for ts in range(seq_length):
                 # Flatten the input to [batch_size, input_features]
-                z = x[ts, :, :, :].view(-1, self.input_features)
+                z = x[ts]
 
                 # Hidden layer 1
                 z = self.fc1(z)
