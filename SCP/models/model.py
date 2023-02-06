@@ -111,6 +111,11 @@ def decode(x):
     return log_p_y
 
 
+# For the case where the input is already in spiking form
+def no_encoder(x):
+    return x
+
+
 def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_neurons=10, n_hidden_layers=1,
                encoder='poisson', n_time_steps=24, f_max=100):
     if encoder == 'poisson':
@@ -150,7 +155,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
         elif n_hidden_layers == 3:  # Model for OODGenomics
             assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
             model = Model(
-                encoder=encoder,
+                encoder=no_encoder,
                 snn=FCSNN3(input_features=input_size,
                            hidden_features=hidden_neurons,
                            output_features=output_neurons),

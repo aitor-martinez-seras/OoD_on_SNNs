@@ -27,7 +27,8 @@ def get_args_parser():
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("-b", "--batch-size", dest='batch_size', default=16, type=int, help="batch size")
-    parser.add_argument("--model", default="", type=str, help="name of the model")
+    parser.add_argument("--model", default="", type=str, help="name of the model",
+                        choices=['Fully_connected', 'ConvNet'])
     parser.add_argument("--encoder", default="poisson", type=str,
                         help="encoder to use. Options 'poisson' and 'constant'")
     parser.add_argument("--n-time-steps", default=24, type=int, dest='n_time_steps',
