@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import torch
-from torch.utils.data import IterableDataset
+from torch.utils.data import IterableDataset, DataLoader
 import numpy as np
 from tfrecord.torch.dataset import MultiTFRecordDataset
 
@@ -133,7 +133,6 @@ def load_oodgenomics(batch_size, datasets_path: Path, test_only=False):
 
 
 if __name__ == "__main__":
-    from torch.utils.data import DataLoader
     from sys import platform
     if platform == 'linux':
         ds = Path(r'/home/tri110414/nfs_home/OoD_on_SNNs/datasets')
