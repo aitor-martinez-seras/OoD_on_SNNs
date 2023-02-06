@@ -55,7 +55,7 @@ class OODGenomicsDataset(IterableDataset):
     def full_transform(self, item, transform, target_transform):
         dec = np.array([int(i) for i in item["x"].tobytes().decode("utf-8").split(" ")])
         x = torch.from_numpy(transform(dec.copy())).float()
-        # x = self.spike_transformation(x)
+        x = self.spike_transformation(x)
         y = torch.from_numpy(target_transform(item["y"].copy())).long().squeeze()
         return x, y
 
@@ -71,49 +71,79 @@ class OODGenomicsDataset(IterableDataset):
         # Get the positions where each unique input occurs
         # Possible inputs: adenine (A), cytosine (C), guanine (G) and thymine (T).
         # Each represented by a number from 0 to 3
-        positions = []
-        for i in range(4):
-            positions.append(np.where(x == i))
+        # positions = []
+        # for i in range(4):
+        #     positions.append(np.where(x == i))
+        #
+        # # Create the array to store the new form of data
+        # temp_data = torch.zeros(len(x), 4, dtype=torch.int32)
+        #
+        # # The position in the sequence where the possible input occurs must have a spike
+        # # in his category the last position of the tensor
+        # for i, pos in enumerate(positions):
+        #     temp_data[pos, 0, i] = 1
 
         # Create the array to store the new form of data
-        temp_data = torch.zeros(len(x), 1, 4, dtype=torch.int32)
+        temp_data = torch.zeros(len(x), 4, dtype=torch.int32)
+        for i in range(4):
+            pos = np.where(x == i)
+            # The position in the sequence where the possible input occurs must have a spike
+            # in his category the last position of the tensor
+            temp_data[pos, i] = 1  # TODO: Maybe slow???
 
-        # The position in the sequence where the possible input occurs must have a spike
-        # in his category the last position of the tensor
-        for i, pos in enumerate(positions):
-            temp_data[pos, 1, i] = 1
         return temp_data
 
 
-class CustomDataloader:
+def custom_collate(batch):
+    for d in zip(*batch):
+        if len(d[0].shape) > 0:
+            data = torch.stack(d, dim=1)
+        else:
+            targets = torch.stack(d, dim=0)
+    return data, targets
 
-    def __init__(self, dataset: OODGenomicsDataset, batch_size=4):
-        self.dataset = dataset
-        self.batch_size = batch_size
-        self.iterator = iter(dataset)
-        self.count = 0
 
-    def __iter__(self):
-        data = []
-        targets = []
-        for _ in range(self.batch_size):
-            self.count += 1
-            next_data = next(self.iterator)
-            data.append(next_data[0])
-            targets.append(next_data[1])
-        yield torch.stack(data), torch.stack(targets)
+def load_genomics_ood(batch_size, datasets_path: Path, test_only=False):
+    test_data = OODGenomicsDataset(
+        data_root=datasets_path,
+        split='val',
+    )
+    test_loader = DataLoader(
+        test_data,
+        batch_size=batch_size,
+        pin_memory=True,
+        collate_fn=custom_collate,
+    )
+
+    if test_only is False:
+        train_data = OODGenomicsDataset(
+            data_root=datasets_path,
+            split='train',
+        )
+        train_loader = DataLoader(
+            test_data,
+            batch_size=batch_size,
+            pin_memory=True,
+            collate_fn=custom_collate,
+        )
+        return train_data, train_loader, test_loader
+
+    else:
+        return test_loader
 
 
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
     from sys import platform
     if platform == 'linux':
-        ds = OODGenomicsDataset(r'/home/tri110414/nfs_home/OoD_on_SNNs/datasets', "train")
+        ds = Path(r'/home/tri110414/nfs_home/OoD_on_SNNs/datasets')
     else:
-        ds = OODGenomicsDataset(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets', "train")
-    loader = DataLoader(ds, batch_size=4, num_workers=0)
-    custom_loader = CustomDataloader(ds, batch_size=4)
-    for data, targets in loader:
-        print(len(data))
-    print(next(iter(ds)))
+        ds = Path(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets')
+    collate_fn = custom_collate
+    train_data, train_loader, test_loader = load_genomics_ood(64, ds)
+    # custom_loader = CustomDataloader(ds, batch_size=4)
+    data, targets = next(iter(train_loader))
+    # for data, targets in loader:
+    #     print(len(data))
+    print(next(iter(train_loader)))
     print(ds.label_dict)

@@ -7,7 +7,7 @@ from norse.torch import PoissonEncoder
 from norse.torch import ConstantCurrentLIFEncoder
 from norse.torch import LIFParameters
 
-from SCP.models.fc import FCSNN1, FCSNN2
+from SCP.models.fc import FCSNN1, FCSNN2, FCSNN3
 from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, ConvSNN9, \
     ConvSNN10, ConvSNN11_no_dropout, ConvSNN8, ConvSNN12, ConvSNN13, ConvSNN14, ConvSNN16, ConvSNN15, ConvSNN17
 
@@ -142,6 +142,15 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
             model = Model(
                 encoder=encoder,
                 snn=FCSNN2(input_features=input_size,
+                           hidden_features=hidden_neurons,
+                           output_features=output_neurons),
+                decoder=decode
+            )
+
+        elif n_hidden_layers == 3:
+            model = Model(
+                encoder=encoder,
+                snn=FCSNN3(input_features=input_size,
                            hidden_features=hidden_neurons,
                            output_features=output_neurons),
                 decoder=decode
