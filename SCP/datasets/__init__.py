@@ -9,6 +9,7 @@ from SCP.datasets.flowers import load_flowers
 from SCP.datasets.caltech import load_caltech101
 from SCP.datasets.fgvc_aircraft import load_FGVCAircraft
 from SCP.datasets.dtd import load_DTD
+from SCP.datasets.genomics import load_oodgenomics
 
 
 datasets_loader = {
@@ -28,4 +29,5 @@ datasets_loader = {
     'Food101': load_caltech101,
     'CIFAR100': load_CIFAR100,
     'DTD': load_DTD,
+    'OODGenomics': load_oodgenomics,
 }

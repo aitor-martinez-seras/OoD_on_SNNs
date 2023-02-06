@@ -103,7 +103,7 @@ def custom_collate(batch):
     return data, targets
 
 
-def load_genomics_ood(batch_size, datasets_path: Path, test_only=False):
+def load_oodgenomics(batch_size, datasets_path: Path, test_only=False):
     test_data = OODGenomicsDataset(
         data_root=datasets_path,
         split='val',
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     else:
         ds = Path(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets')
     collate_fn = custom_collate
-    train_data, train_loader, test_loader = load_genomics_ood(64, ds)
+    train_data, train_loader, test_loader = load_oodgenomics(64, ds)
     # custom_loader = CustomDataloader(ds, batch_size=4)
     data, targets = next(iter(train_loader))
     # for data, targets in loader:
