@@ -42,6 +42,7 @@ def validate_one_epoch(model, device, test_loader, return_logits=False, return_t
     losses = []
     targets = []
     correct = 0
+    n_samples_processed = 0
 
     model.eval()
 
@@ -66,12 +67,16 @@ def validate_one_epoch(model, device, test_loader, return_logits=False, return_t
             pred = output.argmax(dim=1, keepdim=True)
             target_as_prediction = target.view_as(pred)
             correct += pred.eq(target_as_prediction).sum().item()
+            n_samples_processed += len(target)
             # Extract the labels, predictions and the hidden layer spikes
             preds.append(pred.cpu().numpy())
             if return_targets:
                 targets.append(target_as_prediction.cpu().numpy())
 
-    accuracy = 100.0 * correct / len(test_loader.dataset)
+    try:
+        accuracy = 100.0 * correct / len(test_loader.dataset)
+    except TypeError:  # TODO: This is for OODGenomics, but this form could be implemented for all the datasets
+        accuracy = 100.0 * correct / n_samples_processed
     if return_logits is True:
         if return_targets:
             return accuracy, np.concatenate(preds).squeeze(), np.concatenate(all_logits), np.hstack(hidden_spikes), np.concatenate(targets).squeeze()
