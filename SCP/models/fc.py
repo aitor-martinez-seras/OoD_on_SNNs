@@ -199,10 +199,6 @@ class FCSNN3(torch.nn.Module):
                 z = self.fc1(z)
                 z, s1 = self.lif1(z, s1)
 
-                # Hidden layer 2
-                z = self.fc2(z)
-                z, s2 = self.lif2(z, s2)
-
                 # Output layer
                 z = self.fc_out(z)
                 vo, so = self.out(z, so)
