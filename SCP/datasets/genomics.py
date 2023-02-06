@@ -64,12 +64,12 @@ class OODGenomicsDataset(IterableDataset):
         return map(self.data_transform, self.ds.__iter__())
 
     @staticmethod
-    def spike_transformation(x):
+    def spike_transformation(x) -> torch.Tensor:
         """
-        Transform input to spikes
+        Transform input to spikes, returning a tensor of shape [length_of_the_sequence, 4]
         """
         # Create the array to store the new form of data
-        spike_encoded_data = torch.zeros(len(x), 4, dtype=torch.float)
+        spike_encoded_data = np.zeros((len(x), 4))
         for i in range(4):
             # Get the positions where each unique input occurs
             # Possible inputs: adenine (A), cytosine (C), guanine (G) and thymine (T).

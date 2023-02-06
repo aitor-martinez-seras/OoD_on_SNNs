@@ -110,7 +110,6 @@ def create_clusters(preds_train_clusters, spk_count_train_clusters, class_names,
     clusterLabels = []
 
     for class_index in tqdm(range(n_classes), desc='Computing silhuette score for various distance thresholds'):
-        dunnIndexes = []
         silh_scores = []
         for dist in dist_thrs:
             indices = find_idx_of_class(class_index, preds_train_clusters, size)
