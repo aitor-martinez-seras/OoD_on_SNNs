@@ -38,6 +38,7 @@ class OODGenomicsDataset(IterableDataset):
             index_pattern=str(split_dir / "{}.index"),
             splits={id_: 1 / len(tf_record_ids) for id_ in tf_record_ids},
             description={"x": "byte", "y": "int", "z": "byte"},
+            infinite=False,
         )
 
         with open(self.data_root / "label_dict.json") as f:
@@ -67,31 +68,18 @@ class OODGenomicsDataset(IterableDataset):
         """
         Transform input to spikes
         """
-
-        # Get the positions where each unique input occurs
-        # Possible inputs: adenine (A), cytosine (C), guanine (G) and thymine (T).
-        # Each represented by a number from 0 to 3
-        # positions = []
-        # for i in range(4):
-        #     positions.append(np.where(x == i))
-        #
-        # # Create the array to store the new form of data
-        # temp_data = torch.zeros(len(x), 4, dtype=torch.int32)
-        #
-        # # The position in the sequence where the possible input occurs must have a spike
-        # # in his category the last position of the tensor
-        # for i, pos in enumerate(positions):
-        #     temp_data[pos, 0, i] = 1
-
         # Create the array to store the new form of data
-        temp_data = torch.zeros(len(x), 4, dtype=torch.float)
+        spike_encoded_data = torch.zeros(len(x), 4, dtype=torch.float)
         for i in range(4):
+            # Get the positions where each unique input occurs
+            # Possible inputs: adenine (A), cytosine (C), guanine (G) and thymine (T).
+            # Each represented by a number from 0 to 3
+            # positions = []
             pos = np.where(x == i)
             # The position in the sequence where the possible input occurs must have a spike
             # in his category the last position of the tensor
-            temp_data[pos, i] = 1  # TODO: Maybe slow???
-
-        return temp_data
+            spike_encoded_data[pos, i] = 1  # TODO: Maybe slow???
+        return spike_encoded_data
 
 
 def custom_collate(batch):
