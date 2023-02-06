@@ -147,7 +147,8 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
-        elif n_hidden_layers == 3:
+        elif n_hidden_layers == 3:  # Model for OODGenomics
+            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
             model = Model(
                 encoder=encoder,
                 snn=FCSNN3(input_features=input_size,

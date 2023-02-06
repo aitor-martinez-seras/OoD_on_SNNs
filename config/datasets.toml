@@ -58,3 +58,7 @@ classes = 0
 [MNIST-C]
 input_size = [1, 28, 28]
 classes = 0
+
+[OODGenomics]
+input_size = [4]
+classes = 10
