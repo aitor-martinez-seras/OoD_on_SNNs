@@ -2235,7 +2235,7 @@ class ConvSNN18(nn.Module):
         # Convolutions
         self.conv1 = nn.Conv2d(input_size[0], 16, 3, 1, padding=1, bias=False)
         self.conv2 = nn.Conv2d(16, 32, 3, 1, padding=1, bias=False)
-        self.conv3 = nn.Conv2d(32, 34, 3, 1, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(32, 64, 3, 1, padding=1, bias=False)
         self.avgpool1 = nn.AvgPool2d(kernel_size=2)
         self.avgpool2 = nn.AvgPool2d(kernel_size=2)
         self.avgpool3 = nn.AvgPool2d(kernel_size=2)
