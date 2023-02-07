@@ -9,7 +9,8 @@ from norse.torch import LIFParameters
 
 from SCP.models.fc import FCSNN1, FCSNN2, FCSNN3, FCSNN4, FCSNN5, FCSNN6, FCSNN7
 from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, ConvSNN9, \
-    ConvSNN10, ConvSNN11_no_dropout, ConvSNN8, ConvSNN12, ConvSNN13, ConvSNN14, ConvSNN16, ConvSNN15, ConvSNN17
+    ConvSNN10, ConvSNN11_no_dropout, ConvSNN8, ConvSNN12, ConvSNN13, ConvSNN14, ConvSNN16, ConvSNN15, ConvSNN17, \
+    ConvSNN18
 
 
 def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler):
@@ -404,6 +405,18 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
             model = Model(
                 encoder=encoder,
                 snn=ConvSNN17(
+                    input_size=input_size,
+                    hidden_neurons=hidden_neurons,
+                    output_neurons=output_neurons,
+                    alpha=100
+                ),
+                decoder=decode
+            )
+
+        elif n_hidden_layers == 18:
+            model = Model(
+                encoder=encoder,
+                snn=ConvSNN18(
                     input_size=input_size,
                     hidden_neurons=hidden_neurons,
                     output_neurons=output_neurons,
