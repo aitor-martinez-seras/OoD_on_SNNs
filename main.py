@@ -16,7 +16,7 @@ from SCP.datasets import datasets_loader
 from SCP.datasets.presets import load_test_presets
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
-from SCP.utils.clusters import create_clusters, average_per_class_and_cluster, distance_to_clusters_averages
+from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages
 from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
     find_idx_of_class
 from SCP.benchmark import MSP, ODIN, EnergyOOD
@@ -414,8 +414,8 @@ def main(args: argparse.Namespace):
                 spk_count_ood = np.sum(_spk_count_ood, axis=0, dtype='uint16')
                 logger.info(f'OoD set: {spk_count_ood.shape}')
 
-                # Create the median aggregations for each cluster of each class
-                agg_counts_per_class_cluster = average_per_class_and_cluster(
+                # Create the median aggregations (centroids) for each cluster of each class
+                agg_counts_per_class_cluster = aggregation_per_class_and_cluster(
                     spk_count_train_clusters,
                     labels_for_clustering,
                     clusters_per_class,
