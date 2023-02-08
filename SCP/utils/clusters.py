@@ -169,6 +169,7 @@ def select_best_distance_threshold_for_each_class(
         clustering_performance_scores = []
         for threshold in possible_distance_thrs:
             indices = find_idx_of_class(class_index, preds_train, size)
+            print(f'Class {class_index}:\t {len(indices)}')
             cluster_model = AgglomerativeClustering(
                 n_clusters=None, metric='manhattan', linkage='average', distance_threshold=threshold
             )

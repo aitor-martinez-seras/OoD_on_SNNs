@@ -158,10 +158,10 @@ def main(args: argparse.Namespace):
         # ---------------------------------------------------------------
         batch_size = get_batch_size(config, in_dataset, logger)
         train_data, train_loader, test_loader = datasets_loader[in_dataset](batch_size, datasets_path)
-        # TODO: Add generator and change the way of loading the dataloader and the dataset
-        #   This is to create the clusters from the same images as the one being tested
         g_ind = torch.Generator()
         g_ind = g_ind.manual_seed(args.ind_seed)
+        # Define the test presets for the train data as we need the data to be of the same distribution
+        # as In Distribution test data
         train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'])
         train_loader = DataLoader(
             train_data,
@@ -240,17 +240,15 @@ def main(args: argparse.Namespace):
             elif args.cluster_mode == "labels":
                 labels_for_clustering = labels_subset_train_clusters
             elif args.cluster_mode == "correct-predictions":
+                # Pasos
+                #   1. Ejecutar el training y obtener labels y predictions
+                #   2. Hacer np.where para obtener para cada clase los indices
+                #   3. Capar esos indices al size que hayamos decidido tener
                 raise NotImplementedError("Not yet implemented the correct-predictions mode")
             else:
                 raise NameError(f"Wrong cluster mode {args.cluster_mode}")
 
             # Create clusters
-            '''
-            if hidden_neurons == 200:
-              dist_clustering = (1000,2000)
-            elif hidden_neurons == 300:
-              dist_clustering = (1500,2500)
-            '''
             dist_clustering = (500, 5000)
 
             # TODO: Tengo que conseguir que se use el args.samples_for_cluster_per_class sin que de error.
