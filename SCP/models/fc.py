@@ -615,10 +615,6 @@ class FCSNN9(torch.nn.Module):
                 z = self.fc2(z)
                 z, s2 = self.lif2(z, s2)
 
-                # Hidden layer 3
-                z = self.fc3(z)
-                z, s3 = self.lif3(z, s3)
-
                 # Output layer
                 z = self.fc_out(z)
                 vo, so = self.out(z, so)
@@ -640,11 +636,6 @@ class FCSNN9(torch.nn.Module):
                 # Hidden layer 2
                 z = self.fc2(z)
                 z, s2 = self.lif2(z, s2)
-
-                # Hidden layer 3
-                z = self.fc3(z)
-                z, s3 = self.lif3(z, s3)
-                hdn_spikes[ts] = z
 
                 # Output layer
                 z = self.fc_out(z)
