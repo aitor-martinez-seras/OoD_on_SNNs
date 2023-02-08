@@ -5,7 +5,7 @@ from sklearn.cluster import AgglomerativeClustering
 import sklearn.metrics as skmetrics
 
 from .common import find_idx_of_class
-from .plots import plot_dendrogram
+from .plots import plot_dendrogram, plot_clusters_performance
 
 
 def create_string_for_logger(clusters_per_class, class_names) -> str:
@@ -25,6 +25,36 @@ def print_created_clusters_per_class(clusters_per_class, class_names):
         unique, counts = np.unique(clusters_one_class.labels_, return_counts=True)
         print('Clase', class_names[cl_ind].ljust(15), '\t', dict(zip(unique, counts)))
         print('-' * 75)
+
+
+def bic_score(X, labels):
+    """
+    BIC score for the goodness of fit of clusters.
+    This Python function is directly translated from the GoLang code made by the author of the paper.
+    The original code is available here:
+    https://github.com/bobhancock/goxmeans/blob/a78e909e374c6f97ddd04a239658c7c5b7365e5c/km.go#L778
+    """
+    import math
+    n_points = len(labels)
+    n_clusters = len(set(labels))
+    n_dimensions = X.shape[1]
+
+    n_parameters = (n_clusters - 1) + (n_dimensions * n_clusters) + 1
+
+    loglikelihood = 0
+    for label_name in set(labels):
+        X_cluster = X[labels == label_name]
+        n_points_cluster = len(X_cluster)
+        centroid = np.mean(X_cluster, axis=0)
+        variance = np.sum((X_cluster - centroid) ** 2) / (len(X_cluster) - 1)
+        loglikelihood += \
+            n_points_cluster * np.log(n_points_cluster) \
+            - n_points_cluster * np.log(n_points) \
+            - n_points_cluster * n_dimensions / 2 * np.log(2 * math.pi * variance) \
+            - (n_points_cluster - 1) / 2
+
+    bic = loglikelihood - (n_parameters / 2) * np.log(n_points)
+    return bic
 
 
 def aggregation_per_class_and_cluster(spike_counts, preds, clusters_per_class, n_classes,
@@ -74,7 +104,6 @@ def distance_to_clusters_averages(spike_counts, predictions, aggregation_per_cla
     Takes the counts and the predictions of each sample of a subset (not ordered by class) and
     the averages of each cluster and class
     :returns distance of each sample to the cluster average for each class
-    # TODO: Describe the dimensions of the inputs
     """
     # Order array by predicted class
     spike_counts_per_class = []
@@ -96,59 +125,32 @@ def distance_to_clusters_averages(spike_counts, predictions, aggregation_per_cla
     return distances_per_class, closest_clusters_per_class
 
 
-def bic_score(X, labels):
+def select_distance_threshold_for_one_class(clustering_performance_scores) -> int:
     """
-    BIC score for the goodness of fit of clusters.
-    This Python function is directly translated from the GoLang code made by the author of the paper.
-    The original code is available here:
-    https://github.com/bobhancock/goxmeans/blob/a78e909e374c6f97ddd04a239658c7c5b7365e5c/km.go#L778
+    Return the index of the greatest clustering performance distance threshold
     """
-
-    n_points = len(labels)
-    n_clusters = len(set(labels))
-    n_dimensions = X.shape[1]
-
-    n_parameters = (n_clusters - 1) + (n_dimensions * n_clusters) + 1
-
-    loglikelihood = 0
-    for label_name in set(labels):
-        X_cluster = X[labels == label_name]
-        n_points_cluster = len(X_cluster)
-        centroid = np.mean(X_cluster, axis=0)
-        variance = np.sum((X_cluster - centroid) ** 2) / (len(X_cluster) - 1)
-        loglikelihood += \
-            n_points_cluster * np.log(n_points_cluster) \
-            - n_points_cluster * np.log(n_points) \
-            - n_points_cluster * n_dimensions / 2 * np.log(2 * math.pi * variance) \
-            - (n_points_cluster - 1) / 2
-
-    bic = loglikelihood - (n_parameters / 2) * np.log(n_points)
-    return bic
+    # Iterate the inverted array to catch the smallest distance value with the greatest silhouette score
+    max_score = 0
+    max_index = 0
+    for idx, current_score in enumerate(clustering_performance_scores):
+        # Store the greatest value we encounter traveling the curve
+        # Only update the value if it is greater, not if it equal
+        if current_score > max_score:
+            max_index = idx
+            max_score = current_score
+    return max_index
 
 
-# Possible refactorization: enable multiprocessing, as each class is independent
-def create_clusters(preds_train, spk_count_train, class_names, size=1000,
-                    distance_for_clustering=None, verbose=2, name='', performance_measuring_method='silhouette'):
-    """
-    Verbose = 0 -> No prints and plots neither loggin info
-    verbose = 1 -> Returns loggin info only
-    Verbose = 2 -> Logging info and plots
-    """
-    # Define de number of classes
+def select_best_distance_threshold_for_each_class(
+        class_names, possible_distance_thrs, size, preds_train, spk_count_train, performance_measuring_method,
+        name, verbose
+):
     n_classes = len(class_names)
-
-    # Select a distance threshold for each class in case it is not defined
-    if distance_for_clustering is None:
-        distance_for_clustering = (800, 3000)
-
-    possible_distance_thrs = np.linspace(distance_for_clustering[0], distance_for_clustering[1], 50)
-    selected_distance_thrs_per_class = []
     clustering_performance_scores_for_all_possible_thresholds_per_class = []
     clustering_performance_scores_for_selected_thresholds_per_class = []
-    cluster_labels = []
+    selected_distance_thrs_per_class = []
 
-    # TODO: Enable using other metrics for the cluster quality
-    #   Options: Silhouette scores, BIC score, Calinski-Harabasz score
+    # Select performance measuring method
     if performance_measuring_method == 'silhouette':
         cluster_performance_measuring_function = skmetrics.silhouette_score
 
@@ -157,80 +159,83 @@ def create_clusters(preds_train, spk_count_train, class_names, size=1000,
 
     elif performance_measuring_method == 'calinski':
         cluster_performance_measuring_function = skmetrics.calinski_harabasz_score
-
+        performance_measuring_method = 'calinski-harabasz'
     else:
         raise NameError(f'Wrong option selected for measuring performance of the clustering. '
                         f'Selected {performance_measuring_method}')
 
-    for class_index in tqdm(range(n_classes), desc='Computing silhuette score for various distance thresholds'):
+    for class_index in tqdm(range(n_classes), desc=f'Computing {performance_measuring_method}'
+                                                   f' score for various distance thresholds'):
         clustering_performance_scores = []
         for threshold in possible_distance_thrs:
             indices = find_idx_of_class(class_index, preds_train, size)
             cluster_model = AgglomerativeClustering(
                 n_clusters=None, metric='manhattan', linkage='average', distance_threshold=threshold
             )
-            try:  # Handle the case that one class has no representation in the training samples
+            try:
                 cluster_model.fit(spk_count_train[indices])
-                cluster_labels.append(cluster_model.labels_)
-            except ValueError as e:
+                # cluster_labels.append(cluster_model.labels_)
+            except ValueError as e:   # Handle the case that one class has no representation in the training samples
                 print(f'Error probably caused by the lack of training samples for class index {class_index}')
                 raise e
-            try:
+            try:  # TODO: We may need to modify this call in case another function is used
                 clustering_performance_scores.append(
-                    cluster_performance_measuring_function(spk_count_train[indices], cluster_model.labels_, metric='manhattan')
+                    cluster_performance_measuring_function(
+                        spk_count_train[indices], cluster_model.labels_, metric='manhattan'
+                    )
                 )
             except ValueError:
                 clustering_performance_scores.append(0)
         clustering_performance_scores_for_all_possible_thresholds_per_class.append(clustering_performance_scores)
 
-        # Iterate the inverted array to catch the smallest distance value with the greatest silhouette score
-        max_score = 0
-        max_index = 0
-        for idx, current_score in enumerate(clustering_performance_scores):
-            # Store the greatest value we encounter traveling the curve
-            # Only update the value if it is greater, not if it equal
-            if current_score > max_score:
-                max_index = idx
-                max_score = current_score
-        # We append the distance threshold to a list where they are going to be stored, one for each class
+        # Determine the best method selecting the index where the max performance is obtained
+        max_index = select_distance_threshold_for_one_class(clustering_performance_scores)
+
+        # Append the distance threshold to a list where they are going to be stored, one for each class
         selected_distance_thrs_per_class.append(possible_distance_thrs[max_index])
-        clustering_performance_scores_for_selected_thresholds_per_class.append(clustering_performance_scores[max_index])
+        clustering_performance_scores_for_selected_thresholds_per_class.append(
+            clustering_performance_scores[max_index])
 
-    # Plot the silhouette score for every distance threshold
-    if verbose == 2:  # TODO: Encapsulate function
+    # Plot the performance score for every distance threshold
+    if verbose == 2:
 
-        # def plot_clusters_performance(cluster_performance_for_all_possible_thresholds_per_class,
-        #                               selected_distance_thrs_per_class, possible_distance_thrs,
-        #                               name, performance_measuring_method, save=True):
-        #     print('Selected distance thresholds:\n', selected_distance_thrs_per_class)
-        #     fig, axes = plt.subplots(2, int(n_classes / 2), figsize=(6 * n_classes / 2, 12))
-        #
-        #     for class_index, ax in enumerate(axes.flat):
-        #         ax.plot(possible_distance_thrs,
-        #                 cluster_performance_for_all_possible_thresholds_per_class[class_index], color='blue')
-        #         ax.plot(selected_distance_thrs_per_class[class_index],
-        #                 clustering_performance_scores_for_selected_thresholds_per_class[class_index], 'ro')
-        #         ax.set_title(class_names[class_index])
-        #
-        #     if save is True:
-        #         fig.savefig(f'{name}_silhouetteScores.pdf')
-        #         plt.close(fig)
-        #     else:
-        #         fig.show()
+        plot_clusters_performance(
+            class_names,
+            clustering_performance_scores_for_all_possible_thresholds_per_class,
+            possible_distance_thrs,
+            clustering_performance_scores_for_selected_thresholds_per_class,
+            selected_distance_thrs_per_class,
+            name, performance_measuring_method, save=True
+        )
 
-        # Plot to see the silhouette scores
-        print('Selected distance thresholds:\n', selected_distance_thrs_per_class)
-        fig, axes = plt.subplots(2, int(n_classes/2), figsize=(6 * n_classes / 2, 12))
+    return selected_distance_thrs_per_class, clustering_performance_scores_for_selected_thresholds_per_class
 
-        for class_index, ax in enumerate(axes.flat):
-            ax.plot(possible_distance_thrs,
-                    clustering_performance_scores_for_all_possible_thresholds_per_class[class_index], color='blue')
-            ax.plot(selected_distance_thrs_per_class[class_index],
-                    clustering_performance_scores_for_selected_thresholds_per_class[class_index], 'ro')
-            ax.set_title(class_names[class_index])
-        fig.savefig(f'{name}_silhouetteScores.pdf')
+
+def plot_dendogram_per_class(class_names, clusters_per_class, name, save=True):
+    """
+    Plot the top three levels of the dendrogram for each class
+    """
+    n_classes = len(class_names)
+    fig, axes = plt.subplots(2, int(n_classes / 2), figsize=(6 * n_classes / 2, 12))
+    fig.suptitle('Hierarchical Clustering Dendrogram', fontsize=22, y=0.94)
+    # fig.supxlabel('X axis: Number of points in node
+    # (index of the number if not in parenthesis)',fontsize = h + w*0.1,y=0.065)
+
+    for class_index, ax in tqdm(enumerate(axes.flat), desc='Create the clusters with the selected distance thresholds'):
+        plot_dendrogram(clusters_per_class[class_index], truncate_mode='level', p=3, ax=ax)
+        ax.set_title('Class {}'.format(class_names[class_index]), fontsize=22)
+        # ax[i,j].set_xlabel("Number of points in node",fontsize=h)
+    if save:
+        fig.savefig(f'{name}_DendrogramPerClass.pdf')
         plt.close(fig)
+    else:
+        fig.show()
 
+
+def create_clusters_per_class_based_on_distance_threshold(
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class
+):
+    n_classes = len(class_names)
     # Create the clusters by extracting the labels for every sample
     clusters_per_class = []
     for class_index in range(n_classes):
@@ -243,36 +248,45 @@ def create_clusters(preds_train, spk_count_train, class_names, size=1000,
                                                     distance_threshold=selected_distance_thrs_per_class)
 
         cluster_model.fit(spk_count_train[indices])
-        # Save the cluster models
         clusters_per_class.append(cluster_model)
+    return clusters_per_class
+
+
+# Possible refactorization: enable multiprocessing, as each class is independent
+def create_clusters(preds_train, spk_count_train, class_names, size=1000,
+                    distance_for_clustering=None, verbose=2, name='', performance_measuring_method='silhouette'):
+    """
+    Verbose = 0 -> No prints and plots neither loggin info
+    verbose = 1 -> Returns loggin info only
+    Verbose = 2 -> Logging info and plots
+    """
+    # Select a distance threshold for each class
+    if distance_for_clustering is None:  # in case it is not defined
+        distance_for_clustering = (800, 3000)
+    possible_distance_thrs = np.linspace(distance_for_clustering[0], distance_for_clustering[1], 50)
+
+    # Select the best performing cluster configuration for each class based on a performance metric
+    selected_distance_thrs_per_class, clustering_performance_scores_for_selected_thresholds_per_class = select_best_distance_threshold_for_each_class(
+        class_names, possible_distance_thrs, size, preds_train, spk_count_train, performance_measuring_method,
+        name, verbose
+    )
+
+    # Create the clusters for every class
+    clusters_per_class = create_clusters_per_class_based_on_distance_threshold(
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class
+    )
 
     if verbose == 2:
-        # TODO: Make figure dependant on the number of classes by a formula
-        # Plot the top three levels of the dendrogram
-        if n_classes == 10:
-            fig, axes = plt.subplots(2, 5, figsize=(6 * n_classes / 2, 12))
-        elif n_classes == 26:
-            fig, axes = plt.subplots(2, 13, figsize=(6 * n_classes / 2, 12))
-        else:
-            raise NameError(f'The number of classes {n_classes} is not implemented for the plots')
-        fig.suptitle('Hierarchical Clustering Dendrogram', fontsize=22, y=0.94)
-        # fig.supxlabel('X axis: Number of points in node
-        # (index of the number if not in parenthesis)',fontsize = h + w*0.1,y=0.065)
+        plot_dendogram_per_class(class_names, clusters_per_class, name, save=True)
 
-        for class_index, ax in tqdm(enumerate(axes.flat),
-                                    desc='Create the clusters with the selected distance thresholds'):
-            plot_dendrogram(cluster_model, truncate_mode='level', p=3, ax=ax)
-            ax.set_title('Class {}'.format(class_names[class_index]),
-                         fontsize=22)
-            # ax[i,j].set_xlabel("Number of points in node",fontsize=h)
-
-        fig.savefig(f'{name}_DendrogramPerClass.pdf')
-        plt.close(fig)
+    if verbose == 0:
+        return clusters_per_class
+    else:
         string_for_logger = create_string_for_logger(clusters_per_class, class_names)
         return clusters_per_class, string_for_logger
 
-    if verbose == 1:
-        string_for_logger = create_string_for_logger(clusters_per_class, class_names)
-        return clusters_per_class, string_for_logger
 
-    return clusters_per_class
+def silhouette_score_log(logger, clusters_per_class, preds_train, spk_count_train, size):
+    for class_index, cluster_model in enumerate(clusters_per_class):
+        indices = find_idx_of_class(class_index, preds_train, size)
+        logger.info(skmetrics.silhouette_score(spk_count_train[indices], cluster_model.labels_, metric='manhattan'))

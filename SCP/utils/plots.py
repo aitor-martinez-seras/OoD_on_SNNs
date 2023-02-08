@@ -4,6 +4,21 @@ import numpy as np
 from torchvision.utils import make_grid
 
 
+# ----------------------
+# General plots and auxiliary functions
+# ----------------------
+
+def plot_ax(ax, img, plt_range, cmap, alpha=1, title=None, fontsize=8, xlabel=None):
+    ax.set_xticks([])
+    ax.set_yticks([])
+    im = ax.imshow(img, vmin=plt_range[0], vmax=plt_range[1], cmap=cmap, alpha=alpha)
+    if title is not None:
+        ax.set_title(title, fontsize=fontsize)
+    if xlabel is not None:
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+    return im
+
+
 def plot_grid(images, size=8):
     grid = make_grid(images, nrow=size)
     plt.imshow(grid.permute(1, 2, 0))
@@ -31,6 +46,13 @@ def show_grid_from_dataloader(data_loader, number_of_iterations=1):
     plt.show()
 
 
+def _iterate_dataloader(data_loader, number_of_iterations):
+    assert number_of_iterations >= 1, 'number_of_iterations must be greater or equal than 1'
+    for _ in range(number_of_iterations):
+        images, targets = next(iter(data_loader))
+    return images, targets
+
+
 def plot_loss_history(training_losses, test_losses, fpath=""):
     plt.figure(facecolor="w", figsize=(10, 5))
     plt.plot(training_losses)
@@ -44,6 +66,10 @@ def plot_loss_history(training_losses, test_losses, fpath=""):
         plt.savefig(fpath)
         plt.close()
 
+
+# ----------------------
+# Cluster plots
+# ----------------------
 
 def plot_dendrogram(model, **kwargs):
     # Create linkage matrix and then plot the dendrogram
@@ -66,6 +92,32 @@ def plot_dendrogram(model, **kwargs):
     # Plot the corresponding dendrogram
     dendrogram(linkage_matrix, **kwargs)
 
+
+def plot_clusters_performance(class_names, cluster_performance_for_all_possible_thresholds_per_class,
+                              possible_distance_thrs, selected_distance_thrs_per_class,
+                              clustering_performance_scores_for_selected_thresholds_per_class,
+                              name, performance_measuring_method, save=True):
+    print('Selected distance thresholds:\n', selected_distance_thrs_per_class)
+    n_classes = len(class_names)
+    fig, axes = plt.subplots(2, int(n_classes / 2), figsize=(6 * n_classes / 2, 12))
+
+    for class_index, ax in enumerate(axes.flat):
+        ax.plot(possible_distance_thrs,
+                cluster_performance_for_all_possible_thresholds_per_class[class_index], color='blue')
+        ax.plot(selected_distance_thrs_per_class[class_index],
+                clustering_performance_scores_for_selected_thresholds_per_class[class_index], 'ro')
+        ax.set_title(class_names[class_index])
+
+    if save is True:
+        fig.savefig(f'{name}_{performance_measuring_method}.pdf')
+        plt.close(fig)
+    else:
+        fig.show()
+
+
+# ----------------------
+# OOD Metric plots
+# ----------------------
 
 def plot_auroc(fpr, tpr, save=''):
     # AUC
@@ -119,21 +171,3 @@ def plot_histogram(train, test, ood):
     # plt.ylim([0,10])
     plt.legend(fontsize=18)
     plt.show()
-
-
-def plot_ax(ax, img, plt_range, cmap, alpha=1, title=None, fontsize=8, xlabel=None):
-    ax.set_xticks([])
-    ax.set_yticks([])
-    im = ax.imshow(img, vmin=plt_range[0], vmax=plt_range[1], cmap=cmap, alpha=alpha)
-    if title is not None:
-        ax.set_title(title, fontsize=fontsize)
-    if xlabel is not None:
-        ax.set_xlabel(xlabel, fontsize=fontsize)
-    return im
-
-
-def _iterate_dataloader(data_loader, number_of_iterations):
-    assert number_of_iterations >= 1, 'number_of_iterations must be greater or equal than 1'
-    for _ in range(number_of_iterations):
-        images, targets = next(iter(data_loader))
-    return images, targets

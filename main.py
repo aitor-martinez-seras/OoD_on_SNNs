@@ -16,7 +16,8 @@ from SCP.datasets import datasets_loader
 from SCP.datasets.presets import load_test_presets
 from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
-from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages
+from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages,\
+    silhouette_score_log
 from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
     find_idx_of_class
 from SCP.benchmark import MSP, ODIN, EnergyOOD
@@ -257,7 +258,7 @@ def main(args: argparse.Namespace):
             #   antes de hacer el predict, y luego cuando se predice nos quedamos con menos.
             #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
             #   para cuando se ejecute
-            silh_scores_name = figures_path / f'{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+            perf_score_name = figures_path / f'{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
             clusters_per_class, logging_info = create_clusters(
                 labels_for_clustering,
                 spk_count_train_clusters,
@@ -265,11 +266,16 @@ def main(args: argparse.Namespace):
                 distance_for_clustering=dist_clustering,
                 size=args.samples_for_cluster_per_class,
                 verbose=2,
-                name=silh_scores_name,
+                name=perf_score_name,
             )
             logger.info(f'Mean number of clusters in total: '
                         f'{np.mean([cl.n_clusters_ for cl in clusters_per_class])}')
             logger.info(logging_info)
+
+            silhouette_score_log(
+                logger, clusters_per_class, labels_for_clustering,
+                spk_count_train_clusters, args.samples_for_cluster_per_class
+            )
             
             # ---------------------------------------------------------------
             # Create a subset of training to calculate the thresholds
