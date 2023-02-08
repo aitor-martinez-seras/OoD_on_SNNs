@@ -2317,17 +2317,17 @@ class ConvSNN18(nn.Module):
                 # First convolution
                 z = self.conv1(x[ts])
                 z, sconv1 = self.lif_conv1(z, sconv1)
-                z = self.avgpool(z)
+                z = self.avgpool1(z)
 
                 # Second convolution
                 z = self.conv2(z)
                 z, sconv2 = self.lif_conv2(z, sconv2)
-                z = self.avgpool(z)
+                z = self.avgpool2(z)
 
                 # Third convolution
                 z = self.conv3(z)
                 z, sconv3 = self.lif_conv3(z, sconv3)
-                z = self.avgpool(z)
+                z = self.avgpool3(z)
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
