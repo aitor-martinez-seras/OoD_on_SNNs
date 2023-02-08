@@ -2,11 +2,12 @@ import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram
 import numpy as np
 from torchvision.utils import make_grid
-
+from tqdm import tqdm
 
 # ----------------------
 # General plots and auxiliary functions
 # ----------------------
+
 
 def plot_ax(ax, img, plt_range, cmap, alpha=1, title=None, fontsize=8, xlabel=None):
     ax.set_xticks([])
@@ -93,11 +94,31 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 
+def plot_dendogram_per_class(class_names, clusters_per_class, name, save=True):
+    """
+    Plot the top three levels of the dendrogram for each class
+    """
+    n_classes = len(class_names)
+    fig, axes = plt.subplots(2, int(n_classes / 2), figsize=(6 * n_classes / 2, 12))
+    fig.suptitle('Hierarchical Clustering Dendrogram', fontsize=22, y=0.94)
+    # fig.supxlabel('X axis: Number of points in node
+    # (index of the number if not in parenthesis)',fontsize = h + w*0.1,y=0.065)
+
+    for class_index, ax in tqdm(enumerate(axes.flat), desc='Create the clusters with the selected distance thresholds'):
+        plot_dendrogram(clusters_per_class[class_index], truncate_mode='level', p=3, ax=ax)
+        ax.set_title('Class {}'.format(class_names[class_index]), fontsize=22)
+        # ax[i,j].set_xlabel("Number of points in node",fontsize=h)
+    if save:
+        fig.savefig(f'{name}_DendrogramPerClass.pdf')
+        plt.close(fig)
+    else:
+        fig.show()
+
+
 def plot_clusters_performance(class_names, cluster_performance_for_all_possible_thresholds_per_class,
                               possible_distance_thrs, selected_distance_thrs_per_class,
                               clustering_performance_scores_for_selected_thresholds_per_class,
                               name, performance_measuring_method, save=True):
-    print('Selected distance thresholds:\n', selected_distance_thrs_per_class)
     n_classes = len(class_names)
     fig, axes = plt.subplots(2, int(n_classes / 2), figsize=(6 * n_classes / 2, 12))
 

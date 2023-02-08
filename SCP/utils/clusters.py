@@ -5,7 +5,7 @@ from sklearn.cluster import AgglomerativeClustering
 import sklearn.metrics as skmetrics
 
 from .common import find_idx_of_class
-from .plots import plot_dendrogram, plot_clusters_performance
+from .plots import plot_dendrogram, plot_clusters_performance, plot_dendogram_per_class
 
 
 def create_string_for_logger(clusters_per_class, class_names) -> str:
@@ -198,7 +198,7 @@ def select_best_distance_threshold_for_each_class(
 
     # Plot the performance score for every distance threshold
     if verbose == 2:
-
+        print('Selected distance thresholds:\n', [round(i, 3) for i in selected_distance_thrs_per_class])
         plot_clusters_performance(
             class_names,
             clustering_performance_scores_for_all_possible_thresholds_per_class,
@@ -209,27 +209,6 @@ def select_best_distance_threshold_for_each_class(
         )
 
     return selected_distance_thrs_per_class, clustering_performance_scores_for_selected_thresholds_per_class
-
-
-def plot_dendogram_per_class(class_names, clusters_per_class, name, save=True):
-    """
-    Plot the top three levels of the dendrogram for each class
-    """
-    n_classes = len(class_names)
-    fig, axes = plt.subplots(2, int(n_classes / 2), figsize=(6 * n_classes / 2, 12))
-    fig.suptitle('Hierarchical Clustering Dendrogram', fontsize=22, y=0.94)
-    # fig.supxlabel('X axis: Number of points in node
-    # (index of the number if not in parenthesis)',fontsize = h + w*0.1,y=0.065)
-
-    for class_index, ax in tqdm(enumerate(axes.flat), desc='Create the clusters with the selected distance thresholds'):
-        plot_dendrogram(clusters_per_class[class_index], truncate_mode='level', p=3, ax=ax)
-        ax.set_title('Class {}'.format(class_names[class_index]), fontsize=22)
-        # ax[i,j].set_xlabel("Number of points in node",fontsize=h)
-    if save:
-        fig.savefig(f'{name}_DendrogramPerClass.pdf')
-        plt.close(fig)
-    else:
-        fig.show()
 
 
 def create_clusters_per_class_based_on_distance_threshold(
@@ -288,5 +267,5 @@ def create_clusters(preds_train, spk_count_train, class_names, size=1000,
 
 def silhouette_score_log(logger, clusters_per_class, preds_train, spk_count_train, size):
     for class_index, cluster_model in enumerate(clusters_per_class):
-        indices = find_idx_of_class(class_index, preds_train, size)
+        indices = find_idx_of_class(class_index, preds_train, 1000)
         logger.info(skmetrics.silhouette_score(spk_count_train[indices], cluster_model.labels_, metric='manhattan'))
