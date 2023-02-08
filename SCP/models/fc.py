@@ -556,7 +556,7 @@ class FC8(torch.nn.Module):
         super().__init__()
         from torch.nn.functional import relu
         # Linear layers
-        self.fc1 = torch.nn.Linear(input_features, 8192, bias=False)
+        self.fc1 = torch.nn.Linear(250, 8192, bias=False)
         self.fc2 = torch.nn.Linear(8192, 2048, bias=False)
         self.fc3 = torch.nn.Linear(2048, 512, bias=False)
         self.fc4 = torch.nn.Linear(512, hidden_features, bias=False)  # The idea is to use 128
