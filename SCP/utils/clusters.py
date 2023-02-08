@@ -186,6 +186,7 @@ def select_best_distance_threshold_for_each_class(
                 )
             except ValueError:
                 clustering_performance_scores.append(0)
+
         clustering_performance_scores_for_all_possible_thresholds_per_class.append(clustering_performance_scores)
 
         # Determine the best method selecting the index where the max performance is obtained
@@ -194,7 +195,8 @@ def select_best_distance_threshold_for_each_class(
         # Append the distance threshold to a list where they are going to be stored, one for each class
         selected_distance_thrs_per_class.append(possible_distance_thrs[max_index])
         clustering_performance_scores_for_selected_thresholds_per_class.append(
-            clustering_performance_scores[max_index])
+            clustering_performance_scores[max_index]
+        )
 
     # Plot the performance score for every distance threshold
     if verbose == 2:

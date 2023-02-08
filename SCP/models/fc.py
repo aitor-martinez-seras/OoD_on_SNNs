@@ -549,3 +549,26 @@ class FCSNN7(torch.nn.Module):
             raise NameError('Wrong flag')
 
         return vo, hdn_spikes
+
+
+class FC8(torch.nn.Module):
+    def __init__(self, input_features, hidden_features, output_features, dt=0.001):
+        super().__init__()
+        from torch.nn.functional import relu
+        # Linear layers
+        self.fc1 = torch.nn.Linear(input_features, 8192, bias=False)
+        self.fc2 = torch.nn.Linear(8192, 2048, bias=False)
+        self.fc3 = torch.nn.Linear(2048, 512, bias=False)
+        self.fc4 = torch.nn.Linear(512, hidden_features, bias=False)  # The idea is to use 128
+        self.fc_out = torch.nn.Linear(hidden_features, output_features, bias=False)
+
+        self.relu = relu
+
+    def forward(self, z):
+        z = self.relu(self.fc1(z))
+        z = self.relu(self.fc2(z))
+        z = self.relu(self.fc3(z))
+        z = self.relu(self.fc4(z))
+        z = self.fc_out(z)
+
+        return z

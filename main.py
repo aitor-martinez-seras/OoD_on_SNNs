@@ -272,10 +272,11 @@ def main(args: argparse.Namespace):
                         f'{np.mean([cl.n_clusters_ for cl in clusters_per_class])}')
             logger.info(logging_info)
 
-            logger.info(silhouette_score_log(
+            scores_perf = silhouette_score_log(
                 clusters_per_class, labels_for_clustering, spk_count_train_clusters, args.samples_for_cluster_per_class
-            ))
-            
+            )
+            logger.info(f'Score per class: {scores_perf}')
+
             # ---------------------------------------------------------------
             # Create a subset of training to calculate the thresholds
             # ---------------------------------------------------------------
