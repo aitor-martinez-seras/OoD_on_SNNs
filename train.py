@@ -1,3 +1,4 @@
+import time
 from pathlib import Path
 import argparse
 
@@ -102,6 +103,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
 
     for epoch in range(start_epoch, epochs):
         logger.info(f'Epoch {epoch + 1}:')
+        t = time.perf_counter()
         # Train
         _, mean_training_loss = train_one_epoch(model, device, train_loader, optimizer, epoch)
 
@@ -115,6 +117,7 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
         logger.info(f"\tTraining loss:\t{mean_training_loss}")
         logger.info(f"\tTest loss:\t {mean_test_loss}")
         logger.info(f"\tAccuracy test:\t{accuracies[-1]}%")
+        logger.info(f"\tComputation time:\t{(time.perf_counter() - t)/60:.2f} minutes")
 
         # Update the learning rate
         if lr_scheduler:
