@@ -223,6 +223,17 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
+        elif n_hidden_layers == 10:  # Model for OODGenomics
+            import norse
+            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
+            model = norse.torch.SequentialState(
+                norse.torch.Lift(torch.nn.Linear(input_size, 400, bias=False)),
+                norse.torch.LSNNRecurrent(input_size, 400),
+                norse.torch.Lift(torch.nn.Linear(400, hidden_neurons, bias=False)),  # The idea is to use 128
+                norse.torch.LSNNRecurrent(400, hidden_neurons),
+                norse.torch.Lift(torch.nn.Linear(hidden_neurons, output_neurons, bias=False)),
+            )
+
         else:
             raise NameError('Wrong number of layers')
 
