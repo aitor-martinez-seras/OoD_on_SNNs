@@ -118,6 +118,7 @@ def decode(x):
 
 
 def decoder_seq_state(x):
+    x, _ = x
     log_p_y = torch.nn.functional.log_softmax(x[-1], dim=1)
     return log_p_y
 
@@ -256,6 +257,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 norse.torch.Lift(torch.nn.Linear(400, hidden_neurons, bias=False)),  # The idea is to use 128
                 norse.torch.LSNNRecurrent(hidden_neurons, hidden_neurons),
                 norse.torch.Lift(torch.nn.Linear(hidden_neurons, output_neurons, bias=False)),
+                norse.torch.LICell(),
             )
 
             model = Model_2(
