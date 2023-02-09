@@ -106,15 +106,20 @@ class Model(torch.nn.Module):
             return x, hdd_spks
 
 
+# For the case where the input is already in spiking form
+def no_encoder(x):
+    return x
+
+
 def decode(x):
     # Then compute the logsoftmax across the
     log_p_y = torch.nn.functional.log_softmax(x, dim=1)
     return log_p_y
 
 
-# For the case where the input is already in spiking form
-def no_encoder(x):
-    return x
+def decoder_seq_state(x):
+    log_p_y = torch.nn.functional.log_softmax(x[-1], dim=1)
+    return log_p_y
 
 
 def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_neurons=10, n_hidden_layers=1,
@@ -226,12 +231,37 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
         elif n_hidden_layers == 10:  # Model for OODGenomics
             import norse
             assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = norse.torch.SequentialState(
+
+            class Model_2(torch.nn.Module):
+                def __init__(self, encoder, snn, decoder):
+                    super().__init__()
+                    self.encoder = encoder
+                    self.snn = snn
+                    self.decoder = decoder
+
+                def forward(self, x, flag=None):
+                    x = self.encoder(x)
+                    if flag is None:
+                        x = self.snn(x)
+                        x = self.decoder(x)
+                        return x
+
+                    elif flag == "hidden_spikes_and_logits":
+                        x, hdd_spks = self.snn(x, flag)
+                        return x, hdd_spks
+
+            model_snn = norse.torch.SequentialState(
                 norse.torch.Lift(torch.nn.Linear(input_size, 400, bias=False)),
-                norse.torch.LSNNRecurrent(input_size, 400),
+                norse.torch.LSNNRecurrent(400, 400),
                 norse.torch.Lift(torch.nn.Linear(400, hidden_neurons, bias=False)),  # The idea is to use 128
-                norse.torch.LSNNRecurrent(400, hidden_neurons),
+                norse.torch.LSNNRecurrent(hidden_neurons, hidden_neurons),
                 norse.torch.Lift(torch.nn.Linear(hidden_neurons, output_neurons, bias=False)),
+            )
+
+            model = Model_2(
+                encoder=no_encoder,
+                snn=model_snn,
+                decoder=decoder_seq_state,
             )
 
         else:
