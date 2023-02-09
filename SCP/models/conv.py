@@ -2869,7 +2869,7 @@ class ConvSNN23(nn.Module):
         batch_size = x.shape[1]
 
         # Dropout
-        drop = nn.Dropout(p=0.25, inplace=True)
+        drop = nn.Dropout(p=0.5, inplace=True)
         mask_f1 = Variable(torch.ones(batch_size, self.features_out).cuda(), requires_grad=False)
         mask_f1 = drop(mask_f1)
 
