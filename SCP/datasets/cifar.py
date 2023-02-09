@@ -48,11 +48,9 @@ def load_CIFAR10(batch_size, datasets_path: Path, test_only=False, image_shape=(
         train_transform = T.Compose(
             [
                 # T.RandomRotation(15, ),
-                # T.RandomCrop(400),
                 T.ToTensor(),
                 # T.RandomCrop(32, padding=4),
                 T.RandomHorizontalFlip(),
-                # T.RandomVerticalFlip(),
 
             ]
         )

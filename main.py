@@ -14,15 +14,13 @@ from SCP.benchmark.scp import SCP
 from SCP.benchmark.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
 from SCP.datasets.presets import load_test_presets
-from SCP.datasets.utils import indices_of_every_class_for_subset
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages,\
     silhouette_score_log
 from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
     find_idx_of_class
 from SCP.benchmark import MSP, ODIN, EnergyOOD
-from SCP.utils.metrics import compare_distances_per_class_to_distance_thr_per_class, thresholds_per_class_for_each_TPR, \
-    tp_fn_fp_tn_computation
+from SCP.utils.metrics import compare_distances_per_class_to_distance_thr_per_class, thresholds_per_class_for_each_TPR
 from test import validate_one_epoch
 
 
@@ -45,6 +43,7 @@ def get_args_parser() -> argparse.ArgumentParser:
     parser.add_argument("--samples-for-thr-per-class", default=1000, type=int,
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
     parser.add_argument("--cluster-mode", default="predictions", type=str, dest='cluster_mode',
+                        choices=["predictions", "labels", "correct-predictions"],
                         help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("--use-test-labels", action='store_true', dest='use_test_labels',
                         help="if passed, the labels used to determine which aggregated clusters to compare to"
@@ -78,10 +77,7 @@ def main(args: argparse.Namespace):
     print(f'Loading configuration from {args.conf}.toml')
     config = load_config(args.conf)
 
-    # Parsing some options
-    if args.cluster_mode not in ["predictions", "labels", "correct-predictions"]:
-        raise AssertionError(f"Options for cluster-mode are: labels or correct-predictions, not {args.cluster_mode}")
-
+    # Parse histogram option
     save_scp_hist = save_baseline_hist = save_odin_hist = save_energy_hist = False
     args.save_histograms_for = [method.lower() for method in args.save_histograms_for]
     if "scp" in args.save_histograms_for:
