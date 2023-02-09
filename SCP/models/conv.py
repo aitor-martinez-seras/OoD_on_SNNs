@@ -2727,7 +2727,8 @@ class ConvSNN22(nn.Module):
         self.avgpool3 = nn.AvgPool2d(kernel_size=2)
 
         # Linear part
-        self.fc1 = nn.Linear(4 * 4 * 32, hidden_neurons, bias=False)
+        self.features_out = 4 * 4 * 32
+        self.fc1 = nn.Linear(self.features_out, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
@@ -2748,7 +2749,7 @@ class ConvSNN22(nn.Module):
 
         # Dropout
         drop = nn.Dropout(p=0.2, inplace=True)
-        mask_f1 = Variable(torch.ones(batch_size, 4 * 4 * 128).cuda(), requires_grad=False)
+        mask_f1 = Variable(torch.ones(batch_size, self.features_out).cuda(), requires_grad=False)
         mask_f1 = drop(mask_f1)
 
         # specify the initial states
