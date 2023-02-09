@@ -118,8 +118,8 @@ def decode(x):
 
 
 def decoder_seq_state(x):
-    print(x[0], x[1])
-    print(f'Classification: {x[0].mean():.3f}%')
+    # print(x[0], x[1])
+    # print(f'Classification: {x[0].mean():.3f}%')
     log_p_y = torch.nn.functional.log_softmax(x[0][-1], dim=1)
     return log_p_y
 
