@@ -2829,3 +2829,124 @@ class ConvSNN22(nn.Module):
                 v, so = self.out(z, so)
 
             return v, hidden_spks
+
+
+class ConvSNN23(nn.Module):
+    """
+    As Conv22 but only one avg pooling
+    """
+    def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
+        # super(ConvNet, self).__init__()
+        super().__init__()
+
+        self.ftmaps_h = int((((input_size[1] - 2) - 2) - 2) / 2)
+        self.ftmaps_v = int((((input_size[1] - 2) - 2) - 2) / 2)
+
+        # Convolutions
+        self.conv1 = nn.Conv2d(input_size[0], 8, 3, 1, bias=False)
+        self.conv2 = nn.Conv2d(8, 16, 3, 1, bias=False)
+        self.conv3 = nn.Conv2d(16, 32, 3, 1, bias=False)
+        self.avgpool3 = nn.AvgPool2d(kernel_size=2)
+
+        # Linear part
+        self.features_out = 13 * 13 * 32
+        self.fc1 = nn.Linear(self.features_out, hidden_neurons, bias=False)
+        self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
+
+        # LIF cells
+        self.lif_conv1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.25), alpha=alpha))
+        self.lif_conv2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
+        self.lif_conv3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+
+        self.lif_fc1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.out = LICell()
+
+        self.hidden_neurons = hidden_neurons
+        self.output_neurons = output_neurons
+
+    def forward(self, x, flag=None):
+        seq_length = x.shape[0]
+        batch_size = x.shape[1]
+
+        # Dropout
+        drop = nn.Dropout(p=0.25, inplace=True)
+        mask_f1 = Variable(torch.ones(batch_size, self.features_out).cuda(), requires_grad=False)
+        mask_f1 = drop(mask_f1)
+
+        # specify the initial states
+        sconv1 = sconv2 = sconv3 = sfc1 = so = None
+
+        if flag is None:
+            for ts in range(seq_length):
+                # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
+
+                # First convolution
+                z = self.conv1(x[ts, :])
+                z, sconv1 = self.lif_conv1(z, sconv1)
+                z = self.avgpool1(z)
+
+                # Second convolution
+                z = self.conv2(z)
+                z, sconv2 = self.lif_conv2(z, sconv2)
+                z = self.avgpool2(z)
+                # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+                # Third convolution
+                z = self.conv3(z)
+                z, sconv3 = self.lif_conv3(z, sconv3)
+                z = self.avgpool3(z)
+                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+                # Fully connected part
+                z = z.flatten(start_dim=1)
+                z = torch.mul(z, mask_f1)
+
+                # First FC
+                z = self.fc1(z)
+                z, sfc1 = self.lif_fc1(z, sfc1)
+
+                # Fc out
+                z = self.fc_out(z)
+                v, so = self.out(z, so)
+
+            return v
+
+        elif flag == "hidden_spikes_and_logits":
+            hidden_spks = torch.zeros(
+                seq_length, batch_size, self.hidden_neurons, device=x.device, dtype=torch.int8
+            )
+            for ts in range(seq_length):
+
+                # z = self.extract_fatures(x[ts], sconv1, sconv2, sconv3)
+
+                # First convolution
+                z = self.conv1(x[ts])
+                z, sconv1 = self.lif_conv1(z, sconv1)
+                z = self.avgpool1(z)
+
+                # Second convolution
+                z = self.conv2(z)
+                z, sconv2 = self.lif_conv2(z, sconv2)
+                z = self.avgpool2(z)
+                # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+                # Third convolution
+                z = self.conv3(z)
+                z, sconv3 = self.lif_conv3(z, sconv3)
+                z = self.avgpool3(z)
+                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+
+                # Fully connected part
+                z = z.flatten(start_dim=1)
+                z = torch.mul(z, mask_f1)
+
+                # First FC
+                z = self.fc1(z)
+                z, sfc1 = self.lif_fc1(z, sfc1)
+                hidden_spks[ts, :, :] = z
+
+                # Fc out
+                z = self.fc_out(z)
+                v, so = self.out(z, so)
+
+            return v, hidden_spks
