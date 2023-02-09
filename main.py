@@ -52,7 +52,8 @@ def get_args_parser() -> argparse.ArgumentParser:
     parser.add_argument("--use-only-correct-test-images", action='store_true', dest='use_only_correct_test_images',
                         help="if passed, the labels used to determine which aggregated clusters to compare to are"
                              "only correctly predicted images, not all the predictions as in real world scenario")
-    parser.add_argument("--random-samples-for-thr", action='store_true', dest='random_samples_for_thr',
+    parser.add_argument("--samples-for-thr", type=str, dest='samples_for_thr', default='disjoint',
+                        choices=['disjoint', 'random', 'same'],
                         help="if passed, the thresholds are defined using a random subset of train")
     parser.add_argument("--save-histograms-for", default=[], type=str, nargs='+', dest="save_histograms_for",
                         help="saves histogram plots for the specified methods. Options: SCP, Baseline, ODIN, Energy")
@@ -119,12 +120,14 @@ def main(args: argparse.Namespace):
             for model_name in archs_to_test:
                 hidden_neurons = model_archs[model_name][in_dataset][0]
                 output_neurons = model_archs[model_name][in_dataset][1]
-                weights_path = Path(
-                    f'state_dict_{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers.pth'
-                )
+                weights_path = pretrained_weights_folder_path / f'state_dict_{in_dataset}_{model_name}' \
+                                                                f'_{hidden_neurons}_{output_neurons}_' \
+                                                                f'{args.n_hidden_layers}_layers.pth'
                 if not weights_path.exists():
                     print(f'As {weights_path} does not exist, pretrained weights will be downloaded')
                     download_pretrained_weights(pretrained_weights_path=pretrained_weights_folder_path)
+                    exist = True
+                    break
                 else:
                     exist = True
         if exist:
@@ -154,7 +157,7 @@ def main(args: argparse.Namespace):
         logger.info(args)
 
         # ---------------------------------------------------------------
-        # Load in-distribution data from the dictionary
+        # Load in-distribution data
         # ---------------------------------------------------------------
         batch_size = get_batch_size(config, in_dataset, logger)
         train_data, train_loader, test_loader = datasets_loader[in_dataset](batch_size, datasets_path)
@@ -162,7 +165,8 @@ def main(args: argparse.Namespace):
         g_ind = g_ind.manual_seed(args.ind_seed)
         # Define the test presets for the train data as we need the data to be of the same distribution
         # as In Distribution test data
-        train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'])
+        train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'],
+                                                 real_shape=train_data[0][0].shape)
         train_loader = DataLoader(
             train_data,
             batch_size=batch_size,
@@ -175,6 +179,8 @@ def main(args: argparse.Namespace):
 
         logger.info(f'Starting In-Distribution dataset {in_dataset}')
         for model_name in tqdm(archs_to_test, desc='Model loop'):
+            # Initialize for every model, as we save the results for every model
+            results_list = []
 
             logger.info(f'Logs for benchmark with the model {model_name}')
             # ---------------------------------------------------------------
@@ -216,47 +222,54 @@ def main(args: argparse.Namespace):
             # ---------------------------------------------------------------
             # Create clusters
             # ---------------------------------------------------------------
-            number_of_samples_per_class = 1200
-            selected_indices_per_class = indices_of_every_class_for_subset(
-                train_loader,  # Here is generated the variability in the cluster creation if no generator is defined
-                n_samples_per_class=args.samples_for_cluster_per_class,
-                dataset_name=in_dataset
+            # number_of_samples_per_class = 1200
+            # selected_indices_per_class = indices_of_every_class_for_subset(
+            #     train_loader,  # Here is generated the variability in the cluster creation if no generator is defined
+            #     n_samples_per_class=args.samples_for_cluster_per_class,
+            #     dataset_name=in_dataset
+            # )
+            # training_subset_clusters = Subset(train_data, [x for x in selected_indices_per_class])
+            # subset_train_loader_clusters = DataLoader(
+            #     training_subset_clusters, batch_size=batch_size, shuffle=False
+            # )
+            # accuracy_subset_train_clusters, preds_train_clusters, _, _spk_count_train_clusters, labels_subset_train_clusters = validate_one_epoch(
+            #     model, device, subset_train_loader_clusters, return_logits=True, return_targets=True
+            # )
+            # logger.info(f'Accuracy for the train clusters subset is {accuracy_subset_train_clusters:.3f} %')
+            # # Convert spikes to counts
+            # spk_count_train_clusters = np.sum(_spk_count_train_clusters, axis=0, dtype='uint16')
+            # logger.info(f'Train subset for clusters: {spk_count_train_clusters.shape}')
+
+            accuracy_train, preds_train, logits_train, _spk_count_train, labels_train = validate_one_epoch(
+                model, device, train_loader, return_logits=True, return_targets=True
             )
-            training_subset_clusters = Subset(train_data, [x for x in selected_indices_per_class])
-            subset_train_loader_clusters = DataLoader(
-                training_subset_clusters, batch_size=batch_size, shuffle=False
-            )
-            accuracy_subset_train_clusters, preds_train_clusters, _, _spk_count_train_clusters, labels_subset_train_clusters = validate_one_epoch(
-                model, device, subset_train_loader_clusters, return_logits=True, return_targets=True
-            )
-            logger.info(f'Accuracy for the train clusters subset is {accuracy_subset_train_clusters:.3f} %')
+            logger.info(f'Accuracy for the train clusters subset is {accuracy_train:.3f} %')
             # Convert spikes to counts
-            spk_count_train_clusters = np.sum(_spk_count_train_clusters, axis=0, dtype='uint16')
-            logger.info(f'Train subset for clusters: {spk_count_train_clusters.shape}')
+            spk_count_train = np.sum(_spk_count_train, axis=0, dtype='uint16')
 
             # Define cluster mode
+            spk_count_train_clusters = spk_count_train
             if args.cluster_mode == "predictions":
-                labels_for_clustering = preds_train_clusters
+                labels_for_clustering = preds_train
             elif args.cluster_mode == "labels":
-                labels_for_clustering = labels_subset_train_clusters
+                labels_for_clustering = labels_train
             elif args.cluster_mode == "correct-predictions":
-                # Pasos
-                #   1. Ejecutar el training y obtener labels y predictions
-                #   2. Hacer np.where para obtener para cada clase los indices
-                #   3. Capar esos indices al size que hayamos decidido tener
-                raise NotImplementedError("Not yet implemented the correct-predictions mode")
+                correctly_classfied_idx = np.where(preds_train == labels_train)[0]
+                labels_for_clustering = preds_train[correctly_classfied_idx]
+                spk_count_train_clusters = spk_count_train[correctly_classfied_idx]
             else:
                 raise NameError(f"Wrong cluster mode {args.cluster_mode}")
 
-            # Create clusters
-            dist_clustering = (500, 5000)
+            logger.info(f"Available train samples' shape: {spk_count_train.shape}")
 
+            # Create cluster models
             # TODO: Tengo que conseguir que se use el args.samples_for_cluster_per_class sin que de error.
             #   El problema viene de que se coge el subset de train para hacer los clusters, pero se escoge
             #   antes de hacer el predict, y luego cuando se predice nos quedamos con menos.
             #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
             #   para cuando se ejecute
-            perf_score_name = figures_path / f'{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+            dist_clustering = (500, 5000)
+            file_name = figures_path / f'{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
             clusters_per_class, logging_info = create_clusters(
                 labels_for_clustering,
                 spk_count_train_clusters,
@@ -264,10 +277,9 @@ def main(args: argparse.Namespace):
                 distance_for_clustering=dist_clustering,
                 size=args.samples_for_cluster_per_class,
                 verbose=2,
-                name=perf_score_name,
+                name=file_name,
             )
-            logger.info(f'Mean number of clusters in total: '
-                        f'{np.mean([cl.n_clusters_ for cl in clusters_per_class])}')
+            logger.info(f'Mean number of clusters in total: {np.mean([cl.n_clusters_ for cl in clusters_per_class])}')
             logger.info(logging_info)
 
             scores_perf = silhouette_score_log(
@@ -276,59 +288,77 @@ def main(args: argparse.Namespace):
             logger.info(f'Score per class: {scores_perf}')
 
             # ---------------------------------------------------------------
-            # Create a subset of training to calculate the thresholds
+            # Select a subset of training to calculate the thresholds
             # ---------------------------------------------------------------
             # Train subset to create the thresholds
             # Introduce a the init_pos parameters to not select the same indices that for
             # the subset for creating the clusters
             # TODO: Handle cases where we don't have sufficient training data
-            if args.random_samples_for_thr:
+            # if args.random_samples_for_thr:
+            #     g_thr = torch.Generator()
+            #     g_thr.manual_seed(args.thr_seed)
+            #     rnd_idxs = torch.randint(high=len(train_data), size=(args.samples_for_thr_per_class,), generator=g_thr)
+            #     training_subset = Subset(train_data, [x for x in rnd_idxs.numpy()])
+            #     subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
+            # else:
+            #     selected_indices_per_class = indices_of_every_class_for_subset(
+            #         train_loader,
+            #         n_samples_per_class=args.samples_for_thr_per_class,
+            #         dataset_name=in_dataset,
+            #         init_pos=number_of_samples_per_class * n_classes
+            #     )
+            #     training_subset = Subset(train_data, [x for x in selected_indices_per_class])
+            #     subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
+
+            # # Extract the logits and the hidden spikes
+            # accuracy_subset_train_thr, preds_train_thr, logits_train_thr, _spk_count_train_thr = validate_one_epoch(
+            #     model, device, subset_train_loader, return_logits=True
+            # )
+            # logger.info(f'Accuracy for the train subset is {accuracy_subset_train_thr:.3f} %')
+            # # Convert spikes to counts
+            # spk_count_train_thr = np.sum(_spk_count_train_thr, axis=0, dtype='uint16')
+            # logger.info(f'Train subset for threshold: {spk_count_train_thr.shape}')
+
+            if args.samples_for_thr == 'disjoint':
+                preds_train_thr = preds_train[args.samples_for_cluster_per_class * n_classes:]
+                spk_count_train_thr = spk_count_train[args.samples_for_cluster_per_class * n_classes:]
+                logits_train_thr = logits_train[args.samples_for_cluster_per_class * n_classes:]
+
+            elif args.samples_for_thr == 'random':
                 g_thr = torch.Generator()
                 g_thr.manual_seed(args.thr_seed)
-                rnd_idxs = torch.randint(high=len(train_data), size=(args.samples_for_thr_per_class,), generator=g_thr)
-                training_subset = Subset(train_data, [x for x in rnd_idxs.numpy()])
-                subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
+                shuffle_idx = torch.randperm(len(train_data), generator=g_thr)
+                preds_train_thr = preds_train[shuffle_idx]
+                spk_count_train_thr = spk_count_train[shuffle_idx]
+                logits_train_thr = logits_train[shuffle_idx]
+
+            elif args.samples_for_thr == 'same':
+                preds_train_thr = preds_train
+                spk_count_train_thr = spk_count_train
+                logits_train_thr = logits_train
+
             else:
-                selected_indices_per_class = indices_of_every_class_for_subset(
-                    train_loader,
-                    n_samples_per_class=args.samples_for_thr_per_class,
-                    dataset_name=in_dataset,
-                    init_pos=number_of_samples_per_class * n_classes
-                )
-                training_subset = Subset(train_data, [x for x in selected_indices_per_class])
-                subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
+                raise NameError('Bad choice')
 
-            # Extract the logits and the hidden spikes
-            accuracy_subset_train_thr, preds_train_thr, logits_train_thr, _spk_count_train_thr = validate_one_epoch(
-                model, device, subset_train_loader, return_logits=True
-            )
-            logger.info(f'Accuracy for the train subset is {accuracy_subset_train_thr:.3f} %')
-            # Convert spikes to counts
-            spk_count_train_thr = np.sum(_spk_count_train_thr, axis=0, dtype='uint16')
-            logger.info(f'Train subset for threshold: {spk_count_train_thr.shape}')
-
-            # Initialize for every model, as we save the results for every model
-            results_list = []
+            logger.info(f'Train set to select thresholds: {spk_count_train_thr.shape}')
 
             # ---------------------------------------------------------------
-            # Extract predictions and hidden spikes from test InD data
+            # Extract predictions, logits and hidden spikes from test InD data
             # ---------------------------------------------------------------
-
-            model.eval()
             test_accuracy, preds_test, logits_test, _spk_count_test, test_labels = validate_one_epoch(
                 model, device, test_loader, return_logits=True, return_targets=True
             )
             if args.use_test_labels:
                 preds_test = test_labels
             logger.info(f"The accuracy of the model with loaded weights of {in_dataset} is {test_accuracy} %")
-            # Convert spikes to counts
             spk_count_test = np.sum(_spk_count_test, axis=0, dtype='uint16')
             logger.info(f'Test set: {spk_count_test.shape}')
             
             if args.use_only_correct_test_images:
-                preds_test = np.where(preds_test == test_labels)[0]
+                pos_correct_preds_test = np.where(preds_test == test_labels)[0]
+                preds_test = preds_test[pos_correct_preds_test]
+                spk_count_test = spk_count_test[pos_correct_preds_test]
                 new_number_of_samples_for_metrics = len(preds_test)
-                spk_count_test = spk_count_test[:new_number_of_samples_for_metrics]
                 logger.info(f'Only using correctly classified samples... '
                             f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
 
@@ -344,7 +374,7 @@ def main(args: argparse.Namespace):
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
                 # Load OoD dataset from the dictionary. In case it is MNIST-C, load the selected option
-                # In case the OOD test dataset has not enought instances, the train dataset is loaded
+                # In case the OOD test dataset has not enough instances, the train dataset is loaded
                 batch_size_ood = get_batch_size(config, ood_dataset, logger)
                 if ood_dataset.split('/')[0] == 'MNIST-C':
                     ood_loader = datasets_loader[ood_dataset.split('/')[0]](
@@ -359,7 +389,7 @@ def main(args: argparse.Namespace):
                         test_only=True, image_shape=datasets_conf[in_dataset]['input_size']
                     )
                     # TODO: Test for BW datasets if causes errors, as test_only is not present in some datasets
-                    size_test_data = len(test_loader.dataset)
+                    size_test_data = len(preds_test)
                     size_ood_data = len(ood_loader.dataset)
 
                     if size_ood_data == size_test_data:
@@ -403,21 +433,20 @@ def main(args: argparse.Namespace):
                 )
                 accuracy_ood = f'{accuracy_ood:.3f}'
                 logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood} %')
-
-                if args.use_only_correct_test_images:
-                    preds_ood = preds_ood[:new_number_of_samples_for_metrics]
-                    _spk_count_ood = _spk_count_ood[:new_number_of_samples_for_metrics]
-
-                # ---------------------------------------------------------------
-                # OOD Detection
-                # ---------------------------------------------------------------
-                # *************** SCP ***************
                 # Convert spikes to counts
                 if isinstance(_spk_count_ood, tuple):
                     _spk_count_ood, _ = _spk_count_ood
                 spk_count_ood = np.sum(_spk_count_ood, axis=0, dtype='uint16')
                 logger.info(f'OoD set: {spk_count_ood.shape}')
 
+                # if args.use_only_correct_test_images:
+                #     preds_ood = preds_ood[:new_number_of_samples_for_metrics]
+                #     _spk_count_ood = _spk_count_ood[:new_number_of_samples_for_metrics]
+
+                # ---------------------------------------------------------------
+                # OOD Detection
+                # ---------------------------------------------------------------
+                # *************** SCP ***************
                 # Create the median aggregations (centroids) for each cluster of each class
                 agg_counts_per_class_cluster = aggregation_per_class_and_cluster(
                     spk_count_train_clusters,
@@ -451,7 +480,7 @@ def main(args: argparse.Namespace):
                     # Compare predictions and labels and output 1 where is correctly predicted, 0 where not
                     correct_incorrect_clasification = np.where(preds_test_reordered == test_labels_reordered, 1, 0)
 
-                    # Obrain array with ind or ood decision for test instances and for specifict TPR values
+                    # Obtain array with ind or ood decision for test instances and for specific TPR values
                     # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
                     dist_thresholds = thresholds_per_class_for_each_TPR(
                         len(class_names), distances_train_per_class
@@ -474,12 +503,6 @@ def main(args: argparse.Namespace):
                             np.where(correct_incorrect_clasification[fn_position] == 1, 1, 0)
                         )
 
-                    # Crear un dataframe a partir de un diccionario donde para cada key (columna) represente
-                    # un resultado que quiero obtener y cada fila sea el TPR
-                    # Columnas: % the FN (para comprobar que coincide con el TPR), % the FN que están mal predichos
-                    # Lo primero se consigue midiendo la longitud del array y lo segundo obteniendo
-                    # la longitud de nonzero que tenemos respecto de la longitud total del array
-                    # Hay que hacer esto por cada posicion de la lista
                     columns = ['Total test samples', 'TPR [%]', 'FN [%]', 'FN [Total]',
                                'FN correctly classified [%]', 'FN misclassified [%]', 'Accuracy of the model']
                     df_fn_incorrect_vs_correct = pd.DataFrame(columns=columns)
@@ -503,23 +526,6 @@ def main(args: argparse.Namespace):
                 if args.save_metric_plots:
                     scp.save_auroc_fig(new_figures_path)
                     scp.save_aupr_fig(new_figures_path)
-
-                # # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
-                # distance_thresholds_train = thresholds_per_class_for_each_TPR(
-                #     n_classes, distances_train_per_class
-                # )
-                # # Computing precision, tpr and fpr
-                # precision, tpr_values, fpr_values = compute_precision_tpr_fpr_for_test_and_ood(
-                #     distances_test_per_class, distances_ood_per_class, distance_thresholds_train
-                # )
-                # # Appending that when FPR = 1 the TPR is also 1:
-                # tpr_values_auroc = np.append(tpr_values, 1)
-                # fpr_values_auroc = np.append(fpr_values, 1)
-                # # Metrics
-                # auroc = round(np.trapz(tpr_values_auroc, fpr_values_auroc) * 100, 2)
-                # aupr = round(np.trapz(precision, tpr_values) * 100, 2)
-                # fpr95 = round(fpr_values_auroc[95] * 100, 2)
-                # fpr80 = round(fpr_values_auroc[80] * 100, 2)
 
                 # Save results to list
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()

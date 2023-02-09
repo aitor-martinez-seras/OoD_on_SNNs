@@ -126,4 +126,6 @@ def load_MNIST_C(batch_size, datasets_path: Path, option='zigzag', *args, **kwar
 
 
 if __name__ == '__main__':
-    load_MNIST_C(64, Path(r'/datasets'))
+    # load_MNIST_C(64, Path(r'/datasets'))
+    d, tr, te = load_MNIST(64, Path(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets'))
+    print()

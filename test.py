@@ -73,10 +73,7 @@ def validate_one_epoch(model, device, test_loader, return_logits=False, return_t
             if return_targets:
                 targets.append(target_as_prediction.cpu().numpy())
 
-    try:
-        accuracy = 100.0 * correct / len(test_loader.dataset)
-    except TypeError:  # TODO: This is for OODGenomics, but this form could be implemented for all the datasets
-        accuracy = 100.0 * correct / n_samples_processed
+    accuracy = 100.0 * correct / n_samples_processed
     if return_logits is True:
         if return_targets:
             return accuracy, np.concatenate(preds).squeeze(), np.concatenate(all_logits), np.hstack(hidden_spikes), np.concatenate(targets).squeeze()
