@@ -234,7 +234,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
             import norse
             from norse.torch.functional import LSNNParameters
             assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            p = LSNNParameters(v_th=torch.tensor(0.2))
+            p = LSNNParameters(v_th=torch.tensor(0.05))
             model_snn = norse.torch.SequentialState(
                 norse.torch.Lift(torch.nn.Linear(input_size, 400, bias=False)),
                 norse.torch.LSNNRecurrent(400, 400, p=p),
