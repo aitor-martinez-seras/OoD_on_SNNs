@@ -2883,12 +2883,10 @@ class ConvSNN23(nn.Module):
                 # First convolution
                 z = self.conv1(x[ts, :])
                 z, sconv1 = self.lif_conv1(z, sconv1)
-                z = self.avgpool1(z)
 
                 # Second convolution
                 z = self.conv2(z)
                 z, sconv2 = self.lif_conv2(z, sconv2)
-                z = self.avgpool2(z)
                 # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Third convolution
@@ -2922,12 +2920,10 @@ class ConvSNN23(nn.Module):
                 # First convolution
                 z = self.conv1(x[ts])
                 z, sconv1 = self.lif_conv1(z, sconv1)
-                z = self.avgpool1(z)
 
                 # Second convolution
                 z = self.conv2(z)
                 z, sconv2 = self.lif_conv2(z, sconv2)
-                z = self.avgpool2(z)
                 # print(f'After conv1: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Third convolution
