@@ -646,7 +646,7 @@ class FCSNN9(torch.nn.Module):
         return vo, hdn_spikes
 
 
-class FCSNN10(torch.nn.Module):
+class FCSNN11(torch.nn.Module):
     """
     Direct
     """

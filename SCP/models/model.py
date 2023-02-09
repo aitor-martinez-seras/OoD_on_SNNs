@@ -7,7 +7,7 @@ from norse.torch import PoissonEncoder
 from norse.torch import ConstantCurrentLIFEncoder
 from norse.torch import LIFParameters
 
-from SCP.models.fc import FCSNN1, FCSNN2, FCSNN3, FCSNN4, FCSNN5, FCSNN6, FCSNN7, FC8, FCSNN9
+from SCP.models.fc import FCSNN1, FCSNN2, FCSNN3, FCSNN4, FCSNN5, FCSNN6, FCSNN7, FC8, FCSNN9, FCSNN11
 from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, ConvSNN9, \
     ConvSNN10, ConvSNN11_no_dropout, ConvSNN8, ConvSNN12, ConvSNN13, ConvSNN14, ConvSNN16, ConvSNN15, ConvSNN17, \
     ConvSNN18, ConvSNN19_max_pooling, ConvSNN20, ConvSNN21, ConvSNN22
@@ -248,6 +248,16 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 encoder=no_encoder,
                 snn=model_snn,
                 decoder=decoder_seq_state,
+            )
+
+        elif n_hidden_layers == 11:  # Model for OODGenomics
+            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
+            model = Model(
+                encoder=no_encoder,
+                snn=FCSNN11(input_features=input_size,
+                            hidden_features=hidden_neurons,
+                            output_features=output_neurons),
+                decoder=decode
             )
 
         else:

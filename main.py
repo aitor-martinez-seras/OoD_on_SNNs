@@ -179,6 +179,7 @@ def main(args: argparse.Namespace):
             results_list = []
 
             logger.info(f'Logs for benchmark with the model {model_name}')
+
             # ---------------------------------------------------------------
             # Load model and its weights
             # ---------------------------------------------------------------
@@ -198,6 +199,9 @@ def main(args: argparse.Namespace):
                 n_time_steps=args.n_time_steps,  # Default value is for reproducing results
             )
             model = model.to(device)
+            logger.info('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
+            logger.info(model)
+            logger.info('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
 
             # TODO: Mejorar la forma de acceder al dataset... El argumento hidden layers podría empezar a llamarse
             #   de otra manera quiza...
