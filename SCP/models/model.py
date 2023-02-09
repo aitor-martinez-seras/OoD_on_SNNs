@@ -231,36 +231,19 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
 
         elif n_hidden_layers == 10:  # Model for OODGenomics
             import norse
+            from norse.torch.functional import LSNNParameters
             assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-
-            class Model_2(torch.nn.Module):
-                def __init__(self, encoder, snn, decoder):
-                    super().__init__()
-                    self.encoder = encoder
-                    self.snn = snn
-                    self.decoder = decoder
-
-                def forward(self, x, flag=None):
-                    x = self.encoder(x)
-                    if flag is None:
-                        x = self.snn(x)
-                        x = self.decoder(x)
-                        return x
-
-                    elif flag == "hidden_spikes_and_logits":
-                        x, hdd_spks = self.snn(x, flag)
-                        return x, hdd_spks
-
+            p = LSNNParameters(v_th=torch.tensor(0.2))
             model_snn = norse.torch.SequentialState(
                 norse.torch.Lift(torch.nn.Linear(input_size, 400, bias=False)),
-                norse.torch.LSNNRecurrent(400, 400),
+                norse.torch.LSNNRecurrent(400, 400, p=p),
                 norse.torch.Lift(torch.nn.Linear(400, hidden_neurons, bias=False)),  # The idea is to use 128
-                norse.torch.LSNNRecurrent(hidden_neurons, hidden_neurons),
+                norse.torch.LSNNRecurrent(hidden_neurons, hidden_neurons, p=p),
                 norse.torch.Lift(torch.nn.Linear(hidden_neurons, output_neurons, bias=False)),
                 norse.torch.LICell(),
             )
 
-            model = Model_2(
+            model = Model(
                 encoder=no_encoder,
                 snn=model_snn,
                 decoder=decoder_seq_state,
