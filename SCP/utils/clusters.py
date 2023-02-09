@@ -215,13 +215,13 @@ def select_best_distance_threshold_for_each_class(
 
 
 def create_clusters_per_class_based_on_distance_threshold(
-        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, size
 ):
     n_classes = len(class_names)
     # Create the clusters by extracting the labels for every sample
     clusters_per_class = []
     for class_index in range(n_classes):
-        indices = find_idx_of_class(class_index, preds_train, 1000)
+        indices = find_idx_of_class(class_index, preds_train, size)
         if isinstance(selected_distance_thrs_per_class, list):
             cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='complete',
                                                     distance_threshold=selected_distance_thrs_per_class[class_index])
@@ -255,7 +255,7 @@ def create_clusters(preds_train, spk_count_train, class_names, size=1000,
 
     # Create the clusters for every class
     clusters_per_class = create_clusters_per_class_based_on_distance_threshold(
-        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, size
     )
 
     if verbose == 2:
