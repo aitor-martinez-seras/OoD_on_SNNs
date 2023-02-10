@@ -2953,7 +2953,6 @@ class ConvSNN24(nn.Module):
     4 convs with padding and avgpooling, one linear layer
     """
     def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
-        # super(ConvNet, self).__init__()
         super().__init__()
 
         self.ftmaps_h = int((((input_size[1] / 2) / 2) / 2) / 2)
@@ -2991,9 +2990,13 @@ class ConvSNN24(nn.Module):
         batch_size = x.shape[1]
 
         # Dropout
-        # drop = nn.Dropout(p=0.2, inplace=True)
-        # mask_f1 = Variable(torch.ones(batch_size, self.features_out).cuda(), requires_grad=False)
-        # mask_f1 = drop(mask_f1)
+        drop_conv = nn.Dropout(p=0.25, inplace=True)
+        mask_c1 = Variable(torch.ones(batch_size, self.features_out).cuda(), requires_grad=False)
+        mask_c1 = drop_conv(mask_c1)
+
+        drop_fc = nn.Dropout(p=0.25, inplace=True)
+        mask_fc = Variable(torch.ones(batch_size, self.hidden_neurons).cuda(), requires_grad=False)
+        mask_fc = drop_fc(mask_fc)
 
         # specify the initial states
         sconv1 = sconv2 = sconv3 = sconv4 = sfc1 = so = None
@@ -3026,11 +3029,12 @@ class ConvSNN24(nn.Module):
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
-                # z = torch.mul(z, mask_f1)
+                z = torch.mul(z, mask_c1)
 
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
+                z = torch.mul(z, mask_fc)
 
                 # Fc out
                 z = self.fc_out(z)

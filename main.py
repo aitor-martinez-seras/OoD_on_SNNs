@@ -222,29 +222,11 @@ def main(args: argparse.Namespace):
             # ---------------------------------------------------------------
             # Create clusters
             # ---------------------------------------------------------------
-            # number_of_samples_per_class = 1200
-            # selected_indices_per_class = indices_of_every_class_for_subset(
-            #     train_loader,  # Here is generated the variability in the cluster creation if no generator is defined
-            #     n_samples_per_class=args.samples_for_cluster_per_class,
-            #     dataset_name=in_dataset
-            # )
-            # training_subset_clusters = Subset(train_data, [x for x in selected_indices_per_class])
-            # subset_train_loader_clusters = DataLoader(
-            #     training_subset_clusters, batch_size=batch_size, shuffle=False
-            # )
-            # accuracy_subset_train_clusters, preds_train_clusters, _, _spk_count_train_clusters, labels_subset_train_clusters = validate_one_epoch(
-            #     model, device, subset_train_loader_clusters, return_logits=True, return_targets=True
-            # )
-            # logger.info(f'Accuracy for the train clusters subset is {accuracy_subset_train_clusters:.3f} %')
-            # # Convert spikes to counts
-            # spk_count_train_clusters = np.sum(_spk_count_train_clusters, axis=0, dtype='uint16')
-            # logger.info(f'Train subset for clusters: {spk_count_train_clusters.shape}')
-
+            # Process train instances and generate logits and spike counts
             accuracy_train, preds_train, logits_train, _spk_count_train, labels_train = validate_one_epoch(
                 model, device, train_loader, return_logits=True, return_targets=True
             )
             logger.info(f'Accuracy for the train clusters subset is {accuracy_train:.3f} %')
-            # Convert spikes to counts
             spk_count_train = np.sum(_spk_count_train, axis=0, dtype='uint16')
 
             # Define cluster mode
@@ -275,7 +257,7 @@ def main(args: argparse.Namespace):
                 spk_count_train_clusters,
                 class_names,
                 distance_for_clustering=dist_clustering,
-                size=args.samples_for_cluster_per_class,
+                n_samples_per_class=args.samples_for_cluster_per_class,
                 verbose=2,
                 name=file_name,
             )
@@ -283,7 +265,7 @@ def main(args: argparse.Namespace):
             logger.info(logging_info)
 
             scores_perf = silhouette_score_log(
-                clusters_per_class, labels_for_clustering, spk_count_train_clusters, args.samples_for_cluster_per_class
+                clusters_per_class, labels_for_clustering, spk_count_train_clusters
             )
             logger.info(f'Score per class: {scores_perf}')
 

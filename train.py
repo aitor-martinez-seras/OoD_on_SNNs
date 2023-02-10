@@ -3,7 +3,7 @@ from pathlib import Path
 import argparse
 
 from torch.optim.lr_scheduler import LinearLR
-from tqdm import tqdm, trange
+from tqdm import tqdm
 import torch
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
@@ -40,9 +40,6 @@ def get_args_parser():
                         dest="n_hidden_layers", help="number of hidden layers of the models")
     parser.add_argument("--penultimate-layer-neurons", default=200, type=int, dest="penultimate_layer_neurons",
                         help="number of neurons in the second to last layer of the model")
-    # parser.add_argument("--load-model", action="store_true", default=False,
-    #                     help="Can only be set if no SNN is used, and in that case the pretrained weights for"
-    #                          "RPN and Detector will be used")
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--lr", default=0.001, type=float)
     parser.add_argument("--opt", default="Adam", type=str, help="optimizer. Options: AdamW and SGD")

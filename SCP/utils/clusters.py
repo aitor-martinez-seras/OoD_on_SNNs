@@ -1,11 +1,12 @@
+from pathlib import Path
+
 import numpy as np
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 from sklearn.cluster import AgglomerativeClustering
 import sklearn.metrics as skmetrics
 
 from .common import find_idx_of_class
-from .plots import plot_dendrogram, plot_clusters_performance, plot_dendogram_per_class
+from .plots import plot_clusters_performance, plot_dendogram_per_class
 
 
 def create_string_for_logger(clusters_per_class, class_names) -> str:
@@ -180,11 +181,17 @@ def select_best_distance_threshold_for_each_class(
                 print(f'Error probably caused by the lack of training samples for class index {class_index}')
                 raise e
             try:  # TODO: We may need to modify this call in case another function is used
-                clustering_performance_scores.append(
-                    cluster_performance_measuring_function(
-                        spk_count_train[indices], cluster_model.labels_, metric='manhattan'
+                if performance_measuring_method == 'silhouette':
+                    clustering_performance_scores.append(
+                        cluster_performance_measuring_function(
+                            spk_count_train[indices], cluster_model.labels_, metric='manhattan'
+                        )
                     )
-                )
+                else:
+                    clustering_performance_scores.append(cluster_performance_measuring_function(
+                        spk_count_train[indices], cluster_model.labels_
+                    ))
+
             except ValueError:
                 clustering_performance_scores.append(0)
 
@@ -235,12 +242,45 @@ def create_clusters_per_class_based_on_distance_threshold(
 
 
 # Possible refactorization: enable multiprocessing, as each class is independent
-def create_clusters(preds_train, spk_count_train, class_names, size=1000,
-                    distance_for_clustering=None, verbose=2, name='', performance_measuring_method='silhouette'):
+def create_clusters(preds_train, spk_count_train, class_names, n_samples_per_class=1000,
+                    distance_for_clustering=None, verbose=2, name=Path(), performance_measuring_method='silhouette'):
     """
-    Verbose = 0 -> No prints and plots neither loggin info
-    verbose = 1 -> Returns loggin info only
-    Verbose = 2 -> Logging info and plots
+    Function that creates the cluster for each class independently
+    Parameters
+    ----------
+    preds_train : array-like of shape (n_samples,),
+        The predictions of the train instances
+
+    spk_count_train: array-like of shape (n_samples, n_hidden_neurons),
+        The spike counts of the train instances, must be in same order as preds_train
+
+    class_names: List,
+        Names of the classes in the In-Distribution Dataset
+
+    n_samples_per_class: int,
+        Number of samples to use to create clusters for each class
+
+    distance_for_clustering: Tuple[int, int]
+        range of distances to find the appropriate distance threshold
+
+    verbose: int,
+        Verbose = 0 -> No prints and plots neither loggin info
+        verbose = 1 -> Returns loggin info only
+        Verbose = 2 -> Logging info and plots
+
+    name: Path
+        String that defines the file name for the figures generated
+
+    performance_measuring_method: str, default='silhouette',
+        String that defines what method to use to measure the performance or goodness of fit of the clusters
+
+    Returns
+    -------
+    clusters_per_class : List[AgglomerativeClustering]
+        List with the cluster models
+
+    string_for_logger: str
+        String used to log the info about the clusters
     """
     # Select a distance threshold for each class
     if distance_for_clustering is None:  # in case it is not defined
@@ -249,13 +289,13 @@ def create_clusters(preds_train, spk_count_train, class_names, size=1000,
 
     # Select the best performing cluster configuration for each class based on a performance metric
     selected_distance_thrs_per_class, clustering_performance_scores_for_selected_thresholds_per_class = select_best_distance_threshold_for_each_class(
-        class_names, possible_distance_thrs, size, preds_train, spk_count_train, performance_measuring_method,
+        class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train, performance_measuring_method,
         name, verbose
     )
 
     # Create the clusters for every class
     clusters_per_class = create_clusters_per_class_based_on_distance_threshold(
-        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, size
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, n_samples_per_class
     )
 
     if verbose == 2:
@@ -268,7 +308,7 @@ def create_clusters(preds_train, spk_count_train, class_names, size=1000,
         return clusters_per_class, string_for_logger
 
 
-def silhouette_score_log(clusters_per_class, preds_train, spk_count_train, size):
+def silhouette_score_log(clusters_per_class, preds_train, spk_count_train):
     scores = []
     for class_index, cluster_model in enumerate(clusters_per_class):
         indices = find_idx_of_class(class_index, preds_train, 1000)
