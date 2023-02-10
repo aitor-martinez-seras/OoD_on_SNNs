@@ -347,6 +347,8 @@ def main(args: argparse.Namespace):
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
+                size_test_data = 0
+                size_ood_data = 0
                 # Load OoD dataset from the dictionary. In case it is MNIST-C, load the selected option
                 # In case the OOD test dataset has not enough instances, the train dataset is loaded
                 batch_size_ood = get_batch_size(config, ood_dataset, logger)
@@ -397,10 +399,7 @@ def main(args: argparse.Namespace):
                                     f"the number of samples of test data, equal to {size_test_data}")
                         g_ood = torch.Generator()
                         g_ood.manual_seed(args.ood_seed)
-                        rnd_idxs = torch.randint(
-                            high=len(ood_loader.dataset), size=(size_test_data,), generator=g_ood)
-                        ood_subset = Subset(ood_loader.dataset, [x for x in rnd_idxs.numpy()])
-                        ood_loader = DataLoader(ood_subset, batch_size=batch_size_ood, shuffle=False)
+                        rnd_idxs = torch.randint(high=len(ood_loader.dataset), size=(size_test_data,), generator=g_ood)
 
                 # Extract the spikes and logits for OoD
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(
@@ -408,10 +407,14 @@ def main(args: argparse.Namespace):
                 )
                 accuracy_ood = f'{accuracy_ood:.3f}'
                 logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood} %')
+
                 # Convert spikes to counts
                 if isinstance(_spk_count_ood, tuple):
                     _spk_count_ood, _ = _spk_count_ood
                 spk_count_ood = np.sum(_spk_count_ood, axis=0, dtype='uint16')
+                if size_ood_data > size_test_data:
+                    preds_ood = preds_ood[rnd_idxs]
+                    spk_count_ood = spk_count_ood[rnd_idxs]
                 logger.info(f'OoD set: {spk_count_ood.shape}')
 
                 # ---------------------------------------------------------------
