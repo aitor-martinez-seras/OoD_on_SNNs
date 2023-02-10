@@ -272,35 +272,6 @@ def main(args: argparse.Namespace):
             # ---------------------------------------------------------------
             # Select a subset of training to calculate the thresholds
             # ---------------------------------------------------------------
-            # Train subset to create the thresholds
-            # Introduce a the init_pos parameters to not select the same indices that for
-            # the subset for creating the clusters
-            # TODO: Handle cases where we don't have sufficient training data
-            # if args.random_samples_for_thr:
-            #     g_thr = torch.Generator()
-            #     g_thr.manual_seed(args.thr_seed)
-            #     rnd_idxs = torch.randint(high=len(train_data), size=(args.samples_for_thr_per_class,), generator=g_thr)
-            #     training_subset = Subset(train_data, [x for x in rnd_idxs.numpy()])
-            #     subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
-            # else:
-            #     selected_indices_per_class = indices_of_every_class_for_subset(
-            #         train_loader,
-            #         n_samples_per_class=args.samples_for_thr_per_class,
-            #         dataset_name=in_dataset,
-            #         init_pos=number_of_samples_per_class * n_classes
-            #     )
-            #     training_subset = Subset(train_data, [x for x in selected_indices_per_class])
-            #     subset_train_loader = DataLoader(training_subset, batch_size=batch_size, shuffle=False)
-
-            # # Extract the logits and the hidden spikes
-            # accuracy_subset_train_thr, preds_train_thr, logits_train_thr, _spk_count_train_thr = validate_one_epoch(
-            #     model, device, subset_train_loader, return_logits=True
-            # )
-            # logger.info(f'Accuracy for the train subset is {accuracy_subset_train_thr:.3f} %')
-            # # Convert spikes to counts
-            # spk_count_train_thr = np.sum(_spk_count_train_thr, axis=0, dtype='uint16')
-            # logger.info(f'Train subset for threshold: {spk_count_train_thr.shape}')
-
             if args.samples_for_thr == 'disjoint':
                 preds_train_thr = preds_train[args.samples_for_cluster_per_class * n_classes:]
                 spk_count_train_thr = spk_count_train[args.samples_for_cluster_per_class * n_classes:]
@@ -384,7 +355,8 @@ def main(args: argparse.Namespace):
                             test_only=False, image_shape=datasets_conf[in_dataset]['input_size']
                         )
                         ood_transform = load_test_presets(datasets_conf[in_dataset]['input_size'])
-                        if ood_dataset == 'Caltech101':  # TODO: Find a better way to do this
+                        # TODO: Find a better way to do this
+                        if ood_dataset == 'Caltech101' or ood_dataset == 'FER2013':
                             ood_transform = Compose(
                                 [
                                     ood_transform,

@@ -35,7 +35,7 @@ def get_args_parser():
     parser.add_argument("--n-time-steps", default=24, type=int, dest='n_time_steps',
                         help="number of timesteps for the simulation")
     parser.add_argument("--f-max", default=100, type=int, dest='f_max',
-                        help="max frecuency of the input neurons per second")
+                        help="max frequency of the input neurons per second")
     parser.add_argument("--n-hidden-layers", default=1, type=int,
                         dest="n_hidden_layers", help="number of hidden layers of the models")
     parser.add_argument("--penultimate-layer-neurons", default=200, type=int, dest="penultimate_layer_neurons",

@@ -10,6 +10,9 @@ from SCP.datasets.caltech import load_caltech101
 from SCP.datasets.fgvc_aircraft import load_FGVCAircraft
 from SCP.datasets.dtd import load_DTD
 from SCP.datasets.genomics import load_oodgenomics
+from SCP.datasets.celeb import load_celebA
+from SCP.datasets.fer2013 import load_fer2013
+from SCP.datasets.country import load_country211
 
 
 datasets_loader = {
@@ -30,4 +33,7 @@ datasets_loader = {
     'CIFAR100': load_CIFAR100,
     'DTD': load_DTD,
     'OODGenomics': load_oodgenomics,
+    'CelebA': load_celebA,
+    'FER2013': load_fer2013,
+    'Country211': load_country211,
 }
