@@ -315,6 +315,26 @@ def main(args: argparse.Namespace):
                 logger.info(f'Only using correctly classified samples... '
                             f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
 
+            # Create the median aggregations (centroids) for each cluster of each class
+            print('Spk counts:', spk_count_train_clusters.shape)
+            print('Labels:', labels_for_clustering.shape)
+            print('Clusters', [len(x.labels_) for x in clusters_per_class])
+            agg_counts_per_class_cluster = aggregation_per_class_and_cluster(
+                spk_count_train_clusters,
+                labels_for_clustering,
+                clusters_per_class,
+                n_classes,
+                n_samples=args.samples_for_cluster_per_class, option='median'
+            )
+
+            # Computation of the distances of train and test
+            distances_train_per_class, _ = distance_to_clusters_averages(
+                spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, n_classes
+            )
+            distances_test_per_class, _ = distance_to_clusters_averages(
+                spk_count_test, preds_test, agg_counts_per_class_cluster, n_classes
+            )
+
             # ---------------------------------------------------------------
             # Evaluate OOD performance
             # ---------------------------------------------------------------
@@ -323,6 +343,7 @@ def main(args: argparse.Namespace):
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
                 new_figures_path = figures_path / f'{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
                 # ---------------------------------------------------------------
@@ -393,29 +414,11 @@ def main(args: argparse.Namespace):
                 spk_count_ood = np.sum(_spk_count_ood, axis=0, dtype='uint16')
                 logger.info(f'OoD set: {spk_count_ood.shape}')
 
-                # if args.use_only_correct_test_images:
-                #     preds_ood = preds_ood[:new_number_of_samples_for_metrics]
-                #     _spk_count_ood = _spk_count_ood[:new_number_of_samples_for_metrics]
-
                 # ---------------------------------------------------------------
                 # OOD Detection
                 # ---------------------------------------------------------------
                 # *************** SCP ***************
-                # Create the median aggregations (centroids) for each cluster of each class
-                agg_counts_per_class_cluster = aggregation_per_class_and_cluster(
-                    spk_count_train_clusters,
-                    labels_for_clustering,
-                    clusters_per_class,
-                    n_classes,
-                    n_samples=1000, option='median'
-                )
-                # Computation of the distances of train, test and ood
-                distances_train_per_class, _ = distance_to_clusters_averages(
-                    spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, n_classes
-                )
-                distances_test_per_class, _ = distance_to_clusters_averages(
-                    spk_count_test, preds_test, agg_counts_per_class_cluster, n_classes
-                )
+                # Computation of the distances of ood instances
                 distances_ood_per_class, _ = distance_to_clusters_averages(
                     spk_count_ood, preds_ood, agg_counts_per_class_cluster, n_classes
                 )
@@ -477,6 +480,7 @@ def main(args: argparse.Namespace):
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     save_histogram=save_scp_hist, name=new_figures_path, class_names=class_names, preds_ood=preds_ood
                 )
+
                 if args.save_metric_plots:
                     scp.save_auroc_fig(new_figures_path)
                     scp.save_aupr_fig(new_figures_path)
