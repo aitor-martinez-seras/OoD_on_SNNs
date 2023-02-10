@@ -265,7 +265,7 @@ def main(args: argparse.Namespace):
             logger.info(logging_info)
 
             scores_perf = silhouette_score_log(
-                clusters_per_class, labels_for_clustering, spk_count_train_clusters
+                clusters_per_class, labels_for_clustering, spk_count_train_clusters, args.samples_for_cluster_per_class,
             )
             logger.info(f'Score per class: {scores_perf}')
 

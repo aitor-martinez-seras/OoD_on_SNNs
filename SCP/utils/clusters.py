@@ -308,10 +308,10 @@ def create_clusters(preds_train, spk_count_train, class_names, n_samples_per_cla
         return clusters_per_class, string_for_logger
 
 
-def silhouette_score_log(clusters_per_class, preds_train, spk_count_train):
+def silhouette_score_log(clusters_per_class, preds_train, spk_count_train, n_samples_per_class=1000):
     scores = []
     for class_index, cluster_model in enumerate(clusters_per_class):
-        indices = find_idx_of_class(class_index, preds_train, 1000)
+        indices = find_idx_of_class(class_index, preds_train, n_samples_per_class)
         scores.append(round(
             skmetrics.silhouette_score(spk_count_train[indices], cluster_model.labels_, metric='manhattan'), 3
         ))
