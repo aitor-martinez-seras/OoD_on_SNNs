@@ -1,6 +1,6 @@
 in_distribution_datasets = ['CIFAR100']
 out_of_distribution_datasets = [
-    'CIFAR100','Flowers102', 'FGVCAircraft', 'Caltech101', 'DTD'
+    'CIFAR100','Flowers102', 'FGVCAircraft', 'Caltech101', 'DTD', 'CelebA', 'FER2013', 'Country211'
 ]
 
 [hyperparameters]
@@ -10,5 +10,5 @@ batch_size = 64
 
 [model_arch]
     [model_arch.ConvNet]
-        # 'CIFAR10' = [128, 10]
-        'CIFAR100' = [300, 100]
+        'CIFAR10' = [128, 10]
+        #'CIFAR100' = [300, 100]
