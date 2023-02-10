@@ -3062,6 +3062,11 @@ class ConvSNN24(nn.Module):
                 z, sconv3 = self.lif_conv3(z, sconv3)
                 z = self.avgpool3(z)
 
+                # Fourth convolution
+                z = self.conv4(z)
+                z, sconv4 = self.lif_conv4(z, sconv4)
+                z = self.avgpool4(z)
+
                 # Fully connected part
                 z = z.flatten(start_dim=1)
                 # z = torch.mul(z, mask_f1)
