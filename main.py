@@ -377,7 +377,9 @@ def main(args: argparse.Namespace):
                             batch_size_ood, datasets_path,
                             test_only=False, image_shape=datasets_conf[in_dataset]['input_size']
                         )
-                        ood_transform = load_test_presets(datasets_conf[in_dataset]['input_size'])
+                        ood_transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'],
+                                                          real_shape=ood_train_data[0][0].shape)
+                        # ood_transform = load_test_presets(datasets_conf[in_dataset]['input_size'])
                         # TODO: Find a better way to do this
                         if ood_dataset == 'Caltech101' or ood_dataset == 'FER2013':
                             ood_transform = Compose(
