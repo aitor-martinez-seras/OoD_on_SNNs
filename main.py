@@ -155,6 +155,7 @@ def main(args: argparse.Namespace):
         # ---------------------------------------------------------------
         # Load in-distribution data
         # ---------------------------------------------------------------
+        # TODO: Think of a better way to handle datasets
         batch_size = get_batch_size(config, in_dataset, logger)
         train_data, train_loader, test_loader = datasets_loader[in_dataset](batch_size, datasets_path)
         g_ind = torch.Generator()
