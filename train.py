@@ -154,7 +154,7 @@ def main(args):
         raise NotImplementedError(f'Dataset with name {args.dataset} is not implemented')
     print(f'Loading {args.dataset}...')
     train_data, train_loader, test_loader = datasets_loader[args.dataset](
-        args.batch_size, datasets_path,
+        args.batch_size, datasets_path, image_shape=dat_conf['input_size']
     )
     print(f'Load of {args.dataset} completed!')
 
