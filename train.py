@@ -42,7 +42,7 @@ def get_args_parser():
                         help="number of neurons in the second to last layer of the model")
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--lr", default=0.001, type=float)
-    parser.add_argument("--opt", default="Adam", type=str, help="optimizer. Options: AdamW and SGD")
+    parser.add_argument("--opt", default="AdamW", type=str, help="optimizer. Options: AdamW and SGD")
     parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
     parser.add_argument(
         "--wd", "--weight-decay", default=0.00001, type=float, metavar="W",
@@ -190,8 +190,10 @@ def main(args):
             weight_decay=args.weight_decay,
             nesterov="nesterov" in opt_name,
         )
-    elif opt_name == "adam":
+    elif opt_name == "adamw":
         optimizer = torch.optim.AdamW(params, lr=args.lr, weight_decay=args.weight_decay)
+    elif opt_name == "adam":
+        optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.weight_decay)
     else:
         raise RuntimeError(f"Invalid optimizer {args.opt}. Only SGD and AdamW are supported.")
 
