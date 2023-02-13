@@ -2969,7 +2969,7 @@ class ConvSNN24(nn.Module):
         self.avgpool4 = nn.AvgPool2d(kernel_size=2)
 
         # Linear part
-        self.features_out = 2 * 2 * 128
+        self.features_out = self.ftmaps_h * self.ftmaps_v * 128
         self.fc1 = nn.Linear(self.features_out, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
