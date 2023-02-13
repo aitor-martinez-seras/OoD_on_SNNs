@@ -10,7 +10,7 @@ from SCP.utils.plots import plot_image, plot_grid, show_img_from_dataloader, sho
 
 def load_CIFAR10_BW(batch_size, datasets_path: Path, *args, **kwargs):
 
-    transform = load_test_presets(img_shape=[1, 28, 28], real_shape=[1, 32, 32])
+    transform = load_test_presets(img_shape=[1, 28, 28], real_shape=[3, 32, 32])
 
     test_data_CIFAR10 = torchvision.datasets.CIFAR10(
         root=datasets_path,
@@ -145,7 +145,8 @@ if __name__ == "__main__":
 
     dat = 10
     if dat == 10:
-        dataset, train_loader, test_loader = load_CIFAR10(64, datasets_path, test_only=False)
+        #dataset, train_loader, test_loader = load_CIFAR10(64, datasets_path, test_only=False)
+        train_loader = load_CIFAR10_BW(64, datasets_path, test_only=False)
         # imgs, targets = next(iter(train_loader))
         show_img_from_dataloader(train_loader, img_pos=0, number_of_iterations=1)
         show_grid_from_dataloader(train_loader)
