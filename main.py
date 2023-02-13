@@ -9,6 +9,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, Subset
 from torchvision.transforms import Compose, Lambda
+import torchvision.transforms as T
 
 from SCP.benchmark.scp import SCP
 from SCP.benchmark.weights import download_pretrained_weights
@@ -164,6 +165,14 @@ def main(args: argparse.Namespace):
         # as In Distribution test data
         train_data.transform = load_test_presets(img_shape=datasets_conf[in_dataset]['input_size'],
                                                  real_shape=train_data[0][0].shape)
+        if in_dataset == 'Letters':
+            train_data.transform = T.Compose(
+                [
+                    lambda img: T.functional.rotate(img, -90),
+                    lambda img: T.functional.hflip(img),
+                    T.transforms.ToTensor(),
+                ]
+            )
         train_loader = DataLoader(
             train_data,
             batch_size=batch_size,
@@ -390,6 +399,14 @@ def main(args: argparse.Namespace):
                                 ]
                             )
                         ood_train_data.transform = ood_transform
+                        if ood_dataset == 'Letters':  # TODO: Handle in a different way
+                            ood_train_data.transform = T.Compose(
+                                [
+                                    lambda img: T.functional.rotate(img, -90),
+                                    lambda img: T.functional.hflip(img),
+                                    T.transforms.ToTensor(),
+                                ]
+                            )
                         g_ood = torch.Generator()
                         g_ood.manual_seed(8)
                         rnd_idxs = torch.randint(
@@ -403,6 +420,14 @@ def main(args: argparse.Namespace):
                         g_ood = torch.Generator()
                         g_ood.manual_seed(args.ood_seed)
                         rnd_idxs = torch.randint(high=len(ood_loader.dataset), size=(size_test_data,), generator=g_ood)
+                        if ood_dataset == 'Letters':  # TODO: Handle in a different way
+                            ood_loader.dataset.transform = T.Compose(
+                                [
+                                    lambda img: T.functional.rotate(img, -90),
+                                    lambda img: T.functional.hflip(img),
+                                    T.transforms.ToTensor(),
+                                ]
+                            )
 
                 # Extract the spikes and logits for OoD
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(

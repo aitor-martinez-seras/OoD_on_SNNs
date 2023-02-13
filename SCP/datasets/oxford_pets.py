@@ -24,13 +24,9 @@ def load_oxford_pets(batch_size, datasets_path: Path, test_only=False, image_sha
     if test_only is False:
         train_transform = transforms.Compose(
             [
-                transforms.Resize((32, 32)),
-                # transforms.RandomRotation(20, ),
+                transforms.Resize((64, 64)),
                 transforms.RandomHorizontalFlip(),
-                # transforms.RandomVerticalFlip(),
                 transforms.ToTensor(),
-                # To represent gray images as RGB images
-                # transforms.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
             ]
         )
         train_data = torchvision.datasets.OxfordIIITPet(
