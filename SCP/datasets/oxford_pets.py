@@ -8,7 +8,7 @@ from SCP.datasets.presets import load_test_presets
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-def load_oxford_pets(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32), *args, **kwargs):
+def load_oxford_pets(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 64, 64), *args, **kwargs):
 
     test_transform = load_test_presets(img_shape=image_shape)
     test_data = torchvision.datasets.OxfordIIITPet(
