@@ -36,5 +36,5 @@ datasets_loader = {
     'CelebA': load_celebA,
     'FER2013': load_fer2013,
     'GTSRB': load_GTSRB,
-    'Oxford-Pets': load_oxford_pets,
+    'Oxford-pets': load_oxford_pets,
 }
