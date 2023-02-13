@@ -40,7 +40,7 @@ input_size = [3, 96, 96]
 classes = 47
 
 [Oxford-pets]
-input_size = [3, 64, 64]
+input_size = [3, 128, 128]
 classes = 37
 
 [FGVCAircraft]

@@ -3105,7 +3105,9 @@ class ConvSNN25(nn.Module):
 
         # Linear part
         self.features_out = self.ftmaps_h * self.ftmaps_v * 128
-        self.fc1 = nn.Linear(self.features_out, hidden_neurons, bias=False)
+        self.intermediate_linear_neurons = 1024
+        self.fc1 = nn.Linear(self.features_out, self.intermediate_linear_neurons, bias=False)
+        self.fc2 = nn.Linear(self.intermediate_linear_neurons, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
@@ -3115,6 +3117,7 @@ class ConvSNN25(nn.Module):
         self.lif_conv4 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
 
         self.lif_fc1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
+        self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
         self.out = LICell()
 
         self.hidden_neurons = hidden_neurons
@@ -3125,21 +3128,19 @@ class ConvSNN25(nn.Module):
         batch_size = x.shape[1]
 
         # Dropout
-        # drop_conv = nn.Dropout(p=0.25, inplace=True)
-        # mask_c1 = Variable(torch.ones(batch_size, self.features_out).cuda(), requires_grad=False)
-        # mask_c1 = drop_conv(mask_c1)
-        #
-        # drop_fc = nn.Dropout(p=0.25, inplace=True)
-        # mask_fc = Variable(torch.ones(batch_size, self.hidden_neurons).cuda(), requires_grad=False)
-        # mask_fc = drop_fc(mask_fc)
+        drop_conv = nn.Dropout(p=0.25, inplace=True)
+        mask_c1 = Variable(torch.ones(batch_size, self.features_out).cuda(), requires_grad=False)
+        mask_c1 = drop_conv(mask_c1)
+
+        drop_fc = nn.Dropout(p=0.25, inplace=True)
+        mask_fc = Variable(torch.ones(batch_size, self.intermediate_linear_neurons).cuda(), requires_grad=False)
+        mask_fc = drop_fc(mask_fc)
 
         # specify the initial states
-        sconv1 = sconv2 = sconv3 = sconv4 = sfc1 = so = None
+        sconv1 = sconv2 = sconv3 = sconv4 = sfc1 = sfc2 = so = None
 
         if flag is None:
             for ts in range(seq_length):
-                # print(f'Encoder: {(x[ts, :].count_nonzero() / x[ts, :].nelement()) * 100:.3f}%')
-
                 # First convolution
                 z = self.conv1(x[ts, :])
                 z, sconv1 = self.lif_conv1(z, sconv1)
@@ -3164,12 +3165,16 @@ class ConvSNN25(nn.Module):
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
-                #z = torch.mul(z, mask_c1)
+                z = torch.mul(z, mask_c1)
 
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
-                #z = torch.mul(z, mask_fc)
+                z = torch.mul(z, mask_fc)
+
+                # Second FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc2(z, sfc2)
 
                 # Fc out
                 z = self.fc_out(z)
@@ -3209,6 +3214,10 @@ class ConvSNN25(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
+
+                # Second FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc2(z, sfc2)
                 hidden_spks[ts, :, :] = z
 
                 # Fc out
