@@ -12,7 +12,8 @@ from SCP.datasets.dtd import load_DTD
 from SCP.datasets.genomics import load_oodgenomics
 from SCP.datasets.celeb import load_celebA
 from SCP.datasets.fer2013 import load_fer2013
-
+from SCP.datasets.gtsrb import load_GTSRB
+from SCP.datasets.oxford_pets import load_oxford_pets
 
 datasets_loader = {
     'MNIST': load_MNIST,
@@ -34,4 +35,6 @@ datasets_loader = {
     'OODGenomics': load_oodgenomics,
     'CelebA': load_celebA,
     'FER2013': load_fer2013,
+    'GTSRB': load_GTSRB,
+    'Oxford-Pets': load_oxford_pets,
 }

@@ -8,10 +8,10 @@ from SCP.datasets.presets import load_test_presets
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-def load_GTSRB(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32), *args, **kwargs):
+def load_oxford_pets(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32), *args, **kwargs):
 
     test_transform = load_test_presets(img_shape=image_shape)
-    test_data = torchvision.datasets.GTSRB(
+    test_data = torchvision.datasets.OxfordIIITPet(
         root=datasets_path,
         split='test',
         transform=test_transform,
@@ -24,7 +24,7 @@ def load_GTSRB(batch_size, datasets_path: Path, test_only=False, image_shape=(3,
     if test_only is False:
         train_transform = transforms.Compose(
             [
-                transforms.Resize((32, 32)),
+                # transforms.Resize((32, 32)),
                 # transforms.RandomRotation(30, ),
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip(),
@@ -33,7 +33,7 @@ def load_GTSRB(batch_size, datasets_path: Path, test_only=False, image_shape=(3,
                 # transforms.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
             ]
         )
-        train_data = torchvision.datasets.GTSRB(
+        train_data = torchvision.datasets.OxfordIIITPet(
             root=datasets_path,
             split='train',
             download=True,
@@ -52,7 +52,7 @@ def load_GTSRB(batch_size, datasets_path: Path, test_only=False, image_shape=(3,
 
 
 if __name__ == "__main__":
-    dataset, train_loader, test_loader = load_GTSRB(
+    dataset, train_loader, test_loader = load_oxford_pets(
         64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False
     )
     show_img_from_dataloader(train_loader, img_pos=0, number_of_iterations=1)
