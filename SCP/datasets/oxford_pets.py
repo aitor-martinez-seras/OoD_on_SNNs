@@ -24,7 +24,7 @@ def load_oxford_pets(batch_size, datasets_path: Path, test_only=False, image_sha
     if test_only is False:
         train_transform = transforms.Compose(
             [
-                transforms.Resize((64, 64)),
+                transforms.Resize((32, 32)),
                 # transforms.RandomRotation(20, ),
                 transforms.RandomHorizontalFlip(),
                 # transforms.RandomVerticalFlip(),
