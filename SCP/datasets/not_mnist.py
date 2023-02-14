@@ -34,7 +34,7 @@ class notMNIST(VisionDataset):
             else:
                 limit = samples_per_class
             for index, png_im in enumerate(sorted(class_dir_path.iterdir())):
-                if index == limit:
+                if index >= limit:
                     break
                 else:
                     # Some images are corrupted, so we skip those images
@@ -71,7 +71,7 @@ class notMNIST(VisionDataset):
 
 
 def load_notMNIST(batch_size: int, datasets_path: Path, *args, **kwargs):
-    samples_per_class = 1500
+    samples_per_class = 2000
     compressed_fname = 'notMNIST_small.zip'
     url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/EXzRbeXSE2tKvYlLdML9mSkBDq7r8GVoy27n70_5HxUi-A?download=1"
     notmnist_path = download_dataset(compressed_fname, datasets_path, url)
