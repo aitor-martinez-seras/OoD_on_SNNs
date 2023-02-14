@@ -3250,7 +3250,7 @@ class ConvSNN26(nn.Module):
         # Linear part
         self.features_out = self.ftmaps_h * self.ftmaps_v * 64
         self.intermediate_linear_neurons = 512
-        self.fc1 = nn.Linear(self.features_out, self.hidden_neurons, bias=False)
+        self.fc1 = nn.Linear(self.features_out, hidden_neurons, bias=False)
         # self.fc2 = nn.Linear(self.intermediate_linear_neurons, hidden_neurons, bias=False)
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
