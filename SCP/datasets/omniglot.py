@@ -26,5 +26,4 @@ def load_omniglot(batch_size, datasets_path: Path, *args, **kwargs):
         batch_size=batch_size,
         shuffle=False
     )
-    test_loader = parse_size_of_dataloader(test_loader, batch_size)
     return test_loader
