@@ -50,9 +50,9 @@ def download_dataset(compressed_fname, datasets_folder_path, url) -> Path:
     return uncomp_fpath
 
 
-def parse_size_of_dataloader(dataloader_obj: DataLoader, batch_size):
-    if len(dataloader_obj.dataset) > 10000:
-        subset = Subset(dataloader_obj.dataset, [x for x in range(10000)])
+def parse_size_of_dataloader(dataloader_obj: DataLoader, batch_size, max_size=30000):
+    if len(dataloader_obj.dataset) > max_size:
+        subset = Subset(dataloader_obj.dataset, [x for x in range(max_size)])
         subset_loader = DataLoader(subset, batch_size=batch_size, shuffle=False)
         return subset_loader
 
