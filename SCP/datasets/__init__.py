@@ -14,6 +14,8 @@ from SCP.datasets.celeb import load_celebA
 from SCP.datasets.fer2013 import load_fer2013
 from SCP.datasets.gtsrb import load_GTSRB
 from SCP.datasets.oxford_pets import load_oxford_pets
+from SCP.datasets.eurosat import load_eurosat
+from SCP.datasets.pcam import  load_pcam
 
 datasets_loader = {
     'MNIST': load_MNIST,
@@ -37,4 +39,6 @@ datasets_loader = {
     'FER2013': load_fer2013,
     'GTSRB': load_GTSRB,
     'Oxford-pets': load_oxford_pets,
+    'EuroSAT': load_eurosat,
+    'PCAM': load_pcam,
 }
