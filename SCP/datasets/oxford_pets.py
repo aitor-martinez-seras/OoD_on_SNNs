@@ -26,6 +26,8 @@ def load_oxford_pets(batch_size, datasets_path: Path, test_only=False, image_sha
             [
                 transforms.Resize(image_shape[1:]),
                 transforms.RandomHorizontalFlip(),
+                transforms.RandomResizedCrop(size=image_shape[1:], scale=(0.7, 1.0), ratio=(0.75, 1.0)),
+                transforms.RandomRotation(15),
                 transforms.ToTensor(),
             ]
         )
@@ -50,7 +52,7 @@ def load_oxford_pets(batch_size, datasets_path: Path, test_only=False, image_sha
 
 if __name__ == "__main__":
     dataset, train_loader, test_loader = load_oxford_pets(
-        64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False
+        64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False, image_shape=[3, 128, 128]
     )
     show_img_from_dataloader(train_loader, img_pos=0, number_of_iterations=1)
     show_grid_from_dataloader(train_loader)
