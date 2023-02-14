@@ -3176,7 +3176,7 @@ class ConvSNN25(nn.Module):
                 # Second FC
                 z = self.fc2(z)
                 z, sfc2 = self.lif_fc2(z, sfc2)
-                print(f'After fc: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+                # print(f'After fc: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fc out
                 z = self.fc_out(z)
@@ -3316,7 +3316,7 @@ class ConvSNN26(nn.Module):
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
                 z = torch.mul(z, mask_fc)
-                print(f'After fc: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+                #print(f'After fc: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fc out
                 z = self.fc_out(z)
