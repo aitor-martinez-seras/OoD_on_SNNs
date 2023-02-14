@@ -569,7 +569,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
         elif n_hidden_layers == 26:
             model = Model(
                 encoder=encoder,
-                snn=ConvSNN25(
+                snn=ConvSNN26(
                     input_size=input_size,
                     hidden_neurons=hidden_neurons,
                     output_neurons=output_neurons,
