@@ -3162,6 +3162,7 @@ class ConvSNN25(nn.Module):
                 z = self.conv4(z)
                 z, sconv4 = self.lif_conv4(z, sconv4)
                 z = self.avgpool4(z)
+                print(f'After conv4: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
@@ -3299,7 +3300,7 @@ class ConvSNN26(nn.Module):
                 z = self.conv3(z)
                 z, sconv3 = self.lif_conv3(z, sconv3)
                 z = self.avgpool3(z)
-                # print(f'After conv2: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
+                print(f'After conv3: {(z.count_nonzero() / z.nelement()) * 100:.3f}%')
 
                 # Fourth convolution
                 # z = self.conv4(z)
