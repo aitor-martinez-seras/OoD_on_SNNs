@@ -43,6 +43,14 @@ classes = 47
 input_size = [3, 128, 128]
 classes = 37
 
+[PCAM]
+input_size = [3, 96, 96]
+classes = 0
+
+[EuroSAT]
+input_size = [3, 96, 96]
+classes = 0
+
 [FGVCAircraft]
 input_size = [3, 112, 224]
 classes = 0
