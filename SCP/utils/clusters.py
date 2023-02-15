@@ -13,9 +13,9 @@ def create_string_for_logger(clusters_per_class, class_names) -> str:
     string_for_logger = 'Created clusters:\n' + '-' * 75 + '\n'
     for class_index in range(len(class_names)):
         unique, counts = np.unique(clusters_per_class[class_index].labels_, return_counts=True)
-        string_for_logger += f'Clase {class_names[class_index].ljust(10)}| ' \
-                             f'Total samples: {str(len(clusters_per_class[class_index].labels_)).ljust(4)}' \
-                             f' \t {dict(zip(unique, counts))}\n' + '-' * 75 + '\n'
+        string_for_logger += f'Clase {class_names[class_index].ljust(12)}| ' \
+                             f'Total samples: {str(len(clusters_per_class[class_index].labels_)).ljust(2)} |' \
+                             f' Cluster distribution: {dict(zip(unique, counts))}\n' + '-' * 75 + '\n'
     return string_for_logger
 
 
