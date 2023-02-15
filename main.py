@@ -261,7 +261,7 @@ def main(args: argparse.Namespace):
             #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
             #   para cuando se ejecute
             dist_clustering = (500, 5000)
-            file_name = figures_path / f'{in_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+            file_name = figures_path / f'{in_dataset}_{model_name}_{args.cluster_mode}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
             clusters_per_class, logging_info = create_clusters(
                 labels_for_clustering,
                 spk_count_train_clusters,
