@@ -252,7 +252,7 @@ def main(args: argparse.Namespace):
             else:
                 raise NameError(f"Wrong cluster mode {args.cluster_mode}")
 
-            logger.info(f"Available train samples' shape: {spk_count_train.shape}")
+            logger.info(f"Available train samples' shape: {spk_count_train_clusters.shape}")
 
             # Create cluster models
             # TODO: Tengo que conseguir que se use el args.samples_for_cluster_per_class sin que de error.

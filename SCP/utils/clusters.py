@@ -13,19 +13,10 @@ def create_string_for_logger(clusters_per_class, class_names) -> str:
     string_for_logger = 'Created clusters:\n' + '-' * 75 + '\n'
     for class_index in range(len(class_names)):
         unique, counts = np.unique(clusters_per_class[class_index].labels_, return_counts=True)
-        string_for_logger += f'Clase {class_names[class_index].ljust(15)} \t {dict(zip(unique, counts))}\n' + '-' * 75 + '\n'
+        string_for_logger += f'Clase {class_names[class_index].ljust(10)}| ' \
+                             f'Total samples: {str(len(clusters_per_class[class_index].labels_)).ljust(4)}' \
+                             f' \t {dict(zip(unique, counts))}\n' + '-' * 75 + '\n'
     return string_for_logger
-
-
-def print_created_clusters_per_class(clusters_per_class, class_names):
-    print('')
-    print('Created clusters:')
-    print('-' * 75)
-    # Printing the cluster composition for each class
-    for cl_ind, clusters_one_class in enumerate(clusters_per_class):
-        unique, counts = np.unique(clusters_one_class.labels_, return_counts=True)
-        print('Clase', class_names[cl_ind].ljust(15), '\t', dict(zip(unique, counts)))
-        print('-' * 75)
 
 
 def bic_score(X, labels):
@@ -283,7 +274,7 @@ def create_clusters(preds_train, spk_count_train, class_names, n_samples_per_cla
         String used to log the info about the clusters
     """
     # Select a distance threshold for each class
-    if distance_for_clustering is None:  # in case it is not defined
+    if distance_for_clustering is None:
         distance_for_clustering = (800, 3000)
     possible_distance_thrs = np.linspace(distance_for_clustering[0], distance_for_clustering[1], 50)
 
