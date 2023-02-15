@@ -136,6 +136,13 @@ def main(args: argparse.Namespace):
                'AUROC', 'AUPR', 'FPR95', 'FPR80', 'Temperature']
     df_results = pd.DataFrame(columns=COLUMNS)
 
+    if args.fn_vs_bad_clasification:
+        columns_fn_incorrect_vs_correct = [
+            'In-Dataset', 'OOD-Dataset', 'Total test samples', 'TPR [%]', 'FN [%]', 'FN [Total]',
+            'FN correctly classified [%]', 'FN misclassified [%]', 'Accuracy of the model'
+        ]
+        df_fn_vs_bad_classification = pd.DataFrame(columns=columns_fn_incorrect_vs_correct)
+
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
@@ -352,7 +359,8 @@ def main(args: argparse.Namespace):
 
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
-                new_figures_path = figures_path / f'{in_dataset}_vs_{ood_dataset}_{model_name}_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+                new_figures_path = figures_path / f'{in_dataset}_vs_{ood_dataset}_{model_name}_{args.cluster_mode}' \
+                                                  f'_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
 
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
@@ -491,11 +499,11 @@ def main(args: argparse.Namespace):
                             np.where(correct_incorrect_clasification[fn_position] == 1, 1, 0)
                         )
 
-                    columns = ['Total test samples', 'TPR [%]', 'FN [%]', 'FN [Total]',
-                               'FN correctly classified [%]', 'FN misclassified [%]', 'Accuracy of the model']
-                    df_fn_incorrect_vs_correct = pd.DataFrame(columns=columns)
+                    df_fn_incorrect_vs_correct_one_dataset = pd.DataFrame(columns=columns_fn_incorrect_vs_correct)
                     for i, fn_correct_vs_incorrect in enumerate(fn_correct_vs_incorrect_per_tpr):
-                        df_fn_incorrect_vs_correct.loc[len(df_fn_incorrect_vs_correct)] = [
+                        df_fn_incorrect_vs_correct_one_dataset.loc[len(df_fn_incorrect_vs_correct_one_dataset)] = [
+                            in_dataset,
+                            ood_dataset,
                             len(preds_test),
                             tprs_to_extract[i],
                             len(fn_correct_vs_incorrect) / len(preds_test),
@@ -504,8 +512,10 @@ def main(args: argparse.Namespace):
                             (len(fn_correct_vs_incorrect) - len(np.nonzero(fn_correct_vs_incorrect)[0])) / len(fn_correct_vs_incorrect),
                             test_accuracy,
                         ]
-                    df_fn_incorrect_vs_correct.to_excel(results_path / f'fn_misclassified_{args.cluster_mode}_fmax_'
-                                                                       f'{args.f_max}_timesteps_{args.n_time_steps}.xlsx')
+
+                    df_fn_vs_bad_classification = pd.concat(
+                        [df_fn_vs_bad_classification, df_fn_incorrect_vs_correct_one_dataset]
+                    )
 
                 auroc, aupr, fpr95, fpr80 = scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
@@ -578,8 +588,12 @@ def main(args: argparse.Namespace):
             df_results = pd.concat([df_results, df_results_one_run])
 
     # Save all the results to excel
-    df_results.to_excel(results_path / f'benchmark_results_{args.conf}_{args.cluster_mode}_fmax_{args.f_max}_'
-                                       f'timesteps_{args.n_time_steps}.xlsx')
+    results_filename = f'benchmark_results_{args.conf}_{args.cluster_mode}_fmax_' \
+                       f'{args.f_max}_timesteps_{args.n_time_steps}.xlsx'
+    df_results.to_excel(results_path / results_filename)
+
+    if args.fn_vs_bad_clasification:
+        df_fn_vs_bad_classification.to_excel(results_path / results_filename)
 
 
 if __name__ == "__main__":
