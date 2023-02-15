@@ -85,3 +85,4 @@ def load_notMNIST(batch_size: int, datasets_path: Path, *args, **kwargs):
 
 if __name__ == '__main__':
     load_notMNIST(64, Path(r'/datasets'))
+

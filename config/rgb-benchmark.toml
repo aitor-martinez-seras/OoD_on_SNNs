@@ -6,7 +6,7 @@ out_of_distribution_datasets = [
 [hyperparameters]
 # In case you want to use a different batch size for a certain dataset, use the name of the dataset
 # as the variable to define the batch size
-batch_size = 64
+batch_size = 512
 
 [model_arch]
     [model_arch.ConvNet]

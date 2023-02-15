@@ -40,5 +40,22 @@ def load_test_presets(img_shape: List[int], real_shape=None):
     return transform
 
 
+def load_presets_test(resize_to, convert_to='', custom_transform=None):
+
+    if len(resize_to) != 2:
+        raise Exception(f'Resize must be a two element list with integers, got {resize_to} instead')
+
+    # First to tensor
+    transformations = [T.ToTensor()]
+
+    # Second, color chanel transformations
+    if convert_to == 'gray':
+        transformations.append(T.Grayscale(num_output_channels=1))
+
+    transformations.append(T.Resize(resize_to))
+
+    return T.Compose(transformations)
+
+
 if __name__ == "__main__":
     load_test_presets([8, 25, 5])
