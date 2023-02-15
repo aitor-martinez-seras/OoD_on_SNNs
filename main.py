@@ -593,7 +593,8 @@ def main(args: argparse.Namespace):
     df_results.to_excel(results_path / results_filename)
 
     if args.fn_vs_bad_clasification:
-        df_fn_vs_bad_classification.to_excel(results_path / results_filename)
+        df_fn_vs_bad_classification.to_excel(results_path / f'fn_vs_bad_classification_{args.conf}_{args.cluster_mode}'
+                                                            f'_fmax_{args.f_max}_timesteps_{args.n_time_steps}.xlsx')
 
 
 if __name__ == "__main__":
