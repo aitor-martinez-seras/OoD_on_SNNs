@@ -1,22 +1,25 @@
+from typing import Tuple, List
 from pathlib import Path
 
 import torch
 import torchvision
-import torchvision.transforms as transforms
+import torchvision.transforms as T
+from torchvision.datasets import VisionDataset
 
-from SCP.datasets.presets import load_test_presets
+from SCP.datasets.presets import load_test_presets, load_presets_test
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
+from SCP.datasets.utils import DatasetCustomLoader
 
 
-def load_caltech101(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32), *args, **kwargs):
+def load_caltech101(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 96, 96), *args, **kwargs):
     import ssl
     ssl._create_default_https_context = ssl._create_unverified_context
 
     test_transform = load_test_presets(img_shape=image_shape)
-    test_transform = transforms.Compose(
+    test_transform = T.Compose(
         [
             test_transform,
-            transforms.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
+            T.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
         ]
     )
     test_data = torchvision.datasets.Caltech101(
@@ -30,17 +33,13 @@ def load_caltech101(batch_size, datasets_path: Path, test_only=False, image_shap
         batch_size=batch_size
     )
     if test_only is False:
-        train_transform = transforms.Compose(
+        train_transform = T.Compose(
             [
-                # transforms.ToTensor(),
-
-                # transforms.RandomRotation(30, ),
-                # transforms.RandomCrop(400),
-                transforms.Resize((32, 32)),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
+                T.Resize((96, 96)),
+                T.RandomHorizontalFlip(),
+                T.ToTensor(),
                 # To represent gray images as RGB images
-                transforms.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
+                T.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
 
             ]
         )
@@ -61,11 +60,56 @@ def load_caltech101(batch_size, datasets_path: Path, test_only=False, image_shap
         return test_loader
 
 
+class Caltech101(DatasetCustomLoader):
+
+    def __init__(self, root_path):
+        super().__init__(torchvision.datasets.Caltech101, root_path=root_path)
+        self.to_rgb_transform = T.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x)
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            target_type='category',
+            download=True,
+            transform=transform,
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            target_type='category',
+            download=True,
+            transform=transform,
+        )
+
+    def _train_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.Resize(output_shape),
+                T.RandomHorizontalFlip(),
+                T.ToTensor(),
+                self.to_rgb_transform
+            ]
+        )
+
+    def _test_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.Resize(output_shape),
+                T.ToTensor(),
+                self.to_rgb_transform
+            ]
+        )
+
+
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    # data_loader = load_flowers(64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=True)
-    dataset, train_loader, test_loader = load_caltech101(
-        64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False
+
+    dataset = Caltech101(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    loader = torch.utils.data.DataLoader(
+        dataset.load_data(split='test', transformation_option='train', output_shape=(256, 256)),
+        batch_size=64,
+        shuffle=True
     )
-    show_img_from_dataloader(test_loader, img_pos=0, number_of_iterations=10)
-    show_grid_from_dataloader(test_loader)
+    print(loader.dataset.categories)
+    show_img_from_dataloader(loader, img_pos=0, number_of_iterations=10)
+    show_grid_from_dataloader(loader)

@@ -6,6 +6,7 @@ from torchvision.datasets import VisionDataset
 from sklearn.utils import shuffle as skl_shuffle
 
 from SCP.datasets.utils import download_dataset
+from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
 class notMNIST(VisionDataset):
@@ -84,5 +85,7 @@ def load_notMNIST(batch_size: int, datasets_path: Path, *args, **kwargs):
 
 
 if __name__ == '__main__':
-    load_notMNIST(64, Path(r'/datasets'))
+    test_loader = load_notMNIST(64, Path(r'/datasets'))
+    show_img_from_dataloader(test_loader, img_pos=0, number_of_iterations=1)
+    show_grid_from_dataloader(test_loader)
 

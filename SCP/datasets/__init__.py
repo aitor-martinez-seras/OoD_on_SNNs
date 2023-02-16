@@ -6,7 +6,7 @@ from SCP.datasets.kmnist import load_KMNIST
 from SCP.datasets.not_mnist import load_notMNIST
 from SCP.datasets.omniglot import load_omniglot
 from SCP.datasets.flowers import load_flowers
-from SCP.datasets.caltech import load_caltech101
+from SCP.datasets.caltech import Caltech101
 from SCP.datasets.fgvc_aircraft import load_FGVCAircraft
 from SCP.datasets.dtd import load_DTD
 from SCP.datasets.genomics import load_oodgenomics
@@ -15,7 +15,7 @@ from SCP.datasets.fer2013 import load_fer2013
 from SCP.datasets.gtsrb import load_GTSRB
 from SCP.datasets.oxford_pets import load_oxford_pets
 from SCP.datasets.eurosat import load_eurosat
-from SCP.datasets.pcam import  load_pcam
+from SCP.datasets.pcam import load_pcam
 
 datasets_loader = {
     'MNIST': load_MNIST,
@@ -30,8 +30,7 @@ datasets_loader = {
     'CIFAR10': load_CIFAR10,
     'Flowers102': load_flowers,
     'FGVCAircraft': load_FGVCAircraft,
-    'Caltech101': load_caltech101,
-    'Food101': load_caltech101,
+    'Caltech101': Caltech101,
     'CIFAR100': load_CIFAR100,
     'DTD': load_DTD,
     'OODGenomics': load_oodgenomics,

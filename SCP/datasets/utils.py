@@ -1,9 +1,13 @@
-from torch.utils.data import DataLoader, Subset
-
+from abc import ABC, abstractmethod
 from pathlib import Path
 import requests
 from io import BytesIO
+from typing import List
 from zipfile import ZipFile
+
+from torchvision.datasets import VisionDataset
+import torchvision.transforms as T
+from torch.utils.data import DataLoader, Subset
 
 from SCP.utils.common import find_idx_of_class
 
@@ -94,10 +98,92 @@ def isolate_model(df, option):
     return df
 
 
-class RMOverlappingClasses:
+class DatasetCustomLoader(ABC):
 
-    def __init__(self, classes_to_remove):
-        self.classes_to_remove = classes_to_remove
+    def __init__(self, dataset_class, root_path: Path, *args, **kwargs):
+        self.dataset = dataset_class
+        self.root_path = root_path
 
-    def __call__(self, *args, **kwargs):
+    @abstractmethod
+    def _train_data(self, transform) -> VisionDataset:
+        """
+        To be overridden by the child
+        """
         pass
+
+    @abstractmethod
+    def _test_data(self, transform) -> VisionDataset:
+        """
+        To be overridden by the child
+        """
+        pass
+
+    @abstractmethod
+    def _train_transformation(self, output_shape):
+        """
+        To be overridden by the child
+        """
+        raise NotImplementedError('Train transformation not implemented by the child')
+
+    def _test_transformation(self, output_shape):
+        """
+        To be overridden by the child if the dataset needs any custom transformation
+        """
+        return T.Compose(self.test_presets(output_shape))
+
+    @staticmethod
+    def test_presets(output_shape) -> List:
+        transformations = [
+            T.ToTensor(),
+            T.Resize(output_shape)
+        ]
+        return transformations
+
+    def select_transformation(self, transformation_option, output_shape):
+        if transformation_option == 'train':
+            return self.train_transformation(output_shape)
+        elif transformation_option == 'test':
+            return self.test_transformation(output_shape)
+        else:
+            raise NameError(
+                f'Wrong transformation option selected ({transformation_option}). Possible choices: "train" or test")'
+            )
+
+    def load_data(self, split, transformation_option, output_shape):
+
+        transform = self.select_transformation(transformation_option, output_shape)
+
+        if split == 'train':
+            return self._train_data(transform)
+
+        elif split == 'test':
+            return self._test_data(transform)
+
+        else:
+            raise NameError(
+                f'Wrong split option selected ({split}). Possible choices: "train" or test")'
+            )
+
+
+def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0, generator=None):
+    if shuffle and generator:
+        dataloader = DataLoader(
+            dataset=data,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            pin_memory=True,
+            num_workers=num_workers,
+            generator=generator
+        )
+    else:
+        dataloader = DataLoader(
+            dataset=data,
+            batch_size=batch_size,
+            shuffle=shuffle,
+            pin_memory=True,
+            num_workers=num_workers,
+        )
+    return dataloader
+
+
+
