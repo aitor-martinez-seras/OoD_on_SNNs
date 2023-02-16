@@ -1,72 +1,57 @@
 from pathlib import Path
-
-from torch.utils.data import DataLoader
 import torchvision
-import torchvision.transforms as transforms
+import torchvision.transforms as T
+from torchvision.datasets import VisionDataset
 
-from SCP.datasets.presets import load_test_presets
+from SCP.datasets.utils import DatasetCustomLoader
+from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-# This dataset needs Scipy to load target files form .mat format
-def load_flowers(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32),
-                 workers=1, *args, **kwargs):
-    import ssl
-    ssl._create_default_https_context = ssl._create_unverified_context
-    test_transform = load_test_presets(img_shape=image_shape)
+class Flowers102(DatasetCustomLoader):
 
-    test_data = torchvision.datasets.Flowers102(
-        root=datasets_path,
-        split='val',
-        download=True,
-        transform=test_transform,
-    )
-    test_loader = DataLoader(
-        test_data,
-        batch_size=batch_size,
-        num_workers=workers,
-        pin_memory=True,
-    )
-    if test_only is False:
-        train_transform = transforms.Compose(
+    def __init__(self, root_path):
+        import ssl
+        ssl._create_default_https_context = ssl._create_unverified_context
+        super().__init__(torchvision.datasets.Flowers102, root_path=root_path)
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            download=True,
+            split='train',
+            transform=transform,
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            download=True,
+            split='val',
+            transform=transform,
+        )
+
+    def _train_transformation(self, output_shape):
+        return T.Compose(
             [
-                transforms.Resize((500, 500)),
-                transforms.RandomRotation(30, ),
-                transforms.RandomCrop(400),
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomVerticalFlip(),
-                transforms.ToTensor(),
+                T.ToTensor(),
+                T.Resize(output_shape),
+                T.RandomRotation(20, ),
+                # T.RandomCrop(output_shape[0] - int(output_shape[0]*0.05), padding=int(output_shape[0]*0.05)),
+                T.RandomHorizontalFlip(),
+                T.RandomVerticalFlip(),
             ]
         )
-        train_data = torchvision.datasets.Flowers102(
-            root=datasets_path,
-            split='train',
-            download=True,
-            transform=train_transform,
-        )
-
-        train_loader = DataLoader(
-            train_data,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=workers,
-            pin_memory=True,
-        )
-        return train_data, train_loader, test_loader
-    else:
-        return test_loader
 
 
 if __name__ == "__main__":
-    import matplotlib.pyplot as plt
-    # data_loader = load_flowers(64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=True)
-    dataset, train_loader, test_loader = load_flowers(64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False)
-    images, targets = next(iter(train_loader))
-    # images, targets = next(iter(test_loader))
-    n = 25
-    print(images[n].max(), images[n].min())
-    # fig, axes = plt.subplots(nrows=8, ncols=8, sharex=True, sharey=True, figsize=(32, 32))
-    grid = torchvision.utils.make_grid(images)
-    print(targets)
-    # plt.imshow(images[n].permute(1, 2, 0))
-    plt.imshow(grid.permute(1, 2, 0))
-    plt.show()
+    from torch.utils.data import DataLoader
+
+    dataset = Flowers102(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    loader = DataLoader(
+        dataset.load_data(split='test', transformation_option='test', output_shape=(256, 256)),
+        batch_size=64,
+        shuffle=True
+    )
+    print(loader.dataset)
+    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
+    show_grid_from_dataloader(loader)

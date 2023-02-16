@@ -1,56 +1,55 @@
 from pathlib import Path
-
 import torchvision
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+import torchvision.transforms as T
+from torchvision.datasets import VisionDataset
 
-from SCP.datasets.presets import load_test_presets
+from SCP.datasets.utils import DatasetCustomLoader
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-def load_eurosat(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 96, 96), *args, **kwargs):
+class EuroSAT(DatasetCustomLoader):
 
-    test_transform = load_test_presets(img_shape=image_shape)
-    test_data = torchvision.datasets.EuroSAT(
-        root=datasets_path,
-        transform=test_transform,
-        download=True,
-    )
-    test_loader = DataLoader(
-        test_data,
-        batch_size=batch_size,
-    )
-    if test_only is False:
-        train_transform = transforms.Compose(
+    def __init__(self, root_path):
+        import ssl
+        ssl._create_default_https_context = ssl._create_unverified_context
+        super().__init__(torchvision.datasets.EuroSAT, root_path=root_path)
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            download=True,
+            transform=transform,
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            download=True,
+            transform=transform,
+        )
+
+    def _train_transformation(self, output_shape):
+        return T.Compose(
             [
-                transforms.Resize(image_shape[1:]),
-                transforms.RandomHorizontalFlip(),
+                T.ToTensor(),
+                T.Resize(output_shape),
+                T.RandomHorizontalFlip(),
                 # transforms.RandomResizedCrop(size=image_shape[1:], scale=(0.7, 1.0), ratio=(0.75, 1.0)),
                 # transforms.RandomRotation(15),
-                transforms.ToTensor(),
+
             ]
         )
 
-        train_data = torchvision.datasets.EuroSAT(
-            root=datasets_path,
-            download=True,
-            transform=train_transform,
-        )
-
-        train_loader = DataLoader(
-            train_data,
-            batch_size=batch_size,
-            shuffle=True,
-            pin_memory=True,
-        )
-        return train_data, train_loader, test_loader
-    else:
-        return test_loader
-
 
 if __name__ == "__main__":
-    dataset, train_loader, test_loader = load_eurosat(
-        64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False, image_shape=[3, 96, 96]
+    from torch.utils.data import DataLoader
+
+    dataset = EuroSAT(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    loader = DataLoader(
+        dataset.load_data(split='test', transformation_option='test', output_shape=(512, 512)),
+        batch_size=64,
+        shuffle=True
     )
-    show_img_from_dataloader(train_loader, img_pos=0, number_of_iterations=1)
-    show_grid_from_dataloader(train_loader)
+    print(loader.dataset.classes)
+    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
+    show_grid_from_dataloader(loader)

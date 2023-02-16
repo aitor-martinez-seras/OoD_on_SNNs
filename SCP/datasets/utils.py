@@ -141,9 +141,9 @@ class DatasetCustomLoader(ABC):
 
     def select_transformation(self, transformation_option, output_shape):
         if transformation_option == 'train':
-            return self.train_transformation(output_shape)
+            return self._train_transformation(output_shape)
         elif transformation_option == 'test':
-            return self.test_transformation(output_shape)
+            return self._test_transformation(output_shape)
         else:
             raise NameError(
                 f'Wrong transformation option selected ({transformation_option}). Possible choices: "train" or test")'

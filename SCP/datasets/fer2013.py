@@ -1,56 +1,62 @@
 from pathlib import Path
-
 import torchvision
-import torchvision.transforms as transforms
-from torch.utils.data import DataLoader
+import torchvision.transforms as T
+from torchvision.datasets import VisionDataset
 
-from SCP.datasets.presets import load_test_presets
+from SCP.datasets.utils import DatasetCustomLoader
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-def load_fer2013(batch_size, datasets_path: Path, test_only=False, image_shape=(3, 32, 32), *args, **kwargs):
+class FER2013(DatasetCustomLoader):
 
-    test_transform = load_test_presets(img_shape=image_shape)
-    test_data = torchvision.datasets.FER2013(
-        root=datasets_path,
-        split='test',
-        transform=test_transform,
-    )
-    test_loader = DataLoader(
-        test_data,
-        batch_size=batch_size,
-    )
-    if test_only is False:
-        train_transform = transforms.Compose(
+    def __init__(self, root_path):
+        super().__init__(torchvision.datasets.FER2013, root_path=root_path)
+        self.to_rgb_transform = T.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            split='train',
+            transform=transform,
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            split='test',
+            transform=transform,
+        )
+
+    def _train_transformation(self, output_shape):
+        return T.Compose(
             [
-                transforms.Resize((32, 32)),
-                # transforms.RandomRotation(30, ),
-                # transforms.RandomCrop(400),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
+                T.ToTensor(),
+                T.Resize(output_shape),
+                T.RandomHorizontalFlip(),
+                self.to_rgb_transform
+
             ]
         )
-        train_data = torchvision.datasets.FER2013(
-            root=datasets_path,
-            split='train',
-            transform=train_transform,
-        )
 
-        train_loader = DataLoader(
-            train_data,
-            batch_size=batch_size,
-            shuffle=True,
-            pin_memory=True,
+    def _test_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+                self.to_rgb_transform
+            ]
         )
-        return train_data, train_loader, test_loader
-    else:
-        return test_loader
 
 
 if __name__ == "__main__":
-    dataset, train_loader, test_loader = load_fer2013(
-        64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), test_only=False
+    from torch.utils.data import DataLoader
+
+    dataset = FER2013(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    loader = DataLoader(
+        dataset.load_data(split='test', transformation_option='test', output_shape=(28, 28)),
+        batch_size=64,
+        shuffle=True
     )
-    show_img_from_dataloader(train_loader, img_pos=0, number_of_iterations=1)
-    show_grid_from_dataloader(train_loader)
+    print(loader.dataset)
+    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
+    show_grid_from_dataloader(loader)

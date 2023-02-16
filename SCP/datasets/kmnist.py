@@ -1,43 +1,53 @@
 from pathlib import Path
 
-import torch
 import torchvision
+import torchvision.transforms as T
+from torchvision.datasets import VisionDataset
+
+from SCP.datasets.utils import DatasetCustomLoader
+from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-def load_KMNIST(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
-    transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-        ]
-    )
+class KMNIST(DatasetCustomLoader):
 
-    test_data_KMNIST = torchvision.datasets.KMNIST(
-        root=datasets_path,
-        train=False,
-        download=True,
-        transform=transform,
-    )
-    test_loader_KMNIST = torch.utils.data.DataLoader(
-        torchvision.datasets.KMNIST(
-            root=datasets_path,
+    def __init__(self, root_path):
+        super().__init__(torchvision.datasets.KMNIST, root_path=root_path)
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
             train=False,
+            download=True,
             transform=transform,
-        ),
-        batch_size=batch_size
-    )
-    if test_only is False:
-        train_data_KMNIST = torchvision.datasets.KMNIST(
-            root=datasets_path,
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
             train=True,
             download=True,
             transform=transform,
         )
 
-        train_loader_KMNIST = torch.utils.data.DataLoader(
-            train_data_KMNIST,
-            batch_size=batch_size,
-            shuffle=True
+    def _train_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+                # T.RandomHorizontalFlip(),
+            ]
         )
-        return train_data_KMNIST, train_loader_KMNIST, test_loader_KMNIST
-    else:
-        return test_loader_KMNIST
+
+
+if __name__ == "__main__":
+    from torch.utils.data import DataLoader
+
+    dataset = KMNIST(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    loader = DataLoader(
+        dataset.load_data(split='test', transformation_option='test', output_shape=(28, 28)),
+        batch_size=64,
+        shuffle=True
+    )
+    print(loader.dataset.classes)
+    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
+    show_grid_from_dataloader(loader)
