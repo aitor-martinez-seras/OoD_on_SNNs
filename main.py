@@ -7,21 +7,18 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import torch
-from torch.utils.data import DataLoader, Subset
-from torchvision.transforms import Compose, Lambda
-import torchvision.transforms as T
+from torch.utils.data import Subset
 
-from SCP.benchmark.scp import SCP
-from SCP.benchmark.weights import download_pretrained_weights
+from SCP.detection.scp import SCP
+from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
-from SCP.datasets.presets import load_test_presets
 from SCP.datasets.utils import load_dataloader
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages,\
     silhouette_score_log
 from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
     find_idx_of_class
-from SCP.benchmark import MSP, ODIN, EnergyOOD
+from SCP.detection import MSP, ODIN, EnergyOOD
 from SCP.utils.metrics import compare_distances_per_class_to_distance_thr_per_class, thresholds_per_class_for_each_TPR
 from test import validate_one_epoch
 
@@ -469,14 +466,6 @@ def main(args: argparse.Namespace):
                 spk_count_ood = np.sum(_spk_count_ood, axis=0, dtype='uint16')
                 logger.info(f'OoD set: {spk_count_ood.shape}')
 
-                # TODO: This code should not be necessary as a Subset is created in case size_ood_data > size_test_data
-                # if size_ood_data > size_test_data:
-                #     preds_ood = preds_ood[rnd_idxs]
-                #     spk_count_ood = spk_count_ood[rnd_idxs]
-
-                # ---------------------------------------------------------------
-                # OOD Detection
-                # ---------------------------------------------------------------
                 # *************** SCP ***************
                 # Computation of the distances of ood instances
                 distances_ood_per_class, _ = distance_to_clusters_averages(

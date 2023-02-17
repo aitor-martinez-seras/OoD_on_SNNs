@@ -51,6 +51,21 @@ def compare_distances_per_class_to_distance_thr_per_class(distances_list_per_cla
     return in_or_out_distribution_per_tpr
 
 
+def computation_distances_per_class_in_or_out_distribution_per_tpr(
+        dist_test_per_class, dist_ood_per_class, dist_thresholds
+):
+    # Creation of the array with True if predicted InD (True) or OD (False)
+    in_or_out_distribution_per_tpr_test = compare_distances_per_class_to_distance_thr_per_class(dist_test_per_class,
+                                                                                                dist_thresholds)
+    in_or_out_distribution_per_tpr_test[0] = np.zeros((in_or_out_distribution_per_tpr_test.shape[1]),
+                                                      dtype=bool)  # To fix that one element is True when TPR is 0
+    in_or_out_distribution_per_tpr_test[-1] = np.ones((in_or_out_distribution_per_tpr_test.shape[1]),
+                                                      dtype=bool)  # To fix that last element is True when TPR is 1
+    in_or_out_distribution_per_tpr_ood = compare_distances_per_class_to_distance_thr_per_class(dist_ood_per_class,
+                                                                                               dist_thresholds)
+    return in_or_out_distribution_per_tpr_test, in_or_out_distribution_per_tpr_ood
+
+
 def compute_precision_tpr_fpr_for_test_and_ood(dist_test_per_class, dist_ood_per_class, dist_thresholds):
     # Creation of the array with True if predicted InD (True) or OD (False)
     in_or_out_distribution_per_tpr_test = compare_distances_per_class_to_distance_thr_per_class(dist_test_per_class,
@@ -95,11 +110,20 @@ def thresholds_for_each_TPR_distances(distance):
 
 def compare_distances_to_distance_thr_one_for_all_classes(distances_evaluating, thr_distances_array):
     '''
-    Function that creates an array of shape (tpr, InD_or_OD), where tpr has the lenght of the number of steps of the TPR list
-    and second dimensions has the total lenght of the distances_evaluating, and cotains True if its InD and False if is ood
-    :distances_evaluating: list with each element being an array with the distances to avg clusters of one class [array(.), array(.)]
-    :thr_distances_array: array containing the distance for the TPR
-     corresponding to that position. For example, the TPR = 0.85 corresponds to the 85th position.
+    Function that creates an array of shape (tpr, InD_or_OD), where tpr has
+    the lenght of the number of steps of the TPR list and second dimensions
+    has the total lenght of the distances_evaluating, and cotains True if its InD and False if is ood
+    Parameters
+    ----------
+    distances_evaluating: List of length equal to number of classes, each position being an array,
+        Each element of the list are the distances to avg clusters of one class
+    thr_distances_array: numpy array
+        Array containing the distance for the TPR corresponding to that position.
+        For example, the TPR = 0.85 corresponds to the 85th position.
+
+    Returns
+    ----------
+    in_or_out_distribution_per_tpr: List of arrays
     '''
     in_or_out_distribution_per_tpr = np.zeros((len(thr_distances_array), len(distances_evaluating)), dtype=bool)
     for tpr_index, thr_for_one_tpr in enumerate(thr_distances_array):
@@ -150,22 +174,22 @@ def thresholds_for_each_TPR_likelihood(likelihood):
     return likelihood_thresholds
 
 
-def compare_likelihood_to_likelihood_thr_one_for_all_classes(distances_evaluating, thr_distances_array):
+def compare_likelihood_to_likelihood_thr_one_for_all_classes(likelihoods_evaluating, thr_likelihoods_array):
     '''
     Function that creates an array of shape (tpr, InD_or_OD), where tpr has the lenght of the number of steps of the TPR list
-    and second dimensions has the total lenght of the distances_evaluating, and cotains True if its InD and False if is ood
-    :distances_evaluating: list with each element being an array with the distances to avg clusters of one class [array(.), array(.)]
-    :thr_distances_array: array containing the distance for the TPR
+    and second dimensions has the total lenght of the likelihoods_evaluating, and cotains True if its InD and False if is ood
+    :likelihoods_evaluating: list with each element being an array with the distances to avg clusters of one class [array(.), array(.)]
+    :thr_likelihoods_array: array containing the distance for the TPR
      corresponding to that position. For example, the TPR = 0.85 corresponds to the 85th position.
     '''
-    in_or_out_distribution_per_tpr = np.zeros((len(thr_distances_array), len(distances_evaluating)), dtype=bool)
-    for tpr_index, thr_for_one_tpr in enumerate(thr_distances_array):
-        in_or_out_distribution_per_tpr[tpr_index] = np.where(distances_evaluating > thr_for_one_tpr, True, False)
+    in_or_out_distribution_per_tpr = np.zeros((len(thr_likelihoods_array), len(likelihoods_evaluating)), dtype=bool)
+    for tpr_index, thr_for_one_tpr in enumerate(thr_likelihoods_array):
+        in_or_out_distribution_per_tpr[tpr_index] = np.where(likelihoods_evaluating > thr_for_one_tpr, True, False)
 
     return in_or_out_distribution_per_tpr
 
 
-def computation_in_or_out_distribution_per_tpr(likelihood_test, likelihood_ood, likelihood_thresholds):
+def computation_likelihood_in_or_out_distribution_per_tpr(likelihood_test, likelihood_ood, likelihood_thresholds):
     # Creation of the array with True if predicted InD (True) or OD (False)
     in_or_out_distribution_per_tpr_test = compare_likelihood_to_likelihood_thr_one_for_all_classes(
         likelihood_test, likelihood_thresholds
@@ -181,6 +205,7 @@ def computation_in_or_out_distribution_per_tpr(likelihood_test, likelihood_ood, 
     in_or_out_distribution_per_tpr_ood = compare_likelihood_to_likelihood_thr_one_for_all_classes(
         likelihood_ood, likelihood_thresholds
     )
+    return in_or_out_distribution_per_tpr_test, in_or_out_distribution_per_tpr_ood
 
 
 def likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(likelihood_test, likelihood_ood,
@@ -206,6 +231,6 @@ def likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(likelihood_test
 
     # Eliminating NaN value at TPR = 1 and other NaN values that may appear due to
     # precision = TP / (TP + FN) = 0 / (0 + 0)
-    # precision[0] = 1
-    np.nan_to_num(precision, nan=1, copy=False)
+    precision[0] = 1
+    # np.nan_to_num(precision, nan=1, copy=False)
     return precision, tpr_values, fpr_values

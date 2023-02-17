@@ -3,7 +3,7 @@ import scipy.special as scysp
 
 from SCP.utils.metrics import thresholds_for_each_TPR_likelihood, \
     likelihood_method_compute_precision_tpr_fpr_for_test_and_ood
-from SCP.benchmark._base import _OODMethod
+from SCP.detection._base import _OODMethod
 
 
 class ODIN(_OODMethod):
