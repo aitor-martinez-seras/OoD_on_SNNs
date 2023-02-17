@@ -10,7 +10,7 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 class CIFAR10(DatasetCustomLoader):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(torchvision.datasets.CIFAR10, root_path=root_path)
 
     def _train_data(self, transform) -> VisionDataset:
@@ -43,7 +43,7 @@ class CIFAR10(DatasetCustomLoader):
 
 class CIFAR10BW(CIFAR10):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(root_path)
 
     def _train_transformation(self, output_shape):
@@ -70,14 +70,14 @@ class CIFAR10BW(CIFAR10):
 
 class CIFAR100(CIFAR10):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(root_path)
         self.dataset = torchvision.datasets.CIFAR100
 
 
 class CIFAR100BW(CIFAR10BW):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(root_path)
         self.dataset = torchvision.datasets.CIFAR100
 

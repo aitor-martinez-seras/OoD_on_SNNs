@@ -1,45 +1,14 @@
-import random
 from pathlib import Path
+import random
 
-import torchvision
 import numpy as np
 import torch
+import torchvision
+import torchvision.transforms as T
 from torchvision.datasets import VisionDataset
 
-from SCP.datasets.utils import download_dataset
-
-
-def load_MNIST(batch_size, datasets_path: Path, test_only=False, *args, **kwargs):
-    transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-        ]
-    )
-    test_data_MNIST = torchvision.datasets.MNIST(
-        root=datasets_path,
-        train=False,
-        download=True,
-        transform=transform,
-    )
-    test_loader_MNIST = torch.utils.data.DataLoader(
-        test_data_MNIST,
-        batch_size=batch_size
-    )
-    if test_only is False:
-        train_data_MNIST = torchvision.datasets.MNIST(
-            root=datasets_path,
-            train=True,
-            download=True,
-            transform=transform,
-        )
-        train_loader_MNIST = torch.utils.data.DataLoader(
-            train_data_MNIST,
-            batch_size=batch_size,
-            shuffle=True
-        )
-        return train_data_MNIST, train_loader_MNIST, test_loader_MNIST
-    else:
-        return test_loader_MNIST
+from SCP.datasets.utils import DatasetCustomLoader, download_dataset
+from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
 def square_creation(input_tensor: torch.Tensor):
@@ -55,50 +24,93 @@ def square_creation(input_tensor: torch.Tensor):
     return input_tensor
 
 
-def load_MNIST_square(batch_size, datasets_path: Path, *args, **kwargs):
-    transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Lambda(square_creation)
-        ]
-    )
-    test_data_MNIST_square = torchvision.datasets.MNIST(
-        root=datasets_path,
-        train=False,
-        download=True,
-        transform=transform,
-    )
-    test_loader_MNIST_square = torch.utils.data.DataLoader(
-        test_data_MNIST_square,
-        batch_size=batch_size
-    )
-    return test_loader_MNIST_square
+class MNIST(DatasetCustomLoader):
+
+    def __init__(self, root_path, *args, **kwargs):
+        super().__init__(torchvision.datasets.MNIST, root_path=root_path)
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            train=True,
+            download=True,
+            transform=transform,
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            train=False,
+            download=True,
+            transform=transform,
+        )
+
+    def _train_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+                # T.RandomHorizontalFlip(),
+            ]
+        )
 
 
-class ToTensor(object):
+class MNIST_Square(MNIST):
+
+    def __init__(self, root_path):
+        super().__init__(root_path)
+
+    def _train_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+                T.Lambda(square_creation),
+                # T.RandomHorizontalFlip(),
+            ]
+        )
+
+    def _test_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+                T.Lambda(square_creation),
+            ]
+        )
+
+
+class ArrayImageToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
-    def __call__(self, sample):
-        image, label = sample
+    def __call__(self, img):
         # swap color axis because
         # numpy image: H x W x C
         # torch image: C x H x W
-        image = image.transpose((2, 0, 1)) / 255
-        return [torch.from_numpy(image), torch.tensor(label)]
+        return torch.from_numpy(img.transpose((2, 0, 1)) / 255)
+
+
+class ArrayLabelToTensor(object):
+    """Convert ndarrays in sample to Tensors."""
+
+    def __call__(self, label):
+        return torch.tensor(label)
 
 
 class MNIST_C(VisionDataset):
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root, img_transform=None, target_transform=None):
         """
         Args:
-            root_dir (string): Directory with the images of the selected option.
+            root (string): Directory with the images of the selected option.
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.root = Path(root_dir)
+        super().__init__(root)
+        self.root = Path(root)  # Through the dir is the option selected
         self.images = np.load(self.root / 'test_images.npy')
-        self.targets = np.load(self.root / 'test_labels.npy').astype('uint8')
-        self.transform = transform
+        self.targets = np.load(self.root / 'test_labels.npy')
+        self.img_transform = img_transform
+        self.label_transform = target_transform
         self.classes = [str(x) for x in range(10)]
 
     def __len__(self):
@@ -107,25 +119,62 @@ class MNIST_C(VisionDataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        sample = [self.images[idx], self.targets[idx]]
-        if self.transform:
-            sample = self.transform(sample)
-        return sample
+        images = self.images[idx]
+        targets = self.targets[idx]
+        if self.img_transform:
+            images = self.img_transform(images)
+        if self.label_transform:
+            targets = self.label_transform(targets)
+        return [images, targets]
 
 
-def load_MNIST_C(batch_size, datasets_path: Path, option='zigzag', *args, **kwargs):
-    compressed_fname = 'mnist_c.zip'
-    url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/ERi3c4DxluJFqpv4wtlTkKEBvhdrY4WwqNRJWKyyVoTQqg?download=1"
-    uncomp_fpath = download_dataset(compressed_fname, datasets_path, url)
-    mnist_c_dataloader = torch.utils.data.DataLoader(
-        MNIST_C(uncomp_fpath / option, ToTensor()),
-        batch_size=batch_size,
-        shuffle=False
+class MNIST_C_Loader(DatasetCustomLoader):
+
+    def __init__(self, root_path, option, *args, **kwargs):
+        compressed_fname = 'mnist_c.zip'
+        url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/" \
+              "aitor_martinez_tecnalia_com/ERi3c4DxluJFqpv4wtlTkKEBvhdrY4WwqNRJWKyyVoTQqg?download=1"
+        uncomp_fpath = download_dataset(compressed_fname, root_path, url)
+        super().__init__(MNIST_C, root_path=uncomp_fpath / option)
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            img_transform=transform[0],
+            target_transform=transform[1],
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            img_transform=transform[0],
+            target_transform=transform[1],
+        )
+
+    def _train_transformation(self, output_shape):
+        return [
+            T.Compose([ArrayImageToTensor(), T.Resize(output_shape)]),
+            T.Compose([ArrayLabelToTensor()])
+        ]
+
+    def _test_transformation(self, output_shape):
+        return [
+            T.Compose([ArrayImageToTensor(), T.Resize(output_shape)]),
+            T.Compose([ArrayLabelToTensor()])
+        ]
+
+
+if __name__ == "__main__":
+    from torch.utils.data import DataLoader
+
+    dataset = MNIST_C_Loader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), option='zigzag')
+    loader = DataLoader(
+        dataset.load_data(split='test', transformation_option='test', output_shape=(64, 64)),
+        batch_size=64,
+        shuffle=True
     )
-    return mnist_c_dataloader
-
-
-if __name__ == '__main__':
-    # load_MNIST_C(64, Path(r'/datasets'))
-    d, tr, te = load_MNIST(64, Path(r'C:\Users\110414\PycharmProjects\OoD_on_SNNs\datasets'))
-    print()
+    print(loader.dataset.classes)
+    print(len(loader.dataset.images))
+    print(len(loader.dataset.targets))
+    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
+    show_grid_from_dataloader(loader)

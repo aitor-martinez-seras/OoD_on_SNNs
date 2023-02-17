@@ -2,38 +2,64 @@ from pathlib import Path
 
 import torch
 import torchvision
-from torchvision.transforms import Lambda
+import torchvision.transforms as T
+from torchvision.datasets import VisionDataset
 
-from SCP.datasets.utils import parse_size_of_dataloader
+from SCP.datasets.utils import DatasetCustomLoader
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-def load_omniglot(batch_size, datasets_path: Path, *args, **kwargs):
-    transform = torchvision.transforms.Compose(
-        [
-            torchvision.transforms.ToTensor(),
-            torchvision.transforms.Resize((28, 28)),
-            Lambda(lambda img: torchvision.transforms.functional.invert(img)),
-        ]
-    )
-    test_data = torchvision.datasets.Omniglot(
-        root=datasets_path,
-        background=False,
-        download=True,
-        transform=transform,
-    )
-    test_loader = torch.utils.data.DataLoader(
-        test_data,
-        batch_size=batch_size,
-        shuffle=False
-    )
-    return test_loader
+
+class Omniglot(DatasetCustomLoader):
+
+    def __init__(self, root_path, *args, **kwargs):
+        super().__init__(torchvision.datasets.Omniglot, root_path=root_path)
+        self.color_transformation = T.Lambda(lambda img: torchvision.transforms.functional.invert(img))
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            background=False,
+            download=True,
+            transform=transform,
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            background=False,
+            download=True,
+            transform=transform,
+        )
+
+    def _train_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+                self.color_transformation
+            ]
+        )
+
+    def _test_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+                self.color_transformation
+            ]
+        )
 
 
 if __name__ == "__main__":
-    test_loader = load_omniglot(
-        64, Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"),
+    from torch.utils.data import DataLoader
+
+    dataset = Omniglot(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    loader = DataLoader(
+        dataset.load_data(split='test', transformation_option='test', output_shape=(28, 28)),
+        batch_size=64,
+        shuffle=True
     )
-    print(len(test_loader.dataset))
-    show_img_from_dataloader(test_loader, img_pos=0, number_of_iterations=1)
-    show_grid_from_dataloader(test_loader)
+    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
+    show_grid_from_dataloader(loader)
+

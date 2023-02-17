@@ -9,7 +9,7 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 class FER2013(DatasetCustomLoader):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(torchvision.datasets.FER2013, root_path=root_path)
         self.to_rgb_transform = T.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x),
 

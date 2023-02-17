@@ -9,7 +9,7 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 class Flowers102(DatasetCustomLoader):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         import ssl
         ssl._create_default_https_context = ssl._create_unverified_context
         super().__init__(torchvision.datasets.Flowers102, root_path=root_path)

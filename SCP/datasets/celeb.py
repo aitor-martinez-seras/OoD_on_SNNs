@@ -10,7 +10,7 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 class CelebA(DatasetCustomLoader):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(torchvision.datasets.CelebA, root_path=root_path)
 
     def _train_data(self, transform) -> VisionDataset:

@@ -10,7 +10,7 @@ from SCP.datasets.utils import DatasetCustomLoader
 
 class Caltech101(DatasetCustomLoader):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(torchvision.datasets.Caltech101, root_path=root_path)
         self.to_rgb_transform = T.Lambda(lambda x: x.repeat(3, 1, 1) if (x.shape[0] == 1) else x)
 

@@ -1,10 +1,10 @@
-from SCP.datasets.mnist import load_MNIST, load_MNIST_square, load_MNIST_C
+from SCP.datasets.mnist import MNIST, MNIST_Square, MNIST_C_Loader
 from SCP.datasets.fashion_mnist import FashionMNIST
 from SCP.datasets.cifar import CIFAR10, CIFAR10BW, CIFAR100, CIFAR100BW
 from SCP.datasets.letters import Letters
 from SCP.datasets.kmnist import KMNIST
-from SCP.datasets.not_mnist import load_notMNIST
-from SCP.datasets.omniglot import load_omniglot
+from SCP.datasets.not_mnist import notMNISTLoader
+from SCP.datasets.omniglot import Omniglot
 from SCP.datasets.flowers import Flowers102
 from SCP.datasets.caltech import Caltech101
 from SCP.datasets.fgvc_aircraft import FGVCAircraft
@@ -13,20 +13,20 @@ from SCP.datasets.genomics import load_oodgenomics
 from SCP.datasets.celeb import CelebA
 from SCP.datasets.fer2013 import FER2013
 from SCP.datasets.gtsrb import GTSRB
-from SCP.datasets.oxford_pets import load_oxford_pets
+from SCP.datasets.oxford_pets import OxfordPets
 from SCP.datasets.eurosat import EuroSAT
-from SCP.datasets.pcam import load_pcam
+from SCP.datasets.pcam import PCAM
 
 datasets_loader = {
-    'MNIST': load_MNIST,
+    'MNIST': MNIST,
     'Fashion_MNIST': FashionMNIST,
     'KMNIST': KMNIST,
     'Letters': Letters,
-    'noMNIST': load_notMNIST,
-    'omniglot': load_omniglot,
+    'noMNIST': notMNISTLoader,
+    'omniglot': Omniglot,
     'CIFAR10-BW': CIFAR10BW,
-    'MNIST-C': load_MNIST_C,
-    'MNIST_Square': load_MNIST_square,
+    'MNIST-C': MNIST_C_Loader,
+    'MNIST_Square': MNIST_Square,
     'CIFAR10': CIFAR10,
     'Flowers102': Flowers102,
     'FGVCAircraft': FGVCAircraft,
@@ -37,7 +37,7 @@ datasets_loader = {
     'CelebA': CelebA,
     'FER2013': FER2013,
     'GTSRB': GTSRB,
-    'Oxford-pets': load_oxford_pets,
+    'Oxford-pets': OxfordPets,
     'EuroSAT': EuroSAT,
-    'PCAM': load_pcam,
+    'PCAM': PCAM,
 }

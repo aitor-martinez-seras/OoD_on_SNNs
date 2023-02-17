@@ -2,10 +2,11 @@ from pathlib import Path
 
 import torch
 import torchvision
+import torchvision.transforms as T
 from torchvision.datasets import VisionDataset
 from sklearn.utils import shuffle as skl_shuffle
 
-from SCP.datasets.utils import download_dataset
+from SCP.datasets.utils import DatasetCustomLoader, download_dataset
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
@@ -54,8 +55,7 @@ class notMNIST(VisionDataset):
         targets = torch.tensor(targets, dtype=torch.uint8)
 
         # Shuffle fixed for reproducibility reasons
-        self.images, self.targets = skl_shuffle(images, targets,
-                                                random_state=7)
+        self.images, self.targets = skl_shuffle(images, targets, random_state=7)
         self.classes = classes
         self.transform = transform
 
@@ -71,21 +71,48 @@ class notMNIST(VisionDataset):
         return sample
 
 
-def load_notMNIST(batch_size: int, datasets_path: Path, *args, **kwargs):
-    samples_per_class = 2000
-    compressed_fname = 'notMNIST_small.zip'
-    url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/EXzRbeXSE2tKvYlLdML9mSkBDq7r8GVoy27n70_5HxUi-A?download=1"
-    notmnist_path = download_dataset(compressed_fname, datasets_path, url)
-    loader = torch.utils.data.DataLoader(
-        notMNIST(notmnist_path, samples_per_class=samples_per_class),
-        batch_size=batch_size,
-        shuffle=False
+class notMNISTLoader(DatasetCustomLoader):
+
+    def __init__(self, root_path, *args, **kwargs):
+        compressed_fname = 'notMNIST_small.zip'
+        url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/EXzRbeXSE2tKvYlLdML9mSkBDq7r8GVoy27n70_5HxUi-A?download=1"
+        uncomp_fpath = download_dataset(compressed_fname, root_path, url)
+        super().__init__(notMNIST, root_path=uncomp_fpath)
+
+    def _train_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            samples_per_class=2000,
+            transform=None
+        )
+
+    def _test_data(self, transform) -> VisionDataset:
+        return self.dataset(
+            root=self.root_path,
+            samples_per_class=2000,
+            transform=None
+        )
+
+    def _train_transformation(self, output_shape):
+        return T.Compose([T.ToTensor(), T.Resize(output_shape)])
+
+    def _test_transformation(self, output_shape):
+        return T.Compose([T.ToTensor(), T.Resize(output_shape)])
+
+
+if __name__ == "__main__":
+    from torch.utils.data import DataLoader
+
+    dataset = notMNISTLoader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    loader = DataLoader(
+        dataset.load_data(split='test', transformation_option='test', output_shape=(64, 64)),
+        batch_size=64,
+        shuffle=True
     )
-    return loader
+    print(loader.dataset.classes)
+    print(len(loader.dataset.images))
+    print(len(loader.dataset.targets))
+    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
+    show_grid_from_dataloader(loader)
 
-
-if __name__ == '__main__':
-    test_loader = load_notMNIST(64, Path(r'/datasets'))
-    show_img_from_dataloader(test_loader, img_pos=0, number_of_iterations=1)
-    show_grid_from_dataloader(test_loader)
 

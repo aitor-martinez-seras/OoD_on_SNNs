@@ -10,7 +10,7 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 class DTD(DatasetCustomLoader):
 
-    def __init__(self, root_path):
+    def __init__(self, root_path, *args, **kwargs):
         super().__init__(torchvision.datasets.DTD, root_path=root_path)
 
     def _train_data(self, transform) -> VisionDataset:
