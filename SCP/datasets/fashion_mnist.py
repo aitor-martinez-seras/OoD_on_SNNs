@@ -15,7 +15,7 @@ class FashionMNIST(DatasetCustomLoader):
     def _train_data(self, transform) -> VisionDataset:
         return self.dataset(
             root=self.root_path,
-            train=False,
+            train=True,
             download=True,
             transform=transform,
         )
@@ -23,7 +23,7 @@ class FashionMNIST(DatasetCustomLoader):
     def _test_data(self, transform) -> VisionDataset:
         return self.dataset(
             root=self.root_path,
-            train=True,
+            train=False,
             download=True,
             transform=transform,
         )

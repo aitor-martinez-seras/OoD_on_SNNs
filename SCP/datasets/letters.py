@@ -29,7 +29,7 @@ class Letters(DatasetCustomLoader):
         data = torchvision.datasets.EMNIST(
             root=self.root_path,
             split="letters",
-            train=True,
+            train=False,
             download=True,
             transform=transform,
             target_transform=T.Lambda(lambda y: y - 1),
