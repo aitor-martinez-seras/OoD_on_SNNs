@@ -586,7 +586,7 @@ def main(args: argparse.Namespace):
                     logits_train, logits_test, logits_ood,
                     save_histogram=save_ensemble_odin_energy, name=new_figures_path, class_names=class_names
                 )
-                results_log = create_str_for_ood_method_results('Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80)
+                results_log = create_str_for_ood_method_results('Ensemble-Odin-Energy', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
                 # Save results to list
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
