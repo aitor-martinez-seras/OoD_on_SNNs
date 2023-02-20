@@ -9,8 +9,8 @@ import numpy as np
 import torch
 from torch.utils.data import Subset
 
-from SCP.detection.ensembles import EnsembleOdinSCP
-from SCP.detection.scp import SCP
+from SCP.detection.ensembles import EnsembleOdinSCP, EnsembleOdinEnergy
+# from SCP.detection.scp import SCP
 from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
 from SCP.datasets.utils import load_dataloader
@@ -80,7 +80,8 @@ def main(args: argparse.Namespace):
     config = load_config(args.conf)
 
     # Parse histogram option
-    save_scp_hist = save_baseline_hist = save_odin_hist = save_energy_hist = save_ensemble_odin_scp = False
+    save_scp_hist = save_baseline_hist = save_odin_hist = False
+    save_energy_hist = save_ensemble_odin_scp = save_ensemble_odin_energy = False
     args.save_histograms_for = [method.lower() for method in args.save_histograms_for]
     if "scp" in args.save_histograms_for:
         save_scp_hist = True
@@ -92,6 +93,8 @@ def main(args: argparse.Namespace):
         save_energy_hist = True
     if "ensemble-odin-scp" in args.save_histograms_for:
         save_ensemble_odin_scp = True
+    if "ensemble-odin-energy" in args.save_histograms_for:
+        save_ensemble_odin_energy = True
 
     # Paths
     paths_conf = load_config('paths')
@@ -567,10 +570,22 @@ def main(args: argparse.Namespace):
                 # *************** Ensemble ODIN-SCP method ***************
                 ensemble_odin_scp = EnsembleOdinSCP()
                 auroc, aupr, fpr95, fpr80, temp = ensemble_odin_scp(
-                    #distances_train_per_class,
-                    distances_test_per_class, distances_test_per_class, distances_ood_per_class,
+                    distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     logits_train, logits_test, logits_ood,
                     save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
+                )
+                results_log = create_str_for_ood_method_results('Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80)
+                logger.info(results_log)
+                # Save results to list
+                local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
+                results_list.append([local_time, in_dataset, ood_dataset, model_name,
+                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80, temp])
+
+                # *************** Ensemble ODIN-Energy method ***************
+                ensemble_odin_energy = EnsembleOdinEnergy()
+                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_energy(
+                    logits_train, logits_test, logits_ood,
+                    save_histogram=save_ensemble_odin_energy, name=new_figures_path, class_names=class_names
                 )
                 results_log = create_str_for_ood_method_results('Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
