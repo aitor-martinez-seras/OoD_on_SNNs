@@ -328,7 +328,7 @@ def main(args: argparse.Namespace):
                 spk_count_test = spk_count_test[pos_correct_preds_test]
                 logits_test = logits_test[pos_correct_preds_test]
                 new_number_of_samples_for_metrics = len(preds_test)
-                logger.info(f'Only using correctly classified samples... '
+                logger.info(f'Only using correctly classified test samples... '
                             f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
 
             # Create the median aggregations (centroids) for each cluster of each class
@@ -475,7 +475,11 @@ def main(args: argparse.Namespace):
                 distances_ood_per_class, _ = distance_to_clusters_averages(
                     spk_count_ood, preds_ood, agg_counts_per_class_cluster, n_classes
                 )
-
+                logger.info(f'Shape of test and ood tensors:')
+                logger.info(f'  Spike count test:\t{spk_count_test.shape}')
+                logger.info(f'  Spike count ood:\t{spk_count_ood.shape}')
+                logger.info(f'  Logits test:\t{logits_test.shape}')
+                logger.info(f'  Logits ood:\t{logits_ood.shape}')
                 scp = SCP()
                 if args.fn_vs_bad_clasification:
                     # Reorder preds and test labels to match the order of in_or_out_distribution_per_tpr_test
@@ -498,7 +502,8 @@ def main(args: argparse.Namespace):
                     # Compute if test instances are classified as InD or OoD for every tpr
                     in_or_out_distribution_per_tpr_test = compare_distances_per_class_to_distance_thr_per_class(
                         distances_test_per_class,
-                        dist_thresholds)
+                        dist_thresholds
+                    )
                     # Extract the list with only the TPR values we are interested in: 25, 50, 75 and 95 per cent
                     tprs_to_extract = (25, 50, 75, 95)
                     in_or_out_distribution_per_tpr_test = in_or_out_distribution_per_tpr_test[tprs_to_extract, :]
