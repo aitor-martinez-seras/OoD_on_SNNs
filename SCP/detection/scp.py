@@ -5,7 +5,7 @@ from SCP.utils.common import find_idx_of_class
 from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood
 
 
-class SCP(_OODMethod):
+class SCPMethod(_OODMethod):
 
     def __init__(self):
         super().__init__()

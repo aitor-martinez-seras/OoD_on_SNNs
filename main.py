@@ -10,7 +10,6 @@ import torch
 from torch.utils.data import Subset
 
 from SCP.detection.ensembles import EnsembleOdinSCP, EnsembleOdinEnergy
-# from SCP.detection.scp import SCP
 from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
 from SCP.datasets.utils import load_dataloader
@@ -19,7 +18,7 @@ from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluste
     silhouette_score_log
 from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
     find_idx_of_class
-from SCP.detection import MSP, ODIN, EnergyOOD
+from SCP.detection import MSP, ODIN, EnergyOOD, SCPMethod
 from SCP.utils.metrics import compare_distances_per_class_to_distance_thr_per_class, thresholds_per_class_for_each_TPR
 from test import validate_one_epoch
 
@@ -495,7 +494,7 @@ def main(args: argparse.Namespace):
                 logger.info(f'  Spike count ood:\t{spk_count_ood.shape}')
                 logger.info(f'  Logits test:\t{logits_test.shape}')
                 logger.info(f'  Logits ood:\t{logits_ood.shape}')
-                scp = SCP()
+                scp = SCPMethod()
                 if args.fn_vs_bad_clasification:
                     # Reorder preds and test labels to match the order of in_or_out_distribution_per_tpr_test
                     test_labels_per_predicted_class = []
