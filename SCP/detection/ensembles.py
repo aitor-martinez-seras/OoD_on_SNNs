@@ -133,5 +133,4 @@ class EnsembleOdinSCP(_OODMethod):
 
 
 if __name__ == "__main__":
-    scp = EnsembleOdinSCP()
-    scp.save_auroc_fig()
+    ensemble_odin_scp = EnsembleOdinSCP()

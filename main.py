@@ -9,6 +9,7 @@ import numpy as np
 import torch
 from torch.utils.data import Subset
 
+from SCP.detection.ensembles import EnsembleOdinSCP
 from SCP.detection.scp import SCP
 from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
@@ -77,7 +78,7 @@ def main(args: argparse.Namespace):
     config = load_config(args.conf)
 
     # Parse histogram option
-    save_scp_hist = save_baseline_hist = save_odin_hist = save_energy_hist = False
+    save_scp_hist = save_baseline_hist = save_odin_hist = save_energy_hist = save_ensemble_odin_scp = False
     args.save_histograms_for = [method.lower() for method in args.save_histograms_for]
     if "scp" in args.save_histograms_for:
         save_scp_hist = True
@@ -87,6 +88,8 @@ def main(args: argparse.Namespace):
         save_odin_hist = True
     if "energy" in args.save_histograms_for:
         save_energy_hist = True
+    if "ensemble-odin-scp" in args.save_histograms_for:
+        save_ensemble_odin_scp = True
 
     # Paths
     paths_conf = load_config('paths')
@@ -542,6 +545,14 @@ def main(args: argparse.Namespace):
                                      test_accuracy, accuracy_ood, 'Ours', auroc, aupr, fpr95, fpr80, 0.0])
                 results_log = create_str_for_ood_method_results('SPC', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
+
+                # *************** Ensemble ODIN-SCP method ***************
+                ensemble_odin_scp = EnsembleOdinSCP()
+                ensemble_odin_scp(
+                    distances_train_per_class, distances_test_per_class, distances_ood_per_class,
+                    logits_train, logits_test, logits_ood,
+                    save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
+                )
 
                 # *************** Baseline method ***************
                 baseline = MSP()
