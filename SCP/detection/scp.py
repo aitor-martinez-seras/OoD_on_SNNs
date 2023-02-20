@@ -14,9 +14,9 @@ class SCP(_OODMethod):
                  save_histogram=False, name='', class_names=None, preds_ood=None, *args, **kwargs):
 
         # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
-        print(len(distances_train_per_class))
-        for i in distances_train_per_class:
-            print(i.shape)
+        # print(len(distances_train_per_class))
+        # for i in distances_train_per_class:
+        #     print(i.shape)
         distance_thresholds_train = thresholds_per_class_for_each_TPR(
             len(class_names), distances_train_per_class
         )
