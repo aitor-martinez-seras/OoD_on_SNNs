@@ -18,7 +18,7 @@ class Flowers102(DatasetCustomLoader):
         return self.dataset(
             root=self.root_path,
             download=True,
-            split='train',
+            split='test',  # We use this as the test has more data in it
             transform=transform,
         )
 
@@ -26,7 +26,7 @@ class Flowers102(DatasetCustomLoader):
         return self.dataset(
             root=self.root_path,
             download=True,
-            split='test',
+            split='val',
             transform=transform,
         )
 
@@ -48,11 +48,15 @@ if __name__ == "__main__":
 
     dataset = Flowers102(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(256, 256)),
+        dataset.load_data(split='train', transformation_option='test', output_shape=(64, 64)),
         batch_size=64,
         shuffle=True
     )
     print(loader.dataset)
     print(len(loader.dataset))
+    # n = 0
+    # for d, t in loader:
+    #     n += len(t)
+    # print(n)
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)

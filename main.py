@@ -379,9 +379,10 @@ def main(args: argparse.Namespace):
                 # logits and spike counts for the next dataset, as it may not need the test set to be reduced
                 # to match its size
                 if number_of_test_samples_decreased:
-                    preds_test = backup_preds_test
-                    logits_test = backup_logits_test
-                    spk_count_test = backup_spk_count_test
+                    logger.info(f'Using the backups to replenish all the test tensors')
+                    preds_test = np.copy(backup_preds_test)
+                    logits_test = np.copy(backup_logits_test)
+                    spk_count_test = np.copy(backup_spk_count_test)
 
                     # This way, next iteration will only enter this code if again the number of samples
                     # of the test set has been reduced to match the number of OOD samples
@@ -439,14 +440,14 @@ def main(args: argparse.Namespace):
                     #     raise NotImplementedError('Tengo que crear una funcion aqui que me lleve a lo de reducir'
                     #                               'el tamaño del test set')
 
-                    size_ood_train_data = len(ood_data)
-                    rnd_idxs = torch.randint(
-                        high=size_ood_train_data, size=(size_test_data,), generator=g_ood)
-                    ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
-                    ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
+                    # rnd_idxs = torch.randint(
+                    #     high=size_ood_train_data, size=(size_test_data,), generator=g_ood)
+                    # ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
+                    # ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
                     # If there is still not enough data to match the number of samples of test we should
                     # decrease the number of test_samples, but only for the specific dataset being processed
+                    size_ood_train_data = len(ood_data)
                     if size_ood_train_data < size_test_data:
                         logger.info(
                             f"There is still not sufficient OOD data in the training set"
@@ -460,6 +461,16 @@ def main(args: argparse.Namespace):
                         preds_test = preds_test[:size_ood_train_data]
                         logits_test = logits_test[:size_ood_train_data]
                         spk_count_test = spk_count_test[:size_ood_train_data]
+
+                        # Define the new size for the test data for this OOD dataset
+                        size_test_data = len(preds_test)
+
+                    # Create the subset of the train OOD data, where it will have the same size as
+                    # the size of the test data.
+                    rnd_idxs = torch.randint(
+                        high=size_ood_train_data, size=(size_test_data,), generator=g_ood)
+                    ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
+                    ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
                 else:  # size_ood_data > size_test_data
                     logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match "
