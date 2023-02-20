@@ -44,10 +44,11 @@ if __name__ == "__main__":
 
     dataset = DTD(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(32, 32)),
+        dataset.load_data(split='train', transformation_option='test', output_shape=(32, 32)),
         batch_size=64,
         shuffle=True
     )
     print(loader.dataset.classes)
+    print(len(loader.dataset))
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)

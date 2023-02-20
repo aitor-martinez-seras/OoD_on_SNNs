@@ -26,7 +26,7 @@ class Flowers102(DatasetCustomLoader):
         return self.dataset(
             root=self.root_path,
             download=True,
-            split='val',
+            split='test',
             transform=transform,
         )
 
@@ -53,5 +53,6 @@ if __name__ == "__main__":
         shuffle=True
     )
     print(loader.dataset)
+    print(len(loader.dataset))
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)

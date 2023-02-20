@@ -445,10 +445,12 @@ def main(args: argparse.Namespace):
                     ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
                     ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
-                    # If there is still not enought data to match the number of samples of test
-                    # we should decrease the number of test_samples, but only for the specific
-                    # being processed
+                    # If there is still not enought data to match the number of samples of test we should
+                    # decrease the number of test_samples, but only for the specific dataset being processed
                     if size_ood_train_data < size_test_data:
+                        logger.info(
+                            f"There is still not sufficient OOD data in the training set"
+                            f" {len(size_ood_train_data)}. ")
                         number_of_test_samples_decreased = True
                         backup_preds_test = np.copy(preds_test)
                         backup_logits_test = np.copy(logits_test)
