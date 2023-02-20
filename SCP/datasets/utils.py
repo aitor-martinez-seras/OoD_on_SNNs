@@ -5,6 +5,7 @@ from io import BytesIO
 from typing import List
 from zipfile import ZipFile
 
+import torch
 from torchvision.datasets import VisionDataset
 import torchvision.transforms as T
 from torch.utils.data import DataLoader, Subset
@@ -186,4 +187,8 @@ def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0, generat
     return dataloader
 
 
-
+def create_subset_of_specific_size_with_random_data(data, size_data, new_size, generator, batch_size):
+    rnd_idxs = torch.randint(high=size_data, size=(new_size,), generator=generator)
+    subset = Subset(data, [x for x in rnd_idxs.numpy()])
+    loader = load_dataloader(subset, batch_size=batch_size, shuffle=False)
+    return loader

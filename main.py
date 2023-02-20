@@ -12,7 +12,7 @@ from torch.utils.data import Subset
 from SCP.detection.ensembles import EnsembleOdinSCP, EnsembleOdinEnergy
 from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
-from SCP.datasets.utils import load_dataloader
+from SCP.datasets.utils import load_dataloader, create_subset_of_specific_size_with_random_data
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages,\
     silhouette_score_log
@@ -431,27 +431,17 @@ def main(args: argparse.Namespace):
                 elif size_ood_data < size_test_data:
                     logger.info(f"Using training data as test OOD data for {ood_dataset} dataset")
 
-                    # try:
+                    # Load the train data of OOD dataset
                     ood_data = ood_dataset_data_loader.load_data(
                         split='train', transformation_option='test',
                         output_shape=datasets_conf[in_dataset]['input_size'][1:]
                     )
-                    # except NotImplementedError:
-                    #     raise NotImplementedError('Tengo que crear una funcion aqui que me lleve a lo de reducir'
-                    #                               'el tamaño del test set')
 
-                    # rnd_idxs = torch.randint(
-                    #     high=size_ood_train_data, size=(size_test_data,), generator=g_ood)
-                    # ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
-                    # ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
-
-                    # If there is still not enough data to match the number of samples of test we should
-                    # decrease the number of test_samples, but only for the specific dataset being processed
                     size_ood_train_data = len(ood_data)
                     if size_ood_train_data < size_test_data:
                         logger.info(
                             f"There is still not sufficient OOD data in the training set"
-                            f" {size_ood_train_data}. Therefore, the size of the test set is going to decrease"
+                            f" {size_ood_train_data}. Therefore, the size of the test set is going to decrease "
                             f"for {ood_dataset} from {size_test_data} to {size_ood_train_data}")
                         number_of_test_samples_decreased = True
                         backup_preds_test = np.copy(preds_test)
@@ -467,18 +457,24 @@ def main(args: argparse.Namespace):
 
                     # Create the subset of the train OOD data, where it will have the same size as
                     # the size of the test data.
-                    rnd_idxs = torch.randint(
-                        high=size_ood_train_data, size=(size_test_data,), generator=g_ood)
-                    ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
-                    ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
+                    ood_loader = create_subset_of_specific_size_with_random_data(
+                        data=ood_data, size_data=size_ood_train_data, new_size=size_test_data,
+                        generator=g_ood, batch_size=batch_size_ood
+                    )
+                    # rnd_idxs = torch.randint(high=size_ood_train_data, size=(size_test_data,), generator=g_ood)
+                    # ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
+                    # ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
                 else:  # size_ood_data > size_test_data
                     logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match "
                                 f"the number of samples of test data, equal to {size_test_data}")
-                    rnd_idxs = torch.randint(high=len(ood_loader.dataset), size=(size_test_data,), generator=g_ood)
-
-                    ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
-                    ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
+                    ood_loader = create_subset_of_specific_size_with_random_data(
+                        data=ood_data, size_data=size_ood_data, new_size=size_test_data,
+                        generator=g_ood, batch_size=batch_size_ood
+                    )
+                    # rnd_idxs = torch.randint(high=size_ood_data, size=(size_test_data,), generator=g_ood)
+                    # ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
+                    # ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
                 # Compute distances of test instances after possibly reducing its size
                 distances_test_per_class, _ = distance_to_clusters_averages(
