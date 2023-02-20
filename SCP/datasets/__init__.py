@@ -16,6 +16,7 @@ from SCP.datasets.gtsrb import GTSRB
 from SCP.datasets.oxford_pets import OxfordPets
 from SCP.datasets.eurosat import EuroSAT
 from SCP.datasets.pcam import PCAM
+from SCP.datasets.tiny_imagenet import TinyImageNetLoader
 
 datasets_loader = {
     'MNIST': MNIST,
@@ -40,4 +41,5 @@ datasets_loader = {
     'Oxford-pets': OxfordPets,
     'EuroSAT': EuroSAT,
     'PCAM': PCAM,
+    'TinyImagenet': TinyImageNetLoader,
 }

@@ -51,6 +51,6 @@ if __name__ == "__main__":
         batch_size=64,
         shuffle=True
     )
-    print(loader.dataset)
+    print(loader.dataset.classes)
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)
