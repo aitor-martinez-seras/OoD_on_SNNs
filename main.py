@@ -430,14 +430,14 @@ def main(args: argparse.Namespace):
                 elif size_ood_data < size_test_data:
                     logger.info(f"Using training data as test OOD data for {ood_dataset} dataset")
 
-                    try:
-                        ood_data = ood_dataset_data_loader.load_data(
-                            split='train', transformation_option='test',
-                            output_shape=datasets_conf[in_dataset]['input_size'][1:]
-                        )
-                    except NotImplementedError:
-                        raise NotImplementedError('Tengo que crear una funcion aqui que me lleve a lo de reducir'
-                                                  'el tamaño del test set')
+                    # try:
+                    ood_data = ood_dataset_data_loader.load_data(
+                        split='train', transformation_option='test',
+                        output_shape=datasets_conf[in_dataset]['input_size'][1:]
+                    )
+                    # except NotImplementedError:
+                    #     raise NotImplementedError('Tengo que crear una funcion aqui que me lleve a lo de reducir'
+                    #                               'el tamaño del test set')
 
                     size_ood_train_data = len(ood_data)
                     rnd_idxs = torch.randint(
@@ -445,12 +445,13 @@ def main(args: argparse.Namespace):
                     ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
                     ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
-                    # If there is still not enought data to match the number of samples of test we should
+                    # If there is still not enough data to match the number of samples of test we should
                     # decrease the number of test_samples, but only for the specific dataset being processed
                     if size_ood_train_data < size_test_data:
                         logger.info(
                             f"There is still not sufficient OOD data in the training set"
-                            f" {len(size_ood_train_data)}. ")
+                            f" {size_ood_train_data}. Therefore, the size of the test set is going to decrease"
+                            f"for {ood_dataset} from {size_test_data} to {size_ood_train_data}")
                         number_of_test_samples_decreased = True
                         backup_preds_test = np.copy(preds_test)
                         backup_logits_test = np.copy(logits_test)
