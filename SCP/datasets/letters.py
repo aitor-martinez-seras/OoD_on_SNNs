@@ -24,6 +24,7 @@ class Letters(DatasetCustomLoader):
         )
 
         data.classes = data.classes[1:]
+        return data
 
     def _test_data(self, transform) -> VisionDataset:
         data = torchvision.datasets.EMNIST(
@@ -81,7 +82,7 @@ if __name__ == "__main__":
 
     dataset = Letters(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='train', output_shape=(28, 28)),
+        dataset.load_data(split='train', transformation_option='train', output_shape=(28, 28)),
         batch_size=64,
         shuffle=True
     )
