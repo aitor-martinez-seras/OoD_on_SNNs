@@ -1,4 +1,6 @@
-in_distribution_datasets = ['MNIST', 'Fashion_MNIST', 'KMNIST', 'Letters']
+in_distribution_datasets = [
+    #'MNIST', 'Fashion_MNIST',
+    'KMNIST', 'Letters']
 out_of_distribution_datasets = [
     'MNIST', 'Fashion_MNIST', 'KMNIST', 'Letters', 'noMNIST', 'omniglot', 'CIFAR10-BW','MNIST-C/zigzag',
 #    'MNIST-C/canny_edges', 'MNIST-C/dotted_line', 'MNIST-C/fog', 'MNIST-C/glass_blur', 'MNIST-C/identity',
