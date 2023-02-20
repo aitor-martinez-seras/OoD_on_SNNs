@@ -42,6 +42,8 @@ def get_args_parser() -> argparse.ArgumentParser:
                         dest="samples_for_cluster_per_class", help="number of samples for validation per class")
     parser.add_argument("--samples-for-thr-per-class", default=1000, type=int,
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
+    parser.add_argument("--max-number-of-test-images", default=10000, type=int,
+                        dest="max_number_of_test_images", help="max number of test samples for OOD detection")
     parser.add_argument("--cluster-mode", default="predictions", type=str, dest='cluster_mode',
                         choices=["predictions", "labels", "correct-predictions"],
                         help="device (Use cuda or cpu Default: cuda)")
@@ -180,7 +182,7 @@ def main(args: argparse.Namespace):
         g_ind = torch.Generator()
         g_ind.manual_seed(args.ind_seed)
         train_loader = load_dataloader(train_data, batch_size, shuffle=True, generator=g_ind)
-        test_loader = load_dataloader(test_data, batch_size, shuffle=False)
+        test_loader = load_dataloader(test_data, batch_size, shuffle=True, generator=g_ind)
 
         # Extract useful variables for future operations
         class_names = train_data.classes
@@ -329,6 +331,16 @@ def main(args: argparse.Namespace):
                 logits_test = logits_test[pos_correct_preds_test]
                 new_number_of_samples_for_metrics = len(preds_test)
                 logger.info(f'Only using correctly classified test samples... '
+                            f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
+
+            len_test_images = len(preds_test)
+            if args.max_number_of_test_images < len_test_images:
+                preds_test = preds_test[:args.max_number_of_test_images]
+                spk_count_test = spk_count_test[:args.max_number_of_test_images]
+                logits_test = logits_test[:args.max_number_of_test_images]
+                new_number_of_samples_for_metrics = len(preds_test)
+                logger.info(f'As there are more test images available ({len_test_images}) than the predefined limit'
+                            f' ({args.max_number_of_test_images}), the size of the test images will be decreased. '
                             f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
 
             # Create the median aggregations (centroids) for each cluster of each class
