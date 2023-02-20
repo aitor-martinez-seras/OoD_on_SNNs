@@ -254,7 +254,7 @@ def main(args: argparse.Namespace):
             else:
                 raise NameError(f"Wrong cluster mode {args.cluster_mode}")
 
-            logger.info(f"Available train samples' shape: {spk_count_train_clusters.shape}")
+                logger.info(f"Available train samples' shape: {spk_count_train_clusters.shape}")
 
             # Create cluster models
             # TODO: Tengo que conseguir que se use el args.samples_for_cluster_per_class sin que de error.
@@ -548,11 +548,17 @@ def main(args: argparse.Namespace):
 
                 # *************** Ensemble ODIN-SCP method ***************
                 ensemble_odin_scp = EnsembleOdinSCP()
-                ensemble_odin_scp(
+                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     logits_train, logits_test, logits_ood,
                     save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
                 )
+                results_log = create_str_for_ood_method_results('Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80)
+                logger.info(results_log)
+                # Save results to list
+                local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
+                results_list.append([local_time, in_dataset, ood_dataset, model_name,
+                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80, temp])
 
                 # *************** Baseline method ***************
                 baseline = MSP()

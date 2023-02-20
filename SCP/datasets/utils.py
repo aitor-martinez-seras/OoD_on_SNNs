@@ -71,7 +71,7 @@ def indices_of_every_class_for_subset(train_loader, n_samples_per_class, dataset
             cl_index = cl_index + 1
 
         indices = find_idx_of_class(
-            cl_index, train_loader.dataset.targets, n=n_samples_per_class, initial_pos=init_pos
+            cl_index, train_loader.dataset.targets, number_of_searched_samples=n_samples_per_class, initial_pos=init_pos
         )
         selected_indices_per_class += indices
     return selected_indices_per_class

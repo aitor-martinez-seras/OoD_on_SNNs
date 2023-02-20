@@ -29,7 +29,8 @@ def thresholds_per_class_for_each_TPR(n_classes, dist_per_class):
     for class_index in range(n_classes):
         for index, tpr in enumerate(tpr_range):
             distance_thresholds_test[class_index, index] = sorted_distances_per_class[class_index][
-                int(len(sorted_distances_per_class[class_index]) * tpr)]
+                int(len(sorted_distances_per_class[class_index]) * tpr)
+            ]
     return distance_thresholds_test
 
 

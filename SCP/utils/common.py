@@ -5,29 +5,50 @@ from pathlib import Path
 import tomli
 
 
-def find_idx_of_class(searched_class, labels, n=0, initial_pos=0):
+def find_idx_of_class(searched_class, labels, number_of_searched_samples=0, initial_pos=0):
     """
-    Function that outputs a list with all the indices of the searched_class in the labelsList
-    If n is provided, only the first n coincidences are outputted
-    If initial_pos is provided, the search starts by this position.
-    searched_class, n, initial_pos -> integer
-    labels -> array
+    Function that outputs a list with all the indices (positions) of the searched_class in the labels.
+    This way, a List is obtained which can be used to extract the samples of a specific class from
+    a vector which contains these samples in same order as the labels vector.
+    Does not throw an error if the the number of searched samples is not reached
+
+    Parameters
+    ----------
+    searched_class: array-like of shape (n_samples,),
+        The class where are searching for in the labels vector
+
+    labels: array like
+        The predictions or labels where the specific class must be found
+
+    number_of_searched_samples: integer, default 0
+        Number of occurrences wanted to be found in the labels vector. If 0, search for all occurrences
+
+    initial_pos: integer, default 0
+        If provided, the search in the labels vector is done starting from initial_pos
+
+    Returns
+    ----------
+    indices: List
+        The indices of the positions where the searched class is found in the labels vector
     """
     indices = []
-    if n == 0:
-        # Case of searching for all the array
-        for index, labels in enumerate(labels[initial_pos:]):
-            if labels == searched_class:
+
+    # Case of searching for all the array
+    if number_of_searched_samples == 0:
+        for index, label in enumerate(labels[initial_pos:]):
+            if label == searched_class:
                 indices.append(initial_pos + index)
+
+    # Case of searching only n number of indices
     else:
-        # Case of searching only n number of indices
         i = 0
-        for index, labels in enumerate(labels[initial_pos:]):
-            if i >= n:
+        for index, label in enumerate(labels[initial_pos:]):
+            if i >= number_of_searched_samples:
                 break
-            if labels == searched_class:
+            if label == searched_class:
                 indices.append(initial_pos + index)
                 i += 1
+
     return indices
 
 

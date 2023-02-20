@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import List
 
 import numpy as np
 from tqdm import tqdm
@@ -134,7 +135,7 @@ def select_distance_threshold_for_one_class(clustering_performance_scores) -> in
 
 
 def select_best_distance_threshold_for_each_class(
-        class_names, possible_distance_thrs, size, preds_train, spk_count_train, performance_measuring_method,
+        class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train, performance_measuring_method,
         name, verbose
 ):
     n_classes = len(class_names)
@@ -160,7 +161,7 @@ def select_best_distance_threshold_for_each_class(
                                                    f' score for various distance thresholds'):
         clustering_performance_scores = []
         for threshold in possible_distance_thrs:
-            indices = find_idx_of_class(class_index, preds_train, size)
+            indices = find_idx_of_class(class_index, preds_train, n_samples_per_class)
             # print(f'Class {class_index}:\t {len(indices)}')
             cluster_model = AgglomerativeClustering(
                 n_clusters=None, metric='manhattan', linkage='average', distance_threshold=threshold
@@ -213,13 +214,13 @@ def select_best_distance_threshold_for_each_class(
 
 
 def create_clusters_per_class_based_on_distance_threshold(
-        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, size
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, n_samples_per_class
 ):
     n_classes = len(class_names)
     # Create the clusters by extracting the labels for every sample
     clusters_per_class = []
     for class_index in range(n_classes):
-        indices = find_idx_of_class(class_index, preds_train, size)
+        indices = find_idx_of_class(class_index, preds_train, n_samples_per_class)
         if isinstance(selected_distance_thrs_per_class, list):
             cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='complete',
                                                     distance_threshold=selected_distance_thrs_per_class[class_index])
@@ -233,7 +234,7 @@ def create_clusters_per_class_based_on_distance_threshold(
 
 
 # Possible refactorization: enable multiprocessing, as each class is independent
-def create_clusters(preds_train, spk_count_train, class_names, n_samples_per_class=1000,
+def create_clusters(preds_train, spk_count_train, class_names: List, n_samples_per_class: int,
                     distance_for_clustering=None, verbose=2, name=Path(), performance_measuring_method='silhouette'):
     """
     Function that creates the cluster for each class independently
@@ -255,7 +256,7 @@ def create_clusters(preds_train, spk_count_train, class_names, n_samples_per_cla
         range of distances to find the appropriate distance threshold
 
     verbose: int,
-        Verbose = 0 -> No prints and plots neither loggin info
+        Verbose = 0 -> No prints and plots neither logging info
         verbose = 1 -> Returns loggin info only
         Verbose = 2 -> Logging info and plots
 
@@ -280,8 +281,8 @@ def create_clusters(preds_train, spk_count_train, class_names, n_samples_per_cla
 
     # Select the best performing cluster configuration for each class based on a performance metric
     selected_distance_thrs_per_class, clustering_performance_scores_for_selected_thresholds_per_class = select_best_distance_threshold_for_each_class(
-        class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train, performance_measuring_method,
-        name, verbose
+        class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train,
+        performance_measuring_method, name, verbose
     )
 
     # Create the clusters for every class

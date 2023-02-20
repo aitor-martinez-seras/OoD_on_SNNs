@@ -35,12 +35,6 @@ class EnsembleOdinSCP(_OODMethod):
             temp_softmax_test_winners = np.max(temp_softmax_test, axis=1)
             temp_softmax_ood_winners = np.max(temp_softmax_ood, axis=1)
 
-            if save_histogram:
-                super().save_histogram_fig(
-                    temp_softmax_train_winners, temp_softmax_test_winners, temp_softmax_ood_winners,
-                    name=f'{name}_ODIN_temp{temp}'
-                )
-
             # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
             likelihood_thresholds_train = thresholds_for_each_TPR_likelihood(temp_softmax_train_winners)
 
@@ -110,7 +104,9 @@ class EnsembleOdinSCP(_OODMethod):
                 name=f'{name}_Ensemble_OdinSCP',
             )
 
-        return super().compute_metrics()
+        auroc, aupr, fpr95, fpr80 = super().compute_metrics()
+
+        return auroc, aupr, fpr95, fpr80, temp
 
     def plot_in_or_ood(self, odin_in_or_ood_per_tpr_test, odin_in_or_ood_per_tpr_ood,
                        scp_in_or_ood_per_tpr_test, scp_in_or_ood_per_tpr_ood, name):
