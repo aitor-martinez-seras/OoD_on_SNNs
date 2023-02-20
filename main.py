@@ -509,7 +509,7 @@ def main(args: argparse.Namespace):
                     # Obtain array with ind or ood decision for test instances and for specific TPR values
                     # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
                     dist_thresholds = thresholds_per_class_for_each_TPR(
-                        len(class_names), distances_test_per_class, # distances_train_per_class
+                        len(class_names), distances_train_per_class,
                     )
                     # Compute if test instances are classified as InD or OoD for every tpr
                     in_or_out_distribution_per_tpr_test = compare_distances_per_class_to_distance_thr_per_class(
@@ -549,8 +549,7 @@ def main(args: argparse.Namespace):
                     )
 
                 auroc, aupr, fpr95, fpr80 = scp(
-                    # distances_train_per_class,
-                    distances_test_per_class, distances_test_per_class, distances_ood_per_class,
+                    distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     save_histogram=save_scp_hist, name=new_figures_path, class_names=class_names, preds_ood=preds_ood
                 )
 
@@ -583,8 +582,7 @@ def main(args: argparse.Namespace):
                 # *************** Baseline method ***************
                 baseline = MSP()
                 auroc, aupr, fpr95, fpr80 = baseline(
-                    # logits_train_thr,
-                    logits_test, logits_test, logits_ood, save_histogram=save_baseline_hist, name=new_figures_path,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_baseline_hist, name=new_figures_path,
                 )
                 if args.save_metric_plots:
                     baseline.save_auroc_fig(new_figures_path)
@@ -599,8 +597,7 @@ def main(args: argparse.Namespace):
                 # *************** ODIN ***************
                 odin = ODIN()
                 auroc, aupr, fpr95, fpr80, temp = odin(
-                    #logits_train_thr,
-                    logits_test, logits_test, logits_ood, save_histogram=save_odin_hist, name=new_figures_path,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_odin_hist, name=new_figures_path,
                 )
                 if args.save_metric_plots:
                     odin.save_auroc_fig(new_figures_path)
@@ -615,8 +612,7 @@ def main(args: argparse.Namespace):
                 # *************** Energy ***************
                 energy = EnergyOOD()
                 auroc, aupr, fpr95, fpr80, temp = energy(
-                    # logits_train_thr,
-                    logits_test, logits_test, logits_ood, save_histogram=save_energy_hist, name=new_figures_path,
+                    logits_train_thr, logits_test, logits_ood, save_histogram=save_energy_hist, name=new_figures_path,
                 )
                 if args.save_metric_plots:
                     energy.save_auroc_fig(new_figures_path)
