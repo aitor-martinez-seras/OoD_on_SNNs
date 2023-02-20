@@ -326,6 +326,7 @@ def main(args: argparse.Namespace):
                 pos_correct_preds_test = np.where(preds_test == test_labels)[0]
                 preds_test = preds_test[pos_correct_preds_test]
                 spk_count_test = spk_count_test[pos_correct_preds_test]
+                logits_test = logits_test[pos_correct_preds_test]
                 new_number_of_samples_for_metrics = len(preds_test)
                 logger.info(f'Only using correctly classified samples... '
                             f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
@@ -444,7 +445,7 @@ def main(args: argparse.Namespace):
                         spk_count_test = spk_count_test[:size_ood_train_data]
 
                 else:  # size_ood_data > size_test_data
-                    logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match"
+                    logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match "
                                 f"the number of samples of test data, equal to {size_test_data}")
                     rnd_idxs = torch.randint(high=len(ood_loader.dataset), size=(size_test_data,), generator=g_ood)
 
