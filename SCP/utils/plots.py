@@ -1,8 +1,53 @@
+from collections import OrderedDict
+from pathlib import Path
+
 import matplotlib.pyplot as plt
+from matplotlib.transforms import Bbox
 from scipy.cluster.hierarchy import dendrogram
 import numpy as np
 from torchvision.utils import make_grid
 from tqdm import tqdm
+from Orange.evaluation import compute_CD, graph_ranks
+from baycomp import SignedRankTest, SignTest
+
+
+# TeX must be installed to use this statement
+plt.rcParams.update({"text.usetex": True, "font.family": "Latin Modern Sans"})
+
+
+# ----------------------
+# Bayesian Analysis and CD Graph
+# ----------------------
+def cd_graph(score_per_method: OrderedDict, fig_path: Path):
+    ood_method_names = list(score_per_method.keys())
+    score_per_method = np.transpose(np.array(list(score_per_method.values())))
+
+    number_of_ood_datasets = np.shape(score_per_method)[0]
+    order = np.argsort(-score_per_method, axis=1)
+    ranks = np.argsort(order, axis=1) + 1
+    avgranks = np.mean(ranks, axis=0)
+
+    CD = compute_CD(avgranks, number_of_ood_datasets, test='nemenyi')
+    graph_ranks(avgranks, ood_method_names, cd=CD, width=5, textspace=0.8)
+    plt.savefig(f'{fig_path.as_posix()}CD_Graph.pdf', bbox_inches='tight')  # bbox_inches=Bbox([[0.2, 0], [0.8, 1]]))
+    plt.close()
+
+
+def bayesian_test(scores_dict: OrderedDict, option: str, fig_path: Path, rope=0.025):
+    if option == 'signrank':
+        bayesian_test_obj = SignedRankTest
+    elif option == 'signtest':
+        bayesian_test_obj = SignTest
+    else:
+        raise NameError('Wrong option selected')
+
+    method_left, method_right = scores_dict.keys()
+
+    names = (method_left, method_right)
+    # print(bayesian_test_obj.probs(scores_dict[method_left], scores_dict[method_right], rope=rope))
+    bayesian_test_obj.plot(scores_dict[method_left], scores_dict[method_right], rope=rope, names=names, nsamples=5000)
+    plt.savefig(fr'{fig_path.as_posix()}_{option}.pdf', bbox_inches='tight')
+    plt.close()
 
 # ----------------------
 # General plots and auxiliary functions
