@@ -26,3 +26,4 @@ cycler==0.11.0
 packaging==23.0
 kiwisolver==1.4.4
 openpyxl==3.0.10
+orange3==3.30.0
