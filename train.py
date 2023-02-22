@@ -10,6 +10,7 @@ from torch.optim import Optimizer
 import numpy as np
 
 from SCP.datasets import datasets_loader
+from SCP.datasets.utils import load_dataloader
 from SCP.utils.common import load_config, my_custom_logger
 from SCP.utils.plots import plot_loss_history
 from SCP.models.model import load_model, load_weights, load_checkpoint
@@ -52,6 +53,8 @@ def get_args_parser():
                         dest="lr_decay_milestones", help="lr decay milestones")
     parser.add_argument("--lr-decay-step", default=0, type=int, dest="lr_decay_step", help="lr decay step")
     parser.add_argument("--lr-decay-rate", default=0, type=float, dest="lr_decay_rate", help="lr decay rate")
+    parser.add_argument("--train-seed", default=6, type=int, dest='train_seed', help="seed for the train set")
+    parser.add_argument("--test-seed", default=7, type=int, dest='test_seed', help="seed for the test set")
 
     return parser
 
@@ -79,9 +82,6 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
         # Store the losses of every minibatch
         losses.append(loss.item())
 
-        # for name, param in model.named_parameters():
-        #     print(name, param.grad.norm())
-
     mean_loss = np.mean(losses)
     return losses, mean_loss
 
@@ -89,6 +89,7 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
 def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, start_epoch:int,
           optimizer: Optimizer, lr_scheduler, logger, save_every_n_epochs=0, weights_pth=Path('.'), file_name='',
           args=None):
+
     training_losses = []
     test_losses = []
     accuracies = []
@@ -145,30 +146,43 @@ def main(args):
     datasets_path = Path(config_pth["paths"]["datasets"])
 
     # Load dataset and its config and create the data loaders
-    dat_conf = load_config('datasets')
+    all_datasets_conf = load_config('datasets')
     import ssl
     ssl._create_default_https_context = ssl._create_unverified_context  # To enable the correct download of datasets
-    if args.dataset in load_config('datasets').keys():
-        dat_conf = dat_conf[args.dataset]
+    if args.dataset in all_datasets_conf.keys():
+        dataset_conf = all_datasets_conf[args.dataset]
     else:
         raise NotImplementedError(f'Dataset with name {args.dataset} is not implemented')
+
     print(f'Loading {args.dataset}...')
-    train_data, train_loader, test_loader = datasets_loader[args.dataset](
-        args.batch_size, datasets_path, image_shape=dat_conf['input_size']
+    in_dataset_data_loader = datasets_loader[args.dataset](datasets_path)
+    train_data = in_dataset_data_loader.load_data(
+        split='train', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
     )
+    test_data = in_dataset_data_loader.load_data(
+        split='test', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
+    )
+    # Define loaders. Use a seeds
+    g_train = torch.Generator()
+    g_train.manual_seed(args.train_seed)
+    g_test = torch.Generator()
+    g_test.manual_seed(args.test_seed)
+    train_loader = load_dataloader(train_data, args.batch_size, shuffle=True, generator=g_train)
+    test_loader = load_dataloader(test_data, args.batch_size, shuffle=True, generator=g_test)
     print(f'Load of {args.dataset} completed!')
 
+    # Set logger
     fname = f'{args.dataset}_{args.model}_{args.penultimate_layer_neurons}' \
-            f'_{dat_conf["classes"]}_{args.n_hidden_layers}_layers'
+            f'_{dataset_conf["classes"]}_{args.n_hidden_layers}_layers'
     logger = my_custom_logger(logger_name=f'train_{fname}.txt', logs_pth=logs_path)
     logger.info(args)
 
     # Load model
     model = load_model(
         model_arch=args.model,
-        input_size=dat_conf['input_size'],
+        input_size=dataset_conf['input_size'],
         hidden_neurons=args.penultimate_layer_neurons,
-        output_neurons=dat_conf['classes'],
+        output_neurons=dataset_conf['classes'],
         n_hidden_layers=args.n_hidden_layers,
         encoder=args.encoder,
         n_time_steps=args.n_time_steps,
