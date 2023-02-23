@@ -9,7 +9,6 @@ from SCP.datasets.utils import DatasetCustomLoader
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
-
 class Omniglot(DatasetCustomLoader):
 
     def __init__(self, root_path, *args, **kwargs):
@@ -35,20 +34,15 @@ class Omniglot(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
                 T.Resize(output_shape),
-                self.color_transformation
+                self.color_transformation,
+                T.ToTensor(),
+                # self.color_transformation
             ]
         )
 
     def _test_transformation(self, output_shape):
-        return T.Compose(
-            [
-                T.ToTensor(),
-                T.Resize(output_shape),
-                self.color_transformation
-            ]
-        )
+        return self._train_transformation(output_shape)
 
 
 if __name__ == "__main__":
@@ -58,8 +52,10 @@ if __name__ == "__main__":
     loader = DataLoader(
         dataset.load_data(split='test', transformation_option='test', output_shape=(28, 28)),
         batch_size=64,
-        shuffle=True
+        shuffle=False
     )
-    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
-    show_grid_from_dataloader(loader)
+    d, t = next(iter(loader))
+    print(d.mean(), d.std())
+    # show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
+    # show_grid_from_dataloader(loader)
 

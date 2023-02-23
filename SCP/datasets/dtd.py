@@ -32,9 +32,9 @@ class DTD(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
                 T.Resize(output_shape),
                 T.RandomHorizontalFlip(),
+                T.ToTensor(),
             ]
         )
 
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     loader = DataLoader(
         dataset.load_data(split='train', transformation_option='test', output_shape=(32, 32)),
         batch_size=64,
-        shuffle=True
+        shuffle=False
     )
     print(loader.dataset.classes)
     print(len(loader.dataset))

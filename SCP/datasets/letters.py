@@ -43,8 +43,8 @@ class Letters(DatasetCustomLoader):
             [
                 lambda img: T.functional.rotate(img, -90),
                 lambda img: T.functional.hflip(img),
-                T.ToTensor(),
                 T.Resize(output_shape),
+                T.ToTensor(),
             ]
         )
 

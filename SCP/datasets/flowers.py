@@ -33,12 +33,12 @@ class Flowers102(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
                 T.Resize(output_shape),
                 T.RandomRotation(20, ),
                 # T.RandomCrop(output_shape[0] - int(output_shape[0]*0.05), padding=int(output_shape[0]*0.05)),
                 T.RandomHorizontalFlip(),
                 T.RandomVerticalFlip(),
+                T.ToTensor(),
             ]
         )
 
@@ -48,9 +48,9 @@ if __name__ == "__main__":
 
     dataset = Flowers102(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='train', transformation_option='test', output_shape=(64, 64)),
+        dataset.load_data(split='train', transformation_option='train', output_shape=(64, 64)),
         batch_size=64,
-        shuffle=True
+        shuffle=False
     )
     print(loader.dataset)
     print(len(loader.dataset))

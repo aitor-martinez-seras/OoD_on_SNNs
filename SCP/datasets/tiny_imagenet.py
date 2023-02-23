@@ -211,7 +211,8 @@ class TinyImageNetDataset(Dataset):
         else:
             s = self.samples[idx]
             # img = imageio.imread(s[0])
-            img = np.array(Image.open(s[0]).convert("RGB"))
+            # img = np.array(Image.open(s[0]).convert("RGB"))
+            img = Image.open(s[0]).convert("RGB")
             lbl = None if self.mode == 'test' else s[self.label_idx]
         # sample = {'img': img, 'label': lbl}
 
@@ -236,7 +237,7 @@ class TinyImageNetLoader(DatasetCustomLoader):
     def _test_data(self, transform) -> VisionDataset:
         return self.dataset(
             root_dir=self.root_path,
-            mode='test',
+            mode='val',
             download=True,
             transform=transform,
         )
@@ -244,11 +245,12 @@ class TinyImageNetLoader(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
                 T.Resize(output_shape),
                 T.RandomRotation(20, ),
                 # T.RandomCrop(output_shape[0] - int(output_shape[0]*0.05), padding=int(output_shape[0]*0.05)),
                 T.RandomHorizontalFlip(),
+                T.ToTensor(),
+
             ]
         )
 
@@ -258,10 +260,10 @@ if __name__ == "__main__":
 
     dataset = TinyImageNetLoader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='train', transformation_option='train', output_shape=(64, 64)),
+        dataset.load_data(split='test', transformation_option='train', output_shape=(128, 128)),
         batch_size=64,
-        shuffle=True
+        shuffle=False
     )
-    print(loader.dataset)
+    print(loader.dataset.samples_num)
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)

@@ -48,9 +48,9 @@ class MNIST(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
-                T.Resize(output_shape),
                 # T.RandomHorizontalFlip(),
+                T.Resize(output_shape),
+                T.ToTensor(),
             ]
         )
 
@@ -63,18 +63,18 @@ class MNIST_Square(MNIST):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
-                T.Resize(output_shape),
-                T.Lambda(square_creation),
                 # T.RandomHorizontalFlip(),
+                T.Resize(output_shape),
+                T.ToTensor(),
+                T.Lambda(square_creation),
             ]
         )
 
     def _test_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
                 T.Resize(output_shape),
+                T.ToTensor(),
                 T.Lambda(square_creation),
             ]
         )
@@ -167,14 +167,15 @@ class MNIST_C_Loader(DatasetCustomLoader):
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
 
-    dataset = MNIST_C_Loader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), option='zigzag')
+    # dataset = MNIST_C_Loader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), option='zigzag')
+    dataset = MNIST_Square(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(64, 64)),
+        dataset.load_data(split='test', transformation_option='test', output_shape=(28, 28)),
         batch_size=64,
         shuffle=True
     )
-    print(loader.dataset.classes)
-    print(len(loader.dataset.images))
-    print(len(loader.dataset.targets))
+    # print(loader.dataset.classes)
+    # print(len(loader.dataset.images))
+    # print(len(loader.dataset.targets))
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
     show_grid_from_dataloader(loader)

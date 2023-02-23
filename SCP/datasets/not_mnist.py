@@ -94,10 +94,10 @@ class notMNISTLoader(DatasetCustomLoader):
         )
 
     def _train_transformation(self, output_shape):
-        return T.Compose([T.ToTensor(), T.Resize(output_shape)])
+        return T.Compose([T.Resize(output_shape), T.ToTensor()])
 
     def _test_transformation(self, output_shape):
-        return T.Compose([T.ToTensor(), T.Resize(output_shape)])
+        return self._train_transformation(output_shape)
 
 
 if __name__ == "__main__":

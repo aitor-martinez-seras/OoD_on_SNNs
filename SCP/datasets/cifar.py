@@ -32,11 +32,19 @@ class CIFAR10(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
-                # T.RandomRotation(15, ),
-                # T.RandomCrop(32, padding=4),
                 T.Resize(output_shape),
+                # T.RandomCrop(output_shape[0], padding=4),
+                # T.RandomRotation(15, ),
                 T.RandomHorizontalFlip(),
+                T.ToTensor(),
+            ]
+        )
+
+    def _test_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.Resize(output_shape),
+                T.ToTensor(),
             ]
         )
 
@@ -49,10 +57,10 @@ class CIFAR10BW(CIFAR10):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
                 T.Resize(output_shape),
                 T.RandomHorizontalFlip(),
                 T.Grayscale(num_output_channels=1),
+                T.ToTensor(),
 
             ]
         )
@@ -60,10 +68,9 @@ class CIFAR10BW(CIFAR10):
     def _test_transformation(self, output_shape):
         return T.Compose(
             [
-
-                T.ToTensor(),
                 T.Resize(output_shape),
                 T.Grayscale(num_output_channels=1),
+                T.ToTensor(),
             ]
         )
 
@@ -85,7 +92,7 @@ class CIFAR100BW(CIFAR10BW):
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
 
-    dataset = CIFAR100BW(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    dataset = CIFAR10BW(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
         dataset.load_data(split='test', transformation_option='test', output_shape=(32, 32)),
         batch_size=64,

@@ -31,10 +31,9 @@ class FashionMNIST(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
-                T.Resize(output_shape),
                 # T.RandomHorizontalFlip(),
-
+                T.Resize(output_shape),
+                T.ToTensor(),
             ]
         )
 

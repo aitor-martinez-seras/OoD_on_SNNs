@@ -32,12 +32,11 @@ class OxfordPets(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                T.ToTensor(),
-                T.Resize(output_shape),
+                # T.Resize(output_shape),
                 T.RandomHorizontalFlip(),
                 T.RandomResizedCrop(size=output_shape, scale=(0.7, 1.0), ratio=(0.75, 1.0)),
                 T.RandomRotation(15),
-
+                T.ToTensor(),
             ]
         )
 
@@ -47,9 +46,9 @@ if __name__ == "__main__":
 
     dataset = OxfordPets(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(64, 64)),
+        dataset.load_data(split='test', transformation_option='train', output_shape=(64, 64)),
         batch_size=64,
-        shuffle=True
+        shuffle=False
     )
     print(loader.dataset.classes)
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
