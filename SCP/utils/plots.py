@@ -2,7 +2,6 @@ from collections import OrderedDict
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib.transforms import Bbox
 from scipy.cluster.hierarchy import dendrogram
 import numpy as np
 from torchvision.utils import make_grid
@@ -11,14 +10,12 @@ from Orange.evaluation import compute_CD, graph_ranks
 from baycomp import SignedRankTest, SignTest
 
 
-# TeX must be installed to use this statement
-plt.rcParams.update({"text.usetex": True, "font.family": "Latin Modern Sans"})
-
-
 # ----------------------
 # Bayesian Analysis and CD Graph
 # ----------------------
 def cd_graph(score_per_method: OrderedDict, fig_path: Path):
+    # TeX must be installed to use this statement
+    plt.rcParams.update({"text.usetex": True, "font.family": "Latin Modern Sans"})
     ood_method_names = list(score_per_method.keys())
     score_per_method = np.transpose(np.array(list(score_per_method.values())))
 
@@ -34,6 +31,8 @@ def cd_graph(score_per_method: OrderedDict, fig_path: Path):
 
 
 def bayesian_test(scores_dict: OrderedDict, option: str, fig_path: Path, rope=0.025):
+    # TeX must be installed to use this statement
+    plt.rcParams.update({"text.usetex": True, "font.family": "Latin Modern Sans"})
     if option == 'signrank':
         bayesian_test_obj = SignedRankTest
     elif option == 'signtest':
