@@ -136,7 +136,7 @@ class DatasetCustomLoader(ABC):
     def test_presets(output_shape) -> List:
         transformations = [
             T.ToTensor(),
-            T.Resize(output_shape),
+            T.Resize(output_shape, antialias=True),
 
         ]
         return transformations

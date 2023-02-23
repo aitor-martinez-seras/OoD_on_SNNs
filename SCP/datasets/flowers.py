@@ -46,7 +46,7 @@ class Flowers102(DatasetCustomLoader):
         return T.Compose(
             [
                 T.ToTensor(),
-                T.Resize(output_shape),
+                T.Resize(output_shape, antialias=True),
 
             ]
         )
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     dataset = Flowers102(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='train', transformation_option='train', output_shape=(64, 64)),
+        dataset.load_data(split='train', transformation_option='test', output_shape=(64, 64)),
         batch_size=64,
         shuffle=False
     )
@@ -67,5 +67,7 @@ if __name__ == "__main__":
     # for d, t in loader:
     #     n += len(t)
     # print(n)
+    d, t = next(iter(loader))
+    print(d.mean(), d.std())
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)
