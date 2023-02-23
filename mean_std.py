@@ -46,7 +46,7 @@ def main(args):
     for in_dataset in tqdm(datasets_to_test, desc=f'In-Distribution dataset loop'):
         results_list = []
         # Get the batch size and data loaders to obtain the data splits
-        batch_size = get_batch_size(config, in_dataset)
+        batch_size = 512
         in_dataset_data_loader = datasets_loader[in_dataset](datasets_path)
 
         # Load both splits
