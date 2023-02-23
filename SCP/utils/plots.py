@@ -159,10 +159,12 @@ def plot_dendogram_per_class(class_names, clusters_per_class, name, save=True):
         fig.show()
 
 
-def plot_clusters_performance(class_names, cluster_performance_for_all_possible_thresholds_per_class,
-                              possible_distance_thrs, selected_distance_thrs_per_class,
-                              clustering_performance_scores_for_selected_thresholds_per_class,
-                              name, performance_measuring_method, save=True):
+def plot_clusters_performance(
+        class_names,
+        cluster_performance_for_all_possible_thresholds_per_class, possible_distance_thrs,
+        clustering_performance_scores_for_selected_thresholds_per_class, selected_distance_thrs_per_class,
+        name, performance_measuring_method, save=True
+):
     n_classes = len(class_names)
     fig, axes = plt.subplots(2, int(n_classes / 2), figsize=(6 * n_classes / 2, 12))
 

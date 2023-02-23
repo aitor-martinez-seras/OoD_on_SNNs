@@ -149,12 +149,12 @@ def select_best_distance_threshold_for_each_class(
 
     elif performance_measuring_method == 'bic':
         cluster_performance_measuring_function = bic_score
-        raise NotImplementedError('Still not implemented correctly')
+        raise NotImplementedError('Still not implemented correctly, for future developments')
 
     elif performance_measuring_method == 'calinski':
         cluster_performance_measuring_function = skmetrics.calinski_harabasz_score
         performance_measuring_method = 'calinski-harabasz'
-        raise NotImplementedError('Still not implemented correctly')
+        raise NotImplementedError('Still not implemented correctly, for future developments')
     else:
         raise NameError(f'Wrong option selected for measuring performance of the clustering. '
                         f'Selected {performance_measuring_method}')
@@ -195,19 +195,15 @@ def select_best_distance_threshold_for_each_class(
 
         # Append the distance threshold to a list where they are going to be stored, one for each class
         selected_distance_thrs_per_class.append(possible_distance_thrs[max_index])
-        clustering_performance_scores_for_selected_thresholds_per_class.append(
-            clustering_performance_scores[max_index]
-        )
+        clustering_performance_scores_for_selected_thresholds_per_class.append(clustering_performance_scores[max_index])
 
     # Plot the performance score for every distance threshold
     if verbose == 2:
         print('Selected distance thresholds:\n', [round(i, 3) for i in selected_distance_thrs_per_class])
         plot_clusters_performance(
             class_names,
-            clustering_performance_scores_for_all_possible_thresholds_per_class,
-            possible_distance_thrs,
-            clustering_performance_scores_for_selected_thresholds_per_class,
-            selected_distance_thrs_per_class,
+            clustering_performance_scores_for_all_possible_thresholds_per_class, possible_distance_thrs,
+            clustering_performance_scores_for_selected_thresholds_per_class, selected_distance_thrs_per_class,
             name, performance_measuring_method, save=True
         )
 

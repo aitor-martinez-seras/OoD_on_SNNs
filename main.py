@@ -575,33 +575,6 @@ def main(args: argparse.Namespace):
                 results_log = create_str_for_ood_method_results('SPC', auroc, aupr, fpr95, fpr80)
                 logger.info(results_log)
 
-                # *************** Ensemble ODIN-SCP method ***************
-                ensemble_odin_scp = EnsembleOdinSCP()
-                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_scp(
-                    distances_train_per_class, distances_test_per_class, distances_ood_per_class,
-                    logits_train, logits_test, logits_ood,
-                    save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
-                )
-                results_log = create_str_for_ood_method_results('Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80)
-                logger.info(results_log)
-                # Save results to list
-                local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
-                results_list.append([local_time, in_dataset, ood_dataset, model_name,
-                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80, temp])
-
-                # *************** Ensemble ODIN-Energy method ***************
-                ensemble_odin_energy = EnsembleOdinEnergy()
-                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_energy(
-                    logits_train, logits_test, logits_ood,
-                    save_histogram=save_ensemble_odin_energy, name=new_figures_path, class_names=class_names
-                )
-                results_log = create_str_for_ood_method_results('Ensemble-Odin-Energy', auroc, aupr, fpr95, fpr80)
-                logger.info(results_log)
-                # Save results to list
-                local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
-                results_list.append([local_time, in_dataset, ood_dataset, model_name,
-                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80, temp])
-
                 # *************** Baseline method ***************
                 baseline = MSP()
                 auroc, aupr, fpr95, fpr80 = baseline(
@@ -647,8 +620,35 @@ def main(args: argparse.Namespace):
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
                                      test_accuracy, accuracy_ood, 'Free energy', auroc, aupr, fpr95, fpr80, temp])
 
+                # *************** Ensemble ODIN-SCP method ***************
+                ensemble_odin_scp = EnsembleOdinSCP()
+                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_scp(
+                    distances_train_per_class, distances_test_per_class, distances_ood_per_class,
+                    logits_train, logits_test, logits_ood,
+                    save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
+                )
+                results_log = create_str_for_ood_method_results('Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80)
+                logger.info(results_log)
+                # Save results to list
+                local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
+                results_list.append([local_time, in_dataset, ood_dataset, model_name,
+                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80, temp])
+
+                # *************** Ensemble ODIN-Energy method ***************
+                ensemble_odin_energy = EnsembleOdinEnergy()
+                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_energy(
+                    logits_train, logits_test, logits_ood,
+                    save_histogram=save_ensemble_odin_energy, name=new_figures_path, class_names=class_names
+                )
+                results_log = create_str_for_ood_method_results('Ensemble-Odin-Energy', auroc, aupr, fpr95, fpr80)
+                logger.info(results_log)
+                # Save results to list
+                local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
+                results_list.append([local_time, in_dataset, ood_dataset, model_name,
+                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80, temp])
+
             # ---------------------------------------------------------------
-            # Save results
+            # Save results for every model arch
             # ---------------------------------------------------------------
             # Save the results in the results list to a dataframe and the save it to a file
             df_results_one_run = pd.DataFrame(results_list, columns=COLUMNS)
