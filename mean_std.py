@@ -102,7 +102,7 @@ def main(args):
 
         df_results = pd.concat([df_results, df_results_one_dataset])
 
-    df_results.to_excel(results_path / f'mean_and_standard_{config}.xlsx')
+    df_results.to_excel(results_path / f'mean_and_standard_{args.conf}.xlsx')
 
 
 if __name__ == "__main__":
