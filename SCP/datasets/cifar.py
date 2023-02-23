@@ -4,7 +4,7 @@ import torchvision
 import torchvision.transforms as T
 from torchvision.datasets import VisionDataset
 
-from SCP.datasets.utils import DatasetCustomLoader
+from SCP.datasets.utils import DatasetCustomLoader, MyBrightnessTransform
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 
 
@@ -82,6 +82,16 @@ class CIFAR100(CIFAR10):
     def __init__(self, root_path, *args, **kwargs):
         super().__init__(root_path)
         self.dataset = torchvision.datasets.CIFAR100
+
+    def _test_transformation(self, output_shape):
+        """
+        To be overridden by the child if the dataset needs any custom transformation
+        """
+        return T.Compose([
+            MyBrightnessTransform(brightness_factor=1.5),
+            T.ToTensor(),
+            T.Resize(output_shape),
+        ])
 
 
 class CIFAR100BW(CIFAR10BW):
