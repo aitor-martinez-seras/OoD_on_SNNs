@@ -65,27 +65,27 @@ def main(args):
         train_loader = load_dataloader(train_data, batch_size, shuffle=True, generator=g_train)
         test_loader = load_dataloader(test_data, batch_size, shuffle=True, generator=g_test)
 
-        train_samples = []
-        for data, target in train_loader:
-            train_samples.append(data.numpy())
+        # train_samples = []
+        # for data, target in train_loader:
+        #     train_samples.append(data.numpy())
 
         test_samples = []
         for data, target in test_loader:
             test_samples.append(data.numpy())
 
-        train_samples = np.concatenate(train_samples)
+        # train_samples = np.concatenate(train_samples)
         test_samples = np.concatenate(test_samples)
 
-        results_list.append(
-            [
-                in_dataset,
-                'train',
-                len(train_samples),
-                train_samples.mean(),
-                np.median(train_samples),
-                train_samples.std()
-            ]
-        )
+        # results_list.append(
+        #     [
+        #         in_dataset,
+        #         'train',
+        #         len(train_samples),
+        #         train_samples.mean(),
+        #         np.median(train_samples),
+        #         train_samples.std()
+        #     ]
+        # )
 
         results_list.append(
             [
