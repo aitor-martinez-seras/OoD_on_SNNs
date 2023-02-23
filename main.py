@@ -257,7 +257,7 @@ def main(args: argparse.Namespace):
             else:
                 raise NameError(f"Wrong cluster mode {args.cluster_mode}")
 
-                logger.info(f"Available train samples' shape: {spk_count_train_clusters.shape}")
+            logger.info(f"Available train samples' shape: {spk_count_train_clusters.shape}")
 
             # Create cluster models
             # TODO: Tengo que conseguir que se use el args.samples_for_cluster_per_class sin que de error.
@@ -460,9 +460,6 @@ def main(args: argparse.Namespace):
                         data=ood_data, size_data=size_ood_train_data, new_size=size_test_data,
                         generator=g_ood, batch_size=batch_size_ood
                     )
-                    # rnd_idxs = torch.randint(high=size_ood_train_data, size=(size_test_data,), generator=g_ood)
-                    # ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
-                    # ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
                 else:  # size_ood_data > size_test_data
                     logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match "
@@ -471,9 +468,6 @@ def main(args: argparse.Namespace):
                         data=ood_data, size_data=size_ood_data, new_size=size_test_data,
                         generator=g_ood, batch_size=batch_size_ood
                     )
-                    # rnd_idxs = torch.randint(high=size_ood_data, size=(size_test_data,), generator=g_ood)
-                    # ood_subset = Subset(ood_data, [x for x in rnd_idxs.numpy()])
-                    # ood_loader = load_dataloader(ood_subset, batch_size=batch_size_ood, shuffle=False)
 
                 # Compute distances of test instances after possibly reducing its size
                 distances_test_per_class, _ = distance_to_clusters_averages(

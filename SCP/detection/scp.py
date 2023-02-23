@@ -61,5 +61,5 @@ class SCPMethod(_OODMethod):
 
 
 if __name__ == "__main__":
-    scp = SCP()
+    scp = SCPMethod()
     scp.save_auroc_fig()
