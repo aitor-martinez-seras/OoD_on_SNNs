@@ -42,6 +42,15 @@ class Flowers102(DatasetCustomLoader):
             ]
         )
 
+    def _test_transformation(self, output_shape):
+        return T.Compose(
+            [
+                T.ToTensor(),
+                T.Resize(output_shape),
+
+            ]
+        )
+
 
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
