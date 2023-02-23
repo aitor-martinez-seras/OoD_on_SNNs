@@ -7,7 +7,6 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 import torch
-from torch.utils.data import Subset
 
 from SCP.detection.ensembles import EnsembleOdinSCP, EnsembleOdinEnergy
 from SCP.detection.weights import download_pretrained_weights
@@ -135,7 +134,7 @@ def main(args: argparse.Namespace):
         if exist:
             print('Pretrained weights are correctly in path')
 
-    # Dataframe to store the results
+    # Dataframes to store results
     COLUMNS = ['Timestamp', 'In-Distribution', 'Out-Distribution', 'Model',
                'Test set accuracy', 'Accuracy in OOD test set', 'OoD Method',
                'AUROC', 'AUPR', 'FPR95', 'FPR80', 'Temperature']
@@ -654,7 +653,7 @@ def main(args: argparse.Namespace):
             # Save the results in the results list to a dataframe and the save it to a file
             df_results_one_run = pd.DataFrame(results_list, columns=COLUMNS)
             # Save checkpoint into .csv format
-            df_results_one_run.to_csv(results_path / f'checkpoint_{in_dataset}.csv')
+            # df_results_one_run.to_csv(results_path / f'checkpoint_{in_dataset}.csv')
             df_results = pd.concat([df_results, df_results_one_run])
 
     # Save all the results to excel

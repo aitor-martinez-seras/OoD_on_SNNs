@@ -135,8 +135,8 @@ def select_distance_threshold_for_one_class(clustering_performance_scores) -> in
 
 
 def select_best_distance_threshold_for_each_class(
-        class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train, performance_measuring_method,
-        name, verbose
+        class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train,
+        performance_measuring_method, name, verbose
 ):
     n_classes = len(class_names)
     clustering_performance_scores_for_all_possible_thresholds_per_class = []
@@ -149,10 +149,12 @@ def select_best_distance_threshold_for_each_class(
 
     elif performance_measuring_method == 'bic':
         cluster_performance_measuring_function = bic_score
+        raise NotImplementedError('Still not implemented correctly')
 
     elif performance_measuring_method == 'calinski':
         cluster_performance_measuring_function = skmetrics.calinski_harabasz_score
         performance_measuring_method = 'calinski-harabasz'
+        raise NotImplementedError('Still not implemented correctly')
     else:
         raise NameError(f'Wrong option selected for measuring performance of the clustering. '
                         f'Selected {performance_measuring_method}')
@@ -162,7 +164,6 @@ def select_best_distance_threshold_for_each_class(
         clustering_performance_scores = []
         for threshold in possible_distance_thrs:
             indices = find_idx_of_class(class_index, preds_train, n_samples_per_class)
-            # print(f'Class {class_index}:\t {len(indices)}')
             cluster_model = AgglomerativeClustering(
                 n_clusters=None, metric='manhattan', linkage='average', distance_threshold=threshold
             )
@@ -172,7 +173,7 @@ def select_best_distance_threshold_for_each_class(
             except ValueError as e:   # Handle the case that one class has no representation in the training samples
                 print(f'Error probably caused by the lack of training samples for class index {class_index}')
                 raise e
-            try:  # TODO: We may need to modify this call in case another function is used
+            try:
                 if performance_measuring_method == 'silhouette':
                     clustering_performance_scores.append(
                         cluster_performance_measuring_function(
@@ -210,7 +211,7 @@ def select_best_distance_threshold_for_each_class(
             name, performance_measuring_method, save=True
         )
 
-    return selected_distance_thrs_per_class, clustering_performance_scores_for_selected_thresholds_per_class
+    return selected_distance_thrs_per_class
 
 
 def create_clusters_per_class_based_on_distance_threshold(
@@ -280,7 +281,7 @@ def create_clusters(preds_train, spk_count_train, class_names: List, n_samples_p
     possible_distance_thrs = np.linspace(distance_for_clustering[0], distance_for_clustering[1], 50)
 
     # Select the best performing cluster configuration for each class based on a performance metric
-    selected_distance_thrs_per_class, clustering_performance_scores_for_selected_thresholds_per_class = select_best_distance_threshold_for_each_class(
+    selected_distance_thrs_per_class = select_best_distance_threshold_for_each_class(
         class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train,
         performance_measuring_method, name, verbose
     )
@@ -304,7 +305,10 @@ def silhouette_score_log(clusters_per_class, preds_train, spk_count_train, n_sam
     scores = []
     for class_index, cluster_model in enumerate(clusters_per_class):
         indices = find_idx_of_class(class_index, preds_train, n_samples_per_class)
-        scores.append(round(
-            skmetrics.silhouette_score(spk_count_train[indices], cluster_model.labels_, metric='manhattan'), 3
-        ))
+        scores.append(
+            round(
+                skmetrics.silhouette_score(spk_count_train[indices], cluster_model.labels_, metric='manhattan'),
+                3
+            )
+        )
     return scores
