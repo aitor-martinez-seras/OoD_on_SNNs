@@ -157,7 +157,7 @@ def main(args):
     print(f'Loading {args.dataset}...')
     in_dataset_data_loader = datasets_loader[args.dataset](datasets_path)
     train_data = in_dataset_data_loader.load_data(
-        split='train', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
+        split='train', transformation_option='train', output_shape=dataset_conf['input_size'][1:]
     )
     test_data = in_dataset_data_loader.load_data(
         split='test', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
