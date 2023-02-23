@@ -55,6 +55,10 @@ classes = 0
 input_size = [3, 96, 96]
 classes = 0
 
+[GTSRB]
+input_size = [3, 96, 96]
+classes = 0
+
 [FGVCAircraft]
 input_size = [3, 112, 224]
 classes = 0
