@@ -94,13 +94,15 @@ class CIFAR100BW(CIFAR10BW):
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
 
-    dataset = CIFAR10BW(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    dataset = CIFAR10(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
         dataset.load_data(split='test', transformation_option='test', output_shape=(32, 32)),
         batch_size=64,
         shuffle=False
     )
     print(loader.dataset.classes)
+    d, t = next(iter(loader))
+    print(d.mean(), d.std())
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)
 
