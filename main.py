@@ -361,6 +361,11 @@ def main(args: argparse.Namespace):
                 spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, n_classes
             )
 
+            # Compute distances of test instances after possibly reducing its size
+            distances_test_per_class, _ = distance_to_clusters_averages(
+                spk_count_test, preds_test, agg_counts_per_class_cluster, n_classes
+            )
+
             # ---------------------------------------------------------------
             # Evaluate OOD performance
             # ---------------------------------------------------------------
@@ -382,9 +387,12 @@ def main(args: argparse.Namespace):
                     # preds_test = np.copy(backup_preds_test)
                     # logits_test = np.copy(backup_logits_test)
                     # spk_count_test = np.copy(backup_spk_count_test)
-                    preds_test = backup_preds_test.copy()
+
+                    # preds_test = backup_preds_test.copy()
                     logits_test = backup_logits_test.copy()
-                    spk_count_test = backup_spk_count_test.copy()
+                    # spk_count_test = backup_spk_count_test.copy()
+
+                    distances_test_per_class = backup_distances_test_per_class.copy()
 
                     # This way, next iteration will only enter this code if again the number of samples
                     # of the test set has been reduced to match the number of OOD samples
@@ -394,6 +402,7 @@ def main(args: argparse.Namespace):
                     backup_preds_test = None
                     backup_logits_test = None
                     backup_spk_count_test = None
+                    backup_distances_test_per_class = None
 
                 # ---------------------------------------------------------------
                 # Load dataset and extract spikes and logits
@@ -450,16 +459,18 @@ def main(args: argparse.Namespace):
                         # backup_logits_test = np.copy(logits_test)
                         # backup_spk_count_test = np.copy(spk_count_test)
 
-                        backup_preds_test = preds_test.copy()
+                        # backup_preds_test = preds_test.copy()
                         backup_logits_test = logits_test.copy()
-                        backup_spk_count_test = spk_count_test.copy()
+                        # backup_spk_count_test = spk_count_test.copy()
+                        backup_distances_test_per_class = distances_test_per_class.copy()
 
-                        preds_test = preds_test[:size_ood_train_data]
-                        logits_test = logits_test[:size_ood_train_data]
-                        spk_count_test = spk_count_test[:size_ood_train_data]
+                        # preds_test = preds_test[:size_ood_train_data]
+                        # logits_test = logits_test[:size_ood_train_data]
+                        # spk_count_test = spk_count_test[:size_ood_train_data]
+                        distances_test_per_class = distances_test_per_class[:size_ood_train_data]
 
                         # Define the new size for the test data for this OOD dataset
-                        size_test_data = len(preds_test)
+                        size_test_data = len(distances_test_per_class)
 
                     # Create the subset of the train OOD data, where it will have the same size as
                     # the size of the test data.
@@ -475,11 +486,6 @@ def main(args: argparse.Namespace):
                         data=ood_data, size_data=size_ood_data, new_size=size_test_data,
                         generator=g_ood, batch_size=batch_size_ood
                     )
-
-                # Compute distances of test instances after possibly reducing its size
-                distances_test_per_class, _ = distance_to_clusters_averages(
-                    spk_count_test, preds_test, agg_counts_per_class_cluster, n_classes
-                )
 
                 # Extract the spikes and logits for OoD
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(
