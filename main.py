@@ -379,9 +379,12 @@ def main(args: argparse.Namespace):
                 # to match its size
                 if number_of_test_samples_decreased:
                     logger.info(f'Using the backups to replenish all the test tensors')
-                    preds_test = np.copy(backup_preds_test)
-                    logits_test = np.copy(backup_logits_test)
-                    spk_count_test = np.copy(backup_spk_count_test)
+                    # preds_test = np.copy(backup_preds_test)
+                    # logits_test = np.copy(backup_logits_test)
+                    # spk_count_test = np.copy(backup_spk_count_test)
+                    preds_test = backup_preds_test.copy()
+                    logits_test = backup_logits_test.copy()
+                    spk_count_test = backup_spk_count_test.copy()
 
                     # This way, next iteration will only enter this code if again the number of samples
                     # of the test set has been reduced to match the number of OOD samples
@@ -443,9 +446,13 @@ def main(args: argparse.Namespace):
                             f" {size_ood_train_data}. Therefore, the size of the test set is going to decrease "
                             f"for {ood_dataset} from {size_test_data} to {size_ood_train_data}")
                         number_of_test_samples_decreased = True
-                        backup_preds_test = np.copy(preds_test)
-                        backup_logits_test = np.copy(logits_test)
-                        backup_spk_count_test = np.copy(spk_count_test)
+                        # backup_preds_test = np.copy(preds_test)
+                        # backup_logits_test = np.copy(logits_test)
+                        # backup_spk_count_test = np.copy(spk_count_test)
+
+                        backup_preds_test = preds_test.copy()
+                        backup_logits_test = logits_test.copy()
+                        backup_spk_count_test = spk_count_test.copy()
 
                         preds_test = preds_test[:size_ood_train_data]
                         logits_test = logits_test[:size_ood_train_data]
