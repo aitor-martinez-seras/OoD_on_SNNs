@@ -486,6 +486,7 @@ def main(args: argparse.Namespace):
                         generator=g_ood, batch_size=batch_size_ood
                     )
 
+                logger.info(ood_loader.dataset)
                 # Extract the spikes and logits for OoD
                 accuracy_ood, preds_ood, logits_ood, _spk_count_ood = validate_one_epoch(
                     model, device, ood_loader, return_logits=True
