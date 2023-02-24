@@ -131,7 +131,7 @@ class DatasetCustomLoader(ABC):
         To be overridden by the child if the dataset needs any custom transformation
         """
         return T.Compose([
-            MyBrightnessTransform(brightness_factor=1.5),
+            # MyBrightnessTransform(brightness_factor=1.5),
             T.ToTensor(),
             T.Resize(output_shape),
         ])
