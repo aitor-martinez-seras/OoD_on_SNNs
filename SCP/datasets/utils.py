@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 import requests
 from io import BytesIO
-from typing import List
 from zipfile import ZipFile
 
 import torch
