@@ -190,7 +190,7 @@ class LoaderPatchesiSUN(DatasetCustomLoader):
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
 
-    datasetloader = LSUN(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    datasetloader = LoaderPatchesiSUN(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
         datasetloader.load_data(split='test', transformation_option='train', output_shape=(32, 32)),
         batch_size=64,

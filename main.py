@@ -429,14 +429,16 @@ def main(args: argparse.Namespace):
                 # Define loaders. Use a seed for ood loader
                 g_ood = torch.Generator()
                 g_ood.manual_seed(8)
-                ood_loader = load_dataloader(ood_data, batch_size_ood, shuffle=True, generator=g_ood)
 
                 size_test_data = len(preds_test)
                 size_ood_data = len(ood_data)
 
+                logger.info(f'Available test samples:\t{size_test_data}')
+                logger.info(f'Available test ood samples:\t{size_ood_data}')
+
                 # Ensure we have same number of samples for test and ood
                 if size_ood_data == size_test_data:
-                    pass
+                    ood_loader = load_dataloader(ood_data, batch_size_ood, shuffle=True, generator=g_ood)
 
                 elif size_ood_data < size_test_data:
                     logger.info(f"Using training data as test OOD data for {ood_dataset} dataset")
@@ -449,18 +451,10 @@ def main(args: argparse.Namespace):
 
                     size_ood_train_data = len(ood_data)
 
-                    # Create the subset of the train OOD data, where it will have the same size as
-                    # the size of the test data.
-                    ood_loader = create_loader_with_subset_of_specific_size_with_random_data(
-                        data=ood_data, size_data=size_ood_train_data, new_size=size_test_data,
-                        generator=g_ood, batch_size=batch_size_ood
-                    )
-
                     if size_ood_train_data < size_test_data:
-                        logger.info(
-                            f"There is still not sufficient OOD data in the training set"
-                            f" {size_ood_train_data}. Therefore, the size of the test set is going to decrease "
-                            f"for {ood_dataset} from {size_test_data} to {size_ood_train_data}")
+                        logger.info(f"There is still not sufficient OOD data in the training set"
+                                    f" {size_ood_train_data}. Therefore, the size of the test set is going to decrease"
+                                    f" for {ood_dataset} from {size_test_data} to {size_ood_train_data}")
 
                         number_of_test_samples_decreased = True
                         logger.info(f'number_of_test_samples_decreased = {number_of_test_samples_decreased}')
@@ -472,6 +466,15 @@ def main(args: argparse.Namespace):
                         preds_test = preds_test[:size_ood_train_data]
                         logits_test = logits_test[:size_ood_train_data]
                         spk_count_test = spk_count_test[:size_ood_train_data]
+
+                        ood_loader = load_dataloader(ood_data, batch_size_ood, shuffle=True, generator=g_ood)
+
+                    else:
+                        # Create the subset of the train OOD data, where it will have the same size as
+                        # the size of the test data.
+                        ood_loader = create_loader_with_subset_of_specific_size_with_random_data(
+                            data=ood_data, new_size=size_test_data, generator=g_ood, batch_size=batch_size_ood
+                        )
 
                 else:  # size_ood_data > size_test_data
                     logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match "
