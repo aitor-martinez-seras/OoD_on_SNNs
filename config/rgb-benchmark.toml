@@ -1,8 +1,14 @@
 in_distribution_datasets = ['CIFAR10']
 out_of_distribution_datasets = [
     'SUN397',
-    'TinyImagenet', 'EuroSAT',
-    'CIFAR100','Flowers102',
+    'iSUN',
+    'LSUN_crop',
+    'LSUN_resize',
+    'LSUN',
+    'TinyImagenet',
+    'EuroSAT',
+    'CIFAR100',
+    'Flowers102',
     'DTD',
     'Caltech101',
     'GTSRB',

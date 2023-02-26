@@ -8,6 +8,7 @@ import torch
 from torchvision.datasets import VisionDataset
 import torchvision.transforms as T
 from torch.utils.data import DataLoader, Subset
+import PIL
 
 from SCP.utils.common import find_idx_of_class
 
@@ -16,12 +17,21 @@ def _download_dataset(fpath: Path, url: str):
     ftype = fpath.name.split('.')[-1]
 
     if ftype == 'gz':
-        r = requests.get(url, stream=True)
-        if r.status_code == 200:
-            with open(fpath, 'wb') as f:
-                f.write(r.raw.read())
-        else:
-            raise FileNotFoundError
+        raise NotImplementedError('Not working')
+        # response = requests.get(url, stream=True)
+        # file = tarfile.open(fileobj=response.raw, mode="r|gz")
+        # file.extractall(path=".")
+
+        # with requests.get(url, stream=True) as rx, tarfile.open(fileobj=rx.raw, mode="r:gz") as tarobj:
+        #     tarobj.extractall()
+
+        # r = requests.get(url, stream=True)
+        # if r.status_code == 200:
+        #     with open(fpath, 'wb') as f:
+        #         f.write(r.raw.read())
+        #         # f.write(r.content)
+        # else:
+        #     raise FileNotFoundError
 
     elif ftype == 'zip':
         r = requests.get(url)
@@ -186,3 +196,23 @@ def create_subset_of_specific_size_with_random_data(data, size_data, new_size, g
     subset = Subset(data, [x for x in rnd_idxs.numpy()])
     loader = load_dataloader(subset, batch_size=batch_size, shuffle=False)
     return loader
+
+
+class CustomPNGDataset(VisionDataset):
+    def __init__(self, root: Path, transform=None):
+        self.root = root
+        super().__init__(self.root, transform=transform)
+        self.img_names = []
+        for img in self.root.iterdir():
+            self.img_names.append(img.name)
+
+    def __len__(self):
+        return len(self.img_names)
+
+    def __getitem__(self, idx):
+        img_name = self.img_names[idx]
+        image = PIL.Image.open(self.root / img_name).convert("RGB")
+        target = 0
+        if self.transform:
+            image = self.transform(image)
+        return image, target

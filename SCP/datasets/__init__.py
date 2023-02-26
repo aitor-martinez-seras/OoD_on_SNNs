@@ -15,6 +15,7 @@ from SCP.datasets.gtsrb import GTSRB
 from SCP.datasets.eurosat import EuroSAT
 from SCP.datasets.tiny_imagenet import TinyImageNetLoader
 from SCP.datasets.sun import SUN397
+from SCP.datasets.lsun import LSUN, LoaderLSUNResize, LoaderLSUNCrop, LoaderPatchesiSUN
 
 datasets_loader = {
     'MNIST': MNIST,
@@ -38,4 +39,8 @@ datasets_loader = {
     'EuroSAT': EuroSAT,
     'TinyImagenet': TinyImageNetLoader,
     'SUN397': SUN397,
+    'iSUN': LoaderPatchesiSUN,
+    'LSUN_crop': LoaderLSUNCrop,
+    'LSUN_resize': LoaderLSUNResize,
+    'LSUN': LSUN,
 }
