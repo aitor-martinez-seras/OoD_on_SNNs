@@ -568,7 +568,7 @@ def main(args: argparse.Namespace):
 
                 # *************** Ensemble ODIN-SCP method ***************
                 ensemble_odin_scp = EnsembleOdinSCP()
-                logger.info(f'Shapes')
+                logger.info(f'Shapes before entering')
                 logger.info(f'Distances train thr:\t{len_of_list_per_class(distances_train_per_class)}')
                 logger.info(f'Distances test:\t{len_of_list_per_class(distances_test_per_class)}')
                 logger.info(f'Distances ood:\t{len_of_list_per_class(distances_ood_per_class)}')
