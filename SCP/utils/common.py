@@ -107,3 +107,11 @@ def create_str_for_ood_method_results(method_name, auroc, aupr, fpr95, fpr80, te
     \tFPR80:\t{fpr80}
     \tTemp:\t{temp}"""
     return string
+
+
+def len_of_list_per_class(list_obj) -> int:
+    s = 0
+    for element in list_obj:
+        s += len(element)
+    return s
+

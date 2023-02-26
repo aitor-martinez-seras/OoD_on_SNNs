@@ -157,3 +157,10 @@ def fn_vs_bad(preds_test, test_labels, test_accuracy, distances_train_per_class,
         [df_fn_vs_bad_classification, df_fn_incorrect_vs_correct_one_dataset]
     )
     return df_fn_vs_bad_classification
+
+
+def len_of_list_per_class(list_obj) -> int:
+    s = 0
+    for element in list_obj:
+        s += len(element)
+    return s

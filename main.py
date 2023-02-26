@@ -14,7 +14,8 @@ from SCP.datasets import datasets_loader
 from SCP.datasets.utils import load_dataloader, create_loader_with_subset_of_specific_size_with_random_data
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages
-from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results
+from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
+    len_of_list_per_class
 from SCP.detection import MSP, ODIN, EnergyOOD, SCPMethod
 from test import validate_one_epoch
 
@@ -567,9 +568,16 @@ def main(args: argparse.Namespace):
 
                 # *************** Ensemble ODIN-SCP method ***************
                 ensemble_odin_scp = EnsembleOdinSCP()
+                logger.info(f'Shapes')
+                logger.info(f'Distances train thr:\t{len_of_list_per_class(distances_train_per_class)}')
+                logger.info(f'Distances test:\t{len_of_list_per_class(distances_test_per_class)}')
+                logger.info(f'Distances ood:\t{len_of_list_per_class(distances_ood_per_class)}')
+                logger.info(f'Logits train thr:\t{len(logits_train_thr)}')
+                logger.info(f'Logits test:\t{len(logits_test)}')
+                logger.info(f'Logits ood:\t{len(logits_ood)}')
                 auroc, aupr, fpr95, fpr80, temp = ensemble_odin_scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
-                    logits_train, logits_test, logits_ood,
+                    logits_train_thr, logits_test, logits_ood,
                     save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
                 )
                 results_log = create_str_for_ood_method_results('Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80)
@@ -582,7 +590,7 @@ def main(args: argparse.Namespace):
                 # *************** Ensemble ODIN-Energy method ***************
                 ensemble_odin_energy = EnsembleOdinEnergy()
                 auroc, aupr, fpr95, fpr80, temp = ensemble_odin_energy(
-                    logits_train, logits_test, logits_ood,
+                    logits_train_thr, logits_test, logits_ood,
                     save_histogram=save_ensemble_odin_energy, name=new_figures_path, class_names=class_names
                 )
                 results_log = create_str_for_ood_method_results('Ensemble-Odin-Energy', auroc, aupr, fpr95, fpr80)
