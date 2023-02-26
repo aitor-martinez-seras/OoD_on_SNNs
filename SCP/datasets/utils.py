@@ -130,7 +130,6 @@ class DatasetCustomLoader(ABC):
         To be overridden by the child if the dataset needs any custom transformation
         """
         return T.Compose([
-            # MyBrightnessTransform(brightness_factor=1.5),
             T.ToTensor(),
             T.Resize(output_shape),
         ])
@@ -180,19 +179,6 @@ def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0, generat
             num_workers=num_workers,
         )
     return dataloader
-
-
-import torchvision.transforms.functional as TF
-
-
-class MyBrightnessTransform:
-    """Adjust brightness"""
-
-    def __init__(self, brightness_factor):
-        self.brightness_factor = brightness_factor
-
-    def __call__(self, x):
-        return TF.adjust_brightness(x, brightness_factor=self.brightness_factor)
 
 
 def create_subset_of_specific_size_with_random_data(data, size_data, new_size, generator, batch_size):

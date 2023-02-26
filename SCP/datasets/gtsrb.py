@@ -36,8 +36,8 @@ class GTSRB(DatasetCustomLoader):
                 T.Resize(output_shape),
                 T.RandomHorizontalFlip(),
                 # T.RandomVerticalFlip(),
-                # transforms.RandomResizedCrop(size=image_shape[1:], scale=(0.7, 1.0), ratio=(0.75, 1.0)),
-                # transforms.RandomRotation(15),
+                # T.RandomResizedCrop(size=image_shape[1:], scale=(0.7, 1.0), ratio=(0.75, 1.0)),
+                # T.RandomRotation(15),
 
             ]
         )

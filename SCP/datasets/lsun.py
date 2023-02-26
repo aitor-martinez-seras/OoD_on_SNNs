@@ -90,11 +90,12 @@ class LSUN(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
-                # T.Resize(output_shape),
-                T.RandomHorizontalFlip(),
-                T.RandomResizedCrop(size=output_shape, scale=(0.7, 1.0), ratio=(0.75, 1.0)),
-                T.RandomRotation(15),
                 T.ToTensor(),
+                T.Resize(output_shape),
+                # T.RandomHorizontalFlip(),
+                # T.RandomResizedCrop(size=output_shape, scale=(0.7, 1.0), ratio=(0.75, 1.0)),
+                # T.RandomRotation(15),
+
             ]
         )
 

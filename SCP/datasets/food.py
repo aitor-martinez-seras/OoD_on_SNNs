@@ -33,11 +33,12 @@ class Food101(DatasetCustomLoader):
     def _train_transformation(self, output_shape):
         return T.Compose(
             [
+                T.ToTensor(),
                 T.Resize(output_shape),
                 T.RandomRotation(20, ),
                 # T.RandomCrop(output_shape[0] - int(output_shape[0]*0.05), padding=int(output_shape[0]*0.05)),
                 T.RandomHorizontalFlip(),
-                T.ToTensor(),
+
             ]
         )
 
