@@ -78,3 +78,7 @@ classes = 0
 [OODGenomics]
 input_size = [4]
 classes = 10
+
+[SVHN]
+input_size = [3, 32, 32]
+classes = 10
