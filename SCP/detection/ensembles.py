@@ -53,12 +53,6 @@ class EnsembleOdinSCP(_OODMethod):
         index_max = np.argmax(prelim_results[:, 0])
 
         temp = possible_temps[index_max]
-        print('Temperature max:', temp)
-
-        print(f'Shapes AFTER entering')
-        print(f'Logits train thr:\t{len(logits_train)}')
-        print(f'Logits test:\t{len(logits_test)}')
-        print(f'Logits ood:\t{len(logits_ood)}')
 
         # Temperature scaling the softmax
         temp_softmax_train = scysp.softmax(logits_train / temp, axis=1)
@@ -86,10 +80,6 @@ class EnsembleOdinSCP(_OODMethod):
         scp_in_or_ood_per_tpr_test, scp_in_or_ood_per_tpr_ood = computation_distances_per_class_in_or_out_distribution_per_tpr(
             distances_test_per_class, distances_ood_per_class,  distance_thresholds_train
         )
-
-        print(f'Distances train thr:\t{len_of_list_per_class(distances_train_per_class)}')
-        print(f'Distances test:\t{len_of_list_per_class(distances_test_per_class)}')
-        print(f'Distances ood:\t{len_of_list_per_class(distances_ood_per_class)}')
 
         # ----- Ensemble -----
         sum_test = scp_in_or_ood_per_tpr_test + odin_in_or_ood_per_tpr_test

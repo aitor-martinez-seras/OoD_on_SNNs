@@ -496,7 +496,7 @@ def main(args: argparse.Namespace):
 
                 # *************** SCP ***************
                 # Computation of the distances of ood instances
-                
+
                 # Compute distances of test instances after possibly reducing its size
                 distances_test_per_class, _ = distance_to_clusters_averages(
                     spk_count_test, preds_test, agg_counts_per_class_cluster, len(class_names)
@@ -569,13 +569,6 @@ def main(args: argparse.Namespace):
 
                 # *************** Ensemble ODIN-SCP method ***************
                 ensemble_odin_scp = EnsembleOdinSCP()
-                logger.info(f'Shapes before entering')
-                logger.info(f'Distances train thr:\t{len_of_list_per_class(distances_train_per_class)}')
-                logger.info(f'Distances test:\t{len_of_list_per_class(distances_test_per_class)}')
-                logger.info(f'Distances ood:\t{len_of_list_per_class(distances_ood_per_class)}')
-                logger.info(f'Logits train thr:\t{len(logits_train_thr)}')
-                logger.info(f'Logits test:\t{len(logits_test)}')
-                logger.info(f'Logits ood:\t{len(logits_ood)}')
                 auroc, aupr, fpr95, fpr80, temp = ensemble_odin_scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     logits_train_thr, logits_test, logits_ood,
