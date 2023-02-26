@@ -16,6 +16,8 @@ from SCP.datasets.eurosat import EuroSAT
 from SCP.datasets.tiny_imagenet import TinyImageNetLoader
 from SCP.datasets.sun import SUN397
 from SCP.datasets.lsun import LSUN, LoaderLSUNResize, LoaderLSUNCrop, LoaderPatchesiSUN
+from SCP.datasets.svhn import SVHN
+from SCP.datasets.places import Places365
 
 datasets_loader = {
     'MNIST': MNIST,
@@ -43,4 +45,6 @@ datasets_loader = {
     'LSUN_crop': LoaderLSUNCrop,
     'LSUN_resize': LoaderLSUNResize,
     'LSUN': LSUN,
+    'SVHN': SVHN,
+    'Places365': Places365,
 }

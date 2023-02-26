@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     dataset = GTSRB(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(64, 64)),
+        dataset.load_data(split='train', transformation_option='train', output_shape=(32, 32)),
         batch_size=64,
         shuffle=True
     )

@@ -188,18 +188,9 @@ class LoaderPatchesiSUN(DatasetCustomLoader):
 
 
 if __name__ == "__main__":
-    # dataset = LSUNCrop(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), transform=T.Compose(
-    #         [
-    #             T.ToTensor(),
-    #             T.Resize((32,32))
-    #         ]
-    #     ))
-    # print()
-
     from torch.utils.data import DataLoader
-    #
-    # dataset = LSUN(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
-    datasetloader = LoaderPatchesiSUN(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+
+    datasetloader = LSUN(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
         datasetloader.load_data(split='test', transformation_option='train', output_shape=(32, 32)),
         batch_size=64,
