@@ -170,7 +170,7 @@ class DatasetCustomLoader(ABC):
             )
 
 
-def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0, generator=None):
+def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0, generator=None) -> DataLoader:
     if shuffle and generator:
         dataloader = DataLoader(
             dataset=data,
@@ -191,7 +191,8 @@ def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0, generat
     return dataloader
 
 
-def create_subset_of_specific_size_with_random_data(data, size_data, new_size, generator, batch_size):
+def create_loader_with_subset_of_specific_size_with_random_data(data, size_data, new_size,
+                                                                generator, batch_size) -> DataLoader:
     rnd_idxs = torch.randint(high=size_data, size=(new_size,), generator=generator)
     subset = Subset(data, [x for x in rnd_idxs.numpy()])
     loader = load_dataloader(subset, batch_size=batch_size, shuffle=False)

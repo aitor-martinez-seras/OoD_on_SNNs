@@ -53,7 +53,16 @@ if __name__ == "__main__":
         batch_size=64,
         shuffle=False
     )
-    print(loader.dataset)
+
+    from SCP.datasets.utils import create_loader_with_subset_of_specific_size_with_random_data
+    import torch
+    g_ood = torch.Generator()
+    g_ood.manual_seed(8)
+    loader = create_loader_with_subset_of_specific_size_with_random_data(
+        data=loader.dataset, size_data=len(loader.dataset), new_size=1000,
+        generator=g_ood, batch_size=64
+    )
+    # print(loader.dataset)
     print(len(loader.dataset))
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)

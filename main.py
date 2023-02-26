@@ -11,7 +11,7 @@ import torch
 from SCP.detection.ensembles import EnsembleOdinSCP, EnsembleOdinEnergy
 from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
-from SCP.datasets.utils import load_dataloader, create_subset_of_specific_size_with_random_data
+from SCP.datasets.utils import load_dataloader, create_loader_with_subset_of_specific_size_with_random_data
 from SCP.models.model import load_model
 from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages,\
     silhouette_score_log
@@ -58,15 +58,42 @@ def get_args_parser() -> argparse.ArgumentParser:
                         help="saves histogram plots for the specified methods. Options: SCP, Baseline, ODIN, Energy")
     parser.add_argument("--save-metric-plots", action='store_true', dest='save_metric_plots',
                         help="if passed, AUROC and AUPR Curves are saved")
-    parser.add_argument("--ind-seed", default=6, type=int, dest='ind_seed',
-                        help="seed for the In-Distribution dataset")
+    parser.add_argument("--ind--train-seed", default=6, type=int, dest='ind_train_seed',
+                        help="seed for the In-Distribution train dataset")
+    parser.add_argument("--ind-test-seed", default=6, type=int, dest='ind_test_seed',
+                        help="seed for the In-Distribution test dataset"),
     parser.add_argument("--thr-seed", default=7, type=int, dest='thr_seed',
                         help="seed for the selection of the instances for creating the thresholds")
     parser.add_argument("--ood-seed", default=8, type=int, dest='ood_seed',
                         help="seed for the selection of ood instances in case train instances are needed")
-    parser.add_argument("--fn-vs-bad-clasification", action='store_true', dest='fn_vs_bad_clasification',
-                        help="if passed, obtain a new result where info about False Negative is present")
     return parser
+
+
+def load_in_distribution_data(in_dataset, batch_size, datasets_loader, datasets_path, datasets_conf,
+                              train_seed, test_seed):
+
+    in_dataset_data_loader = datasets_loader[in_dataset](datasets_path)
+
+    # Load both splits
+    train_data = in_dataset_data_loader.load_data(
+        split='train', transformation_option='test', output_shape=datasets_conf[in_dataset]['input_size'][1:]
+    )
+    test_data = in_dataset_data_loader.load_data(
+        split='test', transformation_option='test', output_shape=datasets_conf[in_dataset]['input_size'][1:]
+    )
+
+    # Define loaders. Use a seed for train loader
+    g_ind_train = torch.Generator()
+    g_ind_train.manual_seed(train_seed)
+    train_loader = load_dataloader(train_data, batch_size, shuffle=True, generator=g_ind_train)
+
+    g_ind_test = torch.Generator()
+    g_ind_test.manual_seed(test_seed)
+    test_loader = load_dataloader(test_data, batch_size, shuffle=True, generator=g_ind_test)
+
+    # Extract useful variables for future operations
+    class_names = train_data.classes
+    return train_loader, test_loader, class_names
 
 
 def main(args: argparse.Namespace):
@@ -140,13 +167,6 @@ def main(args: argparse.Namespace):
                'AUROC', 'AUPR', 'FPR95', 'FPR80', 'Temperature']
     df_results = pd.DataFrame(columns=COLUMNS)
 
-    if args.fn_vs_bad_clasification:
-        columns_fn_incorrect_vs_correct = [
-            'In-Dataset', 'OOD-Dataset', 'Total test samples', 'TPR [%]', 'FN [%]', 'FN [Total]',
-            'FN correctly classified [%]', 'FN misclassified [%]', 'Accuracy of the model'
-        ]
-        df_fn_vs_bad_classification = pd.DataFrame(columns=columns_fn_incorrect_vs_correct)
-
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
 
@@ -169,25 +189,11 @@ def main(args: argparse.Namespace):
         # ---------------------------------------------------------------
         # Get the batch size and data loaders to obtain the data splits
         batch_size = get_batch_size(config, in_dataset, logger)
-        in_dataset_data_loader = datasets_loader[in_dataset](datasets_path)
 
-        # Load both splits
-        train_data = in_dataset_data_loader.load_data(
-            split='train', transformation_option='test', output_shape=datasets_conf[in_dataset]['input_size'][1:]
+        train_loader, test_loader, class_names = load_in_distribution_data(
+            in_dataset, config, datasets_loader, datasets_path, datasets_conf,
+            args.ind_train_seed, args.ind_test_seed,
         )
-        test_data = in_dataset_data_loader.load_data(
-            split='test', transformation_option='test', output_shape=datasets_conf[in_dataset]['input_size'][1:]
-        )
-
-        # Define loaders. Use a seed for train loader
-        g_ind = torch.Generator()
-        g_ind.manual_seed(args.ind_seed)
-        train_loader = load_dataloader(train_data, batch_size, shuffle=True, generator=g_ind)
-        test_loader = load_dataloader(test_data, batch_size, shuffle=True, generator=g_ind)
-
-        # Extract useful variables for future operations
-        class_names = train_data.classes
-        n_classes = len(class_names)
 
         logger.info(f'Starting In-Distribution dataset {in_dataset}')
         for model_name in tqdm(archs_to_test, desc='Model loop'):
@@ -199,6 +205,7 @@ def main(args: argparse.Namespace):
             # ---------------------------------------------------------------
             # Load model and its weights
             # ---------------------------------------------------------------
+
             input_size = datasets_conf[in_dataset]['input_size']
             hidden_neurons = model_archs[model_name][in_dataset][0]
             output_neurons = datasets_conf[in_dataset]['classes']
@@ -210,11 +217,12 @@ def main(args: argparse.Namespace):
                 hidden_neurons=hidden_neurons,
                 output_neurons=output_neurons,
                 n_hidden_layers=args.n_hidden_layers,
-                f_max=args.f_max,  # Default value is for reproducing results
+                f_max=args.f_max,  # Default value is for reproducing results of BW
                 encoder='poisson',
-                n_time_steps=args.n_time_steps,  # Default value is for reproducing results
+                n_time_steps=args.n_time_steps,  # Default value is for reproducing results of BW
             )
             model = model.to(device)
+
             logger.info('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
             logger.info(model)
             logger.info('* - - - - - - - - - - - - - - - - - - - - - - - - - - - -')
@@ -280,23 +288,18 @@ def main(args: argparse.Namespace):
             logger.info(f'Mean number of clusters in total: {np.mean([cl.n_clusters_ for cl in clusters_per_class])}')
             logger.info(logging_info)
 
-            scores_perf = silhouette_score_log(
-                clusters_per_class, labels_for_clustering, spk_count_train_clusters, args.samples_for_cluster_per_class,
-            )
-            logger.info(f'Score per class: {scores_perf}')
-
             # ---------------------------------------------------------------
             # Select a subset of training to calculate the thresholds
             # ---------------------------------------------------------------
             if args.samples_for_thr == 'disjoint':
-                preds_train_thr = preds_train[args.samples_for_cluster_per_class * n_classes:]
-                spk_count_train_thr = spk_count_train[args.samples_for_cluster_per_class * n_classes:]
-                logits_train_thr = logits_train[args.samples_for_cluster_per_class * n_classes:]
+                preds_train_thr = preds_train[args.samples_for_cluster_per_class * len(class_names):]
+                spk_count_train_thr = spk_count_train[args.samples_for_cluster_per_class * len(class_names):]
+                logits_train_thr = logits_train[args.samples_for_cluster_per_class * len(class_names):]
 
             elif args.samples_for_thr == 'random':
                 g_thr = torch.Generator()
                 g_thr.manual_seed(args.thr_seed)
-                shuffle_idx = torch.randperm(len(train_data), generator=g_thr)
+                shuffle_idx = torch.randperm(len(train_loader.dataset), generator=g_thr)
                 preds_train_thr = preds_train[shuffle_idx]
                 spk_count_train_thr = spk_count_train[shuffle_idx]
                 logits_train_thr = logits_train[shuffle_idx]
@@ -352,18 +355,18 @@ def main(args: argparse.Namespace):
                 spk_count_train_clusters,
                 labels_for_clustering,
                 clusters_per_class,
-                n_classes,
+                len(class_names),
                 n_samples=args.samples_for_cluster_per_class, option='median'
             )
 
             # Computation of the distances of train
             distances_train_per_class, _ = distance_to_clusters_averages(
-                spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, n_classes
+                spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, len(class_names)
             )
 
             # Compute distances of test instances after possibly reducing its size
             distances_test_per_class, _ = distance_to_clusters_averages(
-                spk_count_test, preds_test, agg_counts_per_class_cluster, n_classes
+                spk_count_test, preds_test, agg_counts_per_class_cluster, len(class_names)
             )
 
             # ---------------------------------------------------------------
@@ -384,9 +387,7 @@ def main(args: argparse.Namespace):
                 # to match its size
                 if number_of_test_samples_decreased:
                     logger.info(f'Using the backups to replenish all the test tensors')
-                    # preds_test = np.copy(backup_preds_test)
-                    # logits_test = np.copy(backup_logits_test)
-                    # spk_count_test = np.copy(backup_spk_count_test)
+
                     preds_test = backup_preds_test.copy()
                     logits_test = backup_logits_test.copy()
                     spk_count_test = backup_spk_count_test.copy()
@@ -394,6 +395,7 @@ def main(args: argparse.Namespace):
                     # This way, next iteration will only enter this code if again the number of samples
                     # of the test set has been reduced to match the number of OOD samples
                     number_of_test_samples_decreased = False
+                    logger.info(f'number_of_test_samples_decreased = {number_of_test_samples_decreased}')
 
                     # Free up memory
                     backup_preds_test = None
@@ -405,6 +407,7 @@ def main(args: argparse.Namespace):
                 # ---------------------------------------------------------------
                 size_test_data = 0
                 size_ood_data = 0
+
                 # Load OoD dataset. In case it is MNIST-C, load the selected option
                 # In case the OOD test dataset has not enough instances, the train dataset is loaded
                 batch_size_ood = get_batch_size(config, ood_dataset, logger)
@@ -426,7 +429,7 @@ def main(args: argparse.Namespace):
                 # Define loaders. Use a seed for ood loader
                 g_ood = torch.Generator()
                 g_ood.manual_seed(8)
-                ood_loader = load_dataloader(ood_data, batch_size, shuffle=True, generator=g_ood)
+                ood_loader = load_dataloader(ood_data, batch_size_ood, shuffle=True, generator=g_ood)
 
                 size_test_data = len(preds_test)
                 size_ood_data = len(ood_data)
@@ -445,15 +448,22 @@ def main(args: argparse.Namespace):
                     )
 
                     size_ood_train_data = len(ood_data)
+
+                    # Create the subset of the train OOD data, where it will have the same size as
+                    # the size of the test data.
+                    ood_loader = create_loader_with_subset_of_specific_size_with_random_data(
+                        data=ood_data, size_data=size_ood_train_data, new_size=size_test_data,
+                        generator=g_ood, batch_size=batch_size_ood
+                    )
+
                     if size_ood_train_data < size_test_data:
                         logger.info(
                             f"There is still not sufficient OOD data in the training set"
                             f" {size_ood_train_data}. Therefore, the size of the test set is going to decrease "
                             f"for {ood_dataset} from {size_test_data} to {size_ood_train_data}")
+
                         number_of_test_samples_decreased = True
-                        # backup_preds_test = np.copy(preds_test)
-                        # backup_logits_test = np.copy(logits_test)
-                        # backup_spk_count_test = np.copy(spk_count_test)
+                        logger.info(f'number_of_test_samples_decreased = {number_of_test_samples_decreased}')
 
                         backup_preds_test = preds_test.copy()
                         backup_logits_test = logits_test.copy()
@@ -463,20 +473,10 @@ def main(args: argparse.Namespace):
                         logits_test = logits_test[:size_ood_train_data]
                         spk_count_test = spk_count_test[:size_ood_train_data]
 
-                        # Define the new size for the test data for this OOD dataset
-                        size_test_data = len(logits_test)
-
-                    # Create the subset of the train OOD data, where it will have the same size as
-                    # the size of the test data.
-                    ood_loader = create_subset_of_specific_size_with_random_data(
-                        data=ood_data, size_data=size_ood_train_data, new_size=size_test_data,
-                        generator=g_ood, batch_size=batch_size_ood
-                    )
-
                 else:  # size_ood_data > size_test_data
                     logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match "
                                 f"the number of samples of test data, equal to {size_test_data}")
-                    ood_loader = create_subset_of_specific_size_with_random_data(
+                    ood_loader = create_loader_with_subset_of_specific_size_with_random_data(
                         data=ood_data, size_data=size_ood_data, new_size=size_test_data,
                         generator=g_ood, batch_size=batch_size_ood
                     )
@@ -489,77 +489,21 @@ def main(args: argparse.Namespace):
                 logger.info(f'Accuracy for the ood dataset {ood_dataset} is {accuracy_ood} %')
 
                 # Convert spikes to counts
-                if isinstance(_spk_count_ood, tuple):
-                    _spk_count_ood, _ = _spk_count_ood
                 spk_count_ood = np.sum(_spk_count_ood, axis=0, dtype='uint16')
-                logger.info(f'OoD set: {spk_count_ood.shape}')
 
-                # *************** SCP ***************
-                # Computation of the distances of ood instances
-                distances_ood_per_class, _ = distance_to_clusters_averages(
-                    spk_count_ood, preds_ood, agg_counts_per_class_cluster, n_classes
-                )
+                # Inform about shapes
                 logger.info(f'Shape of test and ood tensors:')
                 logger.info(f'  Spike count test:\t{spk_count_test.shape}')
                 logger.info(f'  Spike count ood:\t{spk_count_ood.shape}')
                 logger.info(f'  Logits test:\t{logits_test.shape}')
                 logger.info(f'  Logits ood:\t{logits_ood.shape}')
+
+                # *************** SCP ***************
+                # Computation of the distances of ood instances
+                distances_ood_per_class, _ = distance_to_clusters_averages(
+                    spk_count_ood, preds_ood, agg_counts_per_class_cluster, len(class_names)
+                )
                 scp = SCPMethod()
-                if args.fn_vs_bad_clasification:
-                    # Reorder preds and test labels to match the order of in_or_out_distribution_per_tpr_test
-                    test_labels_per_predicted_class = []
-                    for class_index in range(10):
-                        test_labels_per_predicted_class.append(test_labels[find_idx_of_class(class_index, preds_test)])
-                    test_labels_reordered = np.concatenate(test_labels_per_predicted_class)
-                    preds_test_per_predicted_class = []
-                    for class_index in range(10):
-                        preds_test_per_predicted_class.append(preds_test[find_idx_of_class(class_index, preds_test)])
-                    preds_test_reordered = np.concatenate(preds_test_per_predicted_class)
-                    # Compare predictions and labels and output 1 where is correctly predicted, 0 where not
-                    correct_incorrect_clasification = np.where(preds_test_reordered == test_labels_reordered, 1, 0)
-
-                    # Obtain array with ind or ood decision for test instances and for specific TPR values
-                    # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
-                    dist_thresholds = thresholds_per_class_for_each_TPR(
-                        len(class_names), distances_train_per_class,
-                    )
-                    # Compute if test instances are classified as InD or OoD for every tpr
-                    in_or_out_distribution_per_tpr_test = compare_distances_per_class_to_distance_thr_per_class(
-                        distances_test_per_class,
-                        dist_thresholds
-                    )
-                    # Extract the list with only the TPR values we are interested in: 25, 50, 75 and 95 per cent
-                    tprs_to_extract = (25, 50, 75, 95)
-                    in_or_out_distribution_per_tpr_test = in_or_out_distribution_per_tpr_test[tprs_to_extract, :]
-
-                    # Now compare the test labels with the InD or OoD decision and obtain a [4, number_of_samples]
-                    # list, where 1 will mean the False Negative was correctly classified and 0 will mean
-                    # the False Negative was misclassified
-                    fn_correct_vs_incorrect_per_tpr = []
-                    for idx, in_or_out_one_tpr in enumerate(in_or_out_distribution_per_tpr_test):
-                        fn_position = np.where(in_or_out_one_tpr == 0)[0]
-                        fn_correct_vs_incorrect_per_tpr.append(
-                            np.where(correct_incorrect_clasification[fn_position] == 1, 1, 0)
-                        )
-
-                    df_fn_incorrect_vs_correct_one_dataset = pd.DataFrame(columns=columns_fn_incorrect_vs_correct)
-                    for i, fn_correct_vs_incorrect in enumerate(fn_correct_vs_incorrect_per_tpr):
-                        df_fn_incorrect_vs_correct_one_dataset.loc[len(df_fn_incorrect_vs_correct_one_dataset)] = [
-                            in_dataset,
-                            ood_dataset,
-                            len(preds_test),
-                            tprs_to_extract[i],
-                            len(fn_correct_vs_incorrect) / len(preds_test),
-                            len(fn_correct_vs_incorrect),
-                            len(np.nonzero(fn_correct_vs_incorrect)[0]) / len(fn_correct_vs_incorrect),
-                            (len(fn_correct_vs_incorrect) - len(np.nonzero(fn_correct_vs_incorrect)[0])) / len(fn_correct_vs_incorrect),
-                            test_accuracy,
-                        ]
-
-                    df_fn_vs_bad_classification = pd.concat(
-                        [df_fn_vs_bad_classification, df_fn_incorrect_vs_correct_one_dataset]
-                    )
-
                 auroc, aupr, fpr95, fpr80 = scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     save_histogram=save_scp_hist, name=new_figures_path, class_names=class_names, preds_ood=preds_ood
@@ -662,11 +606,7 @@ def main(args: argparse.Namespace):
                        f'{args.f_max}_timesteps_{args.n_time_steps}.xlsx'
     df_results.to_excel(results_path / results_filename)
 
-    if args.fn_vs_bad_clasification:
-        df_fn_vs_bad_classification.to_excel(results_path / f'fn_vs_bad_classification_{args.conf}_{args.cluster_mode}'
-                                                            f'_fmax_{args.f_max}_timesteps_{args.n_time_steps}.xlsx')
 
 
 if __name__ == "__main__":
-    args = get_args_parser().parse_args()
-    main(args)
+    main( get_args_parser().parse_args())
