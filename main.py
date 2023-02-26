@@ -191,7 +191,7 @@ def main(args: argparse.Namespace):
         batch_size = get_batch_size(config, in_dataset, logger)
 
         train_loader, test_loader, class_names = load_in_distribution_data(
-            in_dataset, config, datasets_loader, datasets_path, datasets_conf,
+            in_dataset, batch_size, datasets_loader, datasets_path, datasets_conf,
             args.ind_train_seed, args.ind_test_seed,
         )
 
