@@ -13,12 +13,9 @@ from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
 from SCP.datasets.utils import load_dataloader, create_loader_with_subset_of_specific_size_with_random_data
 from SCP.models.model import load_model
-from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages,\
-    silhouette_score_log
-from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results, \
-    find_idx_of_class
+from SCP.utils.clusters import create_clusters, aggregation_per_class_and_cluster, distance_to_clusters_averages
+from SCP.utils.common import load_config, get_batch_size, my_custom_logger, create_str_for_ood_method_results
 from SCP.detection import MSP, ODIN, EnergyOOD, SCPMethod
-from SCP.utils.metrics import compare_distances_per_class_to_distance_thr_per_class, thresholds_per_class_for_each_TPR
 from test import validate_one_epoch
 
 
