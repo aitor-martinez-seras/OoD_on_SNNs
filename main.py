@@ -477,7 +477,7 @@ def main(args: argparse.Namespace):
                     logger.info(f"Reducing the number of samples for OOD dataset {ood_dataset} to match "
                                 f"the number of samples of test data, equal to {size_test_data}")
                     ood_loader = create_loader_with_subset_of_specific_size_with_random_data(
-                        data=ood_data, size_data=size_ood_data, new_size=size_test_data,
+                        data=ood_data, new_size=size_test_data,
                         generator=g_ood, batch_size=batch_size_ood
                     )
 
