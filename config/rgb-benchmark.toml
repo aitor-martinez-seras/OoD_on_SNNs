@@ -1,6 +1,6 @@
 in_distribution_datasets = ['CIFAR10']
 out_of_distribution_datasets = [
-    'Places365',
+    # 'Places365',
     'SVHN',
     'SUN397',
     'iSUN',

@@ -15,10 +15,6 @@ classes = 10
 input_size = [1, 28, 28]
 classes = 26
 
-[Flowers102]
-input_size = [3, 224, 224]
-classes = 102
-
 [CIFAR10]
 input_size = [3, 32, 32]
 classes = 10
@@ -27,52 +23,8 @@ classes = 10
 input_size = [3, 32, 32]
 classes = 100
 
-[Caltech101]
-input_size = [3, 224, 224]
-classes = 101
-
-[Food101]
-input_size = [3, 224, 224]
-classes = 101
-
-[DTD]
-input_size = [3, 96, 96]
-classes = 47
-
-[EuroSAT]
-input_size = [3, 96, 96]
-classes = 0
-
-[TinyImagenet]
-input_size = [3, 96, 96]
-classes = 0
-
 [GTSRB]
 input_size = [3, 96, 96]
-classes = 0
-
-[SUN]
-input_size = [3, 96, 96]
-classes = 0
-
-[FGVCAircraft]
-input_size = [3, 112, 224]
-classes = 0
-
-[noMNIST]
-input_size = [1, 28, 28]
-classes = 0
-
-[omniglot]
-input_size = [1, 28, 28]
-classes = 0
-
-[CIFAR10-BW]
-input_size = [1, 28, 28]
-classes = 0
-
-[MNIST-C]
-input_size = [1, 28, 28]
 classes = 0
 
 [OODGenomics]
