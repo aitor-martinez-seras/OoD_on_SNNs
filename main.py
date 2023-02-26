@@ -362,11 +362,6 @@ def main(args: argparse.Namespace):
                 spk_count_train_thr, preds_train_thr, agg_counts_per_class_cluster, len(class_names)
             )
 
-            # Compute distances of test instances after possibly reducing its size
-            distances_test_per_class, _ = distance_to_clusters_averages(
-                spk_count_test, preds_test, agg_counts_per_class_cluster, len(class_names)
-            )
-
             # ---------------------------------------------------------------
             # Evaluate OOD performance
             # ---------------------------------------------------------------
@@ -501,6 +496,12 @@ def main(args: argparse.Namespace):
 
                 # *************** SCP ***************
                 # Computation of the distances of ood instances
+                
+                # Compute distances of test instances after possibly reducing its size
+                distances_test_per_class, _ = distance_to_clusters_averages(
+                    spk_count_test, preds_test, agg_counts_per_class_cluster, len(class_names)
+                )
+
                 distances_ood_per_class, _ = distance_to_clusters_averages(
                     spk_count_ood, preds_ood, agg_counts_per_class_cluster, len(class_names)
                 )
