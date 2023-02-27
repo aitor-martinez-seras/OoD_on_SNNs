@@ -150,7 +150,7 @@ class ConvSNN2(nn.Module):
         self.conv2 = nn.Conv2d(20, 50, 3, 1, bias=False)
         self.fc1 = nn.Linear(self.ftmaps_h * self.ftmaps_v * 50, 500, bias=False)
         self.fc2 = nn.Linear(500, hidden_neurons, bias=False)
-        self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
+        self.fcout = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
         self.lif0 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
         self.lif1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
         self.lif2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
@@ -194,7 +194,7 @@ class ConvSNN2(nn.Module):
                 z, s3 = self.lif3(z, s3)  # The neuron is the activation function
 
                 # Final linear connection
-                z = self.fc_out(z)  # (batch_size, 10)
+                z = self.fcout(z)  # (batch_size, 10)
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
             # The max across all time steps is the logit, the first dimension
@@ -231,7 +231,7 @@ class ConvSNN2(nn.Module):
                 hdn_spk_last_layer[ts, :, :] = z  # To save the spikes (ts, batch_size, 500)
 
                 # Second linear connection
-                z = self.fc_out(z)  # (batch_size, 10)
+                z = self.fcout(z)  # (batch_size, 10)
                 v, so = self.out(z, so)
                 voltages[ts, :, :] = v
             # The max across all time steps is the logit, the first dimension
