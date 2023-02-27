@@ -174,10 +174,6 @@ def main(args: argparse.Namespace):
 
     for in_dataset in tqdm(in_dist_dataset_to_test, desc=f'In-Distribution dataset loop'):
 
-        # For each in dataset we reset the results list, previously saving the results
-        # in dataframe and in a checkpoint file
-        # results_list = []
-
         # New logger for each In-Distribution Dataset
         logger = my_custom_logger(logger_name=f'{in_dataset}_{args.cluster_mode}', logs_pth=logs_path)
         logger.info(args)

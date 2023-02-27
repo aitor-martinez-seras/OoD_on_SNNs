@@ -10,13 +10,29 @@ from .common import find_idx_of_class
 from .plots import plot_clusters_performance, plot_dendogram_per_class
 
 
-def create_string_for_logger(clusters_per_class, class_names) -> str:
+def create_string_for_logger(clusters_per_class, class_names, n_samples_per_class) -> str:
     string_for_logger = 'Created clusters:\n' + '-' * 75 + '\n'
+    reached_desired_number_of_samples_per_class = []
     for class_index in range(len(class_names)):
         unique, counts = np.unique(clusters_per_class[class_index].labels_, return_counts=True)
+        total_samples_one_class = len(clusters_per_class[class_index].labels_)
         string_for_logger += f'Clase {class_names[class_index].ljust(12)}| ' \
-                             f'Total samples: {str(len(clusters_per_class[class_index].labels_)).ljust(2)} |' \
+                             f'Total samples: {str(total_samples_one_class).ljust(2)} |' \
                              f' Cluster distribution: {dict(zip(unique, counts))}\n' + '-' * 75 + '\n'
+
+        if total_samples_one_class < n_samples_per_class:
+            reached_desired_number_of_samples_per_class.append(False)
+        elif total_samples_one_class == n_samples_per_class:
+            reached_desired_number_of_samples_per_class.append(True)
+        else:  # total_samples > n_samples_per_class
+            raise ValueError(f'Bug occurred, the total samples for a class is greater than n_samples_per_class, '
+                             f'equal to {n_samples_per_class}')
+
+    for class_index, total_samples_reached_one_class in enumerate(reached_desired_number_of_samples_per_class):
+        if not total_samples_reached_one_class:
+            string_for_logger += f'WARNING: The class {class_names[class_index]} has used' \
+                                 f'{len(clusters_per_class[class_index].labels_)} samples to create the clusters, ' \
+                                 f'which is less than the desired quantity {n_samples_per_class}'
     return string_for_logger
 
 
