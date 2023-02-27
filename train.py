@@ -53,6 +53,8 @@ def get_args_parser():
                         dest="lr_decay_milestones", help="lr decay milestones")
     parser.add_argument("--lr-decay-step", default=0, type=int, dest="lr_decay_step", help="lr decay step")
     parser.add_argument("--lr-decay-rate", default=0, type=float, dest="lr_decay_rate", help="lr decay rate")
+    parser.add_argument("--constant-lr-scheduler", default=0, type=float, dest="constant_lr_scheduler",
+                        help="Use ConstantLR to decrease the LR the first epoch by the factor specified")
     parser.add_argument("--train-seed", default=6, type=int, dest='train_seed', help="seed for the train set")
     parser.add_argument("--test-seed", default=7, type=int, dest='test_seed', help="seed for the test set")
 
@@ -86,7 +88,7 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
     return losses, mean_loss
 
 
-def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, start_epoch:int,
+def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epochs: int, start_epoch: int,
           optimizer: Optimizer, lr_scheduler, logger, save_every_n_epochs=0, weights_pth=Path('.'), file_name='',
           args=None):
 
@@ -119,8 +121,11 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
 
         # Update the learning rate
         if lr_scheduler:
-            # logger.info('\t')
-            lr_scheduler.step()
+            if isinstance(lr_scheduler, list):
+                for sched in lr_scheduler:
+                    sched.step()
+            else:
+                lr_scheduler.step()
 
         if save_every_n_epochs:
             if (epoch + 1) % save_every_n_epochs == 0:
@@ -230,6 +235,15 @@ def main(args):
     else:
         logger.info('No LR scheduler used')
 
+    if args.constant_lr_scheduler:
+        lr_scheduler = [
+            lr_scheduler, torch.optim.lr_scheduler.ConstantLR(
+                optimizer=optimizer,
+                factor=args.constant_lr_scheduler,
+                total_iters=1,
+            )
+        ]
+
     start_epoch = 0
     if args.resume:
         start_epoch = load_checkpoint(model, weights_path=args.resume, optimizer=optimizer, lr_scheduler=lr_scheduler)
@@ -269,6 +283,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    args = get_args_parser().parse_args()
-    main(args)
+    main(get_args_parser().parse_args())
 

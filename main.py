@@ -599,8 +599,6 @@ def main(args: argparse.Namespace):
             # ---------------------------------------------------------------
             # Save the results in the results list to a dataframe and the save it to a file
             df_results_one_run = pd.DataFrame(results_list, columns=COLUMNS)
-            # Save checkpoint into .csv format
-            # df_results_one_run.to_csv(results_path / f'checkpoint_{in_dataset}.csv')
             df_results = pd.concat([df_results, df_results_one_run])
 
     # Save all the results to excel
@@ -609,6 +607,5 @@ def main(args: argparse.Namespace):
     df_results.to_excel(results_path / results_filename)
 
 
-
 if __name__ == "__main__":
-    main( get_args_parser().parse_args())
+    main(get_args_parser().parse_args())
