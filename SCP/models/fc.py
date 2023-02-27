@@ -96,7 +96,7 @@ class FCSNN2(torch.nn.Module):
         )
 
         # Output layer
-        self.fcout = torch.nn.Linear(hidden_features, output_features, bias=False)
+        self.fc_out = torch.nn.Linear(hidden_features, output_features, bias=False)
         self.out = LICell(dt=dt)
 
         self.input_features = input_features
@@ -127,7 +127,7 @@ class FCSNN2(torch.nn.Module):
                 z, s2 = self.lif2(z, s2)
 
                 # Output layer
-                z = self.fcout(z)
+                z = self.fc_out(z)
                 vo, so = self.out(z, so)
                 voltages[ts] = vo
             # The max across all time steps is the logit, the first dimension
@@ -155,7 +155,7 @@ class FCSNN2(torch.nn.Module):
                 hdn_spikes[ts] = z
 
                 # Output layer
-                z = self.fcout(z)
+                z = self.fc_out(z)
                 vo, so = self.out(z, so)
                 voltages[ts] = vo
             # The max across all time steps is the logit, the first dimension
