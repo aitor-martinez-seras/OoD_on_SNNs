@@ -17,14 +17,22 @@ from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, Co
 def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler):
 
     if lr_scheduler:
-
-        checkpoint = {
-            "model": model.state_dict(),
-            "optimizer": optimizer.state_dict(),
-            "lr_scheduler": lr_scheduler.state_dict(),
-            "args": args,
-            "epoch": epoch,
-        }
+        if isinstance(lr_scheduler, list):
+            checkpoint = {
+                "model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "lr_scheduler": lr_scheduler[0].state_dict(),  # Only the milestones
+                "args": args,
+                "epoch": epoch,
+            }
+        else:
+            checkpoint = {
+                "model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "lr_scheduler": lr_scheduler.state_dict(),
+                "args": args,
+                "epoch": epoch,
+            }
     else:
         checkpoint = {
             "model": model.state_dict(),
