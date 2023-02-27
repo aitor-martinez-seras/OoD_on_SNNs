@@ -19,6 +19,13 @@ For the bayesian test and the CD graph, the following resources are used:
 2. Bayesian test repository's bayesiantest.py [https://github.com/BayesianTestsML/tutorial/blob/master/Python/bayesiantests.py]
 
 
+## Datasets
+
+The majority of datasets is downloaded automatically, with the exception of:
+
+- [LSUN_Crop](https://www.dropbox.com/s/fhtsw1m3qxlwj6h/LSUN.tar.gz)
+- [LSUN_Resize](https://www.dropbox.com/s/fhtsw1m3qxlwj6h/LSUN.tar.gz)
+
 ## Usage:
 
 For reproducing results in GPU and with one FC hidden layer models, run:

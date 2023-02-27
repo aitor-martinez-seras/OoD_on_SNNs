@@ -598,6 +598,7 @@ def main(args: argparse.Namespace):
             # Save results for every model arch
             # ---------------------------------------------------------------
             # Save the results in the results list to a dataframe and the save it to a file
+            logger.info(f'Saving results of {in_dataset} for the model architecture {model_name}')
             df_results_one_run = pd.DataFrame(results_list, columns=COLUMNS)
             df_results = pd.concat([df_results, df_results_one_run])
 

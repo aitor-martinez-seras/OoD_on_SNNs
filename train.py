@@ -221,6 +221,7 @@ def main(args):
     # Learning rate scheduler
     lr_scheduler = None
     if args.lr_decay_milestones:
+        logger.info('Using MultiStepLR')
         lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
             optimizer,
             milestones=args.lr_decay_milestones,
@@ -236,6 +237,7 @@ def main(args):
         logger.info('No LR scheduler used')
 
     if args.constant_lr_scheduler:
+        logger.info('Using the ConstantLR to adjust by a factor the first epoch of the training')
         lr_scheduler = [
             lr_scheduler, torch.optim.lr_scheduler.ConstantLR(
                 optimizer=optimizer,
