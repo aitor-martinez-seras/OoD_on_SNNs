@@ -218,7 +218,8 @@ class ConvSNN2(nn.Module):
                 z, s1 = self.lif1(z, s1)
 
                 # Fully connected part
-                z = z.view(-1, self.features ** 2 * 50)  # Flatten -Z (batch_size, 800)
+                z = z.flatten(start_dim=1)
+                # z = z.view(-1, self.features ** 2 * 50)  # Flatten -Z (batch_size, 800)
 
                 # First linear connection
                 z = self.fc1(z)  # (batch_size, 500)
