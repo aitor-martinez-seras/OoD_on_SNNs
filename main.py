@@ -90,7 +90,10 @@ def load_in_distribution_data(in_dataset, batch_size, datasets_loader, datasets_
     test_loader = load_dataloader(test_data, batch_size, shuffle=True, generator=g_ind_test)
 
     # Extract useful variables for future operations
-    class_names = train_data.classes
+    try:
+        class_names = train_data.classes
+    except AttributeError:
+        class_names = train_data.labels
     return train_loader, test_loader, class_names
 
 
