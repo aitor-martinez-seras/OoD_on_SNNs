@@ -168,11 +168,11 @@ def main(args):
         split='test', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
     )
     # Define loaders. Use a seeds
-    g_train = torch.Generator()
-    g_train.manual_seed(args.train_seed)
+    # g_train = torch.Generator()
+    # g_train.manual_seed(args.train_seed)
     g_test = torch.Generator()
     g_test.manual_seed(args.test_seed)
-    train_loader = load_dataloader(train_data, args.batch_size, shuffle=True, generator=g_train)
+    train_loader = load_dataloader(train_data, args.batch_size, shuffle=True)
     test_loader = load_dataloader(test_data, args.batch_size, shuffle=True, generator=g_test)
     print(f'Load of {args.dataset} completed!')
 
