@@ -1614,35 +1614,33 @@ class ConvSNN12(nn.Module):
 
 class ConvSNN13(nn.Module):
     """
-    As Conv11 but with one more CONV layer, but no new avgpool
+    As Conv12 but with one less avg pool and no padding in the last
     """
     def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
         super().__init__()
 
-        self.ftmaps_h = int(((input_size[1] - 2 / 2) / 2) - 2 - 2)
-        self.ftmaps_v = int(((input_size[1] - 2 / 2) / 2) - 2 - 2)
+        self.ftmaps_h = int(((input_size[1] / 2) / 2) - 2 - 2)
+        self.ftmaps_v = int(((input_size[1] / 2) / 2) - 2 - 2)
 
         # Convolutions
         self.conv1 = nn.Conv2d(input_size[0], 32, 3, 1, padding=1, bias=False)
-        self.conv2 = nn.Conv2d(32, 32, 3, 1, padding=1, bias=False)
-        self.conv3 = nn.Conv2d(32, 64, 3, 1, padding=1, bias=False)
-        self.conv4 = nn.Conv2d(64, 128, 3, 1, padding=1, bias=False)
+        self.conv2 = nn.Conv2d(32, 64, 3, 1, padding=1, bias=False)
+        self.conv3 = nn.Conv2d(64, 128, 3, 1, bias=False)
+        self.pool1 = nn.AvgPool2d(kernel_size=2)
         self.pool2 = nn.AvgPool2d(kernel_size=2)
-        self.pool3 = nn.AvgPool2d(kernel_size=2)
-        self.pool4 = nn.AvgPool2d(kernel_size=2)
 
         # Linear part
-        self.fc1 = nn.Linear(4 * 4 * 128, hidden_neurons, bias=False)
+        self.fc1 = nn.Linear(6 * 6 * 128, 512, bias=False)  # 4608 to 512
+        self.fc2 = nn.Linear(512, hidden_neurons, bias=False)  # 512 to 256
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
         self.lif_conv1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.25), alpha=alpha))
         self.lif_conv2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.2), alpha=alpha))
         self.lif_conv3 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
-        self.lif_conv4 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
 
         self.lif_fc1 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
-
+        self.lif_fc2 = LIFCell(p=LIFParameters(v_th=torch.tensor(0.1), alpha=alpha))
         self.out = LICell()
 
         self.hidden_neurons = hidden_neurons
@@ -1653,13 +1651,14 @@ class ConvSNN13(nn.Module):
         batch_size = x.shape[1]
 
         # specify the initial states
-        sconv1 = sconv2 = sconv3 = sconv4 = sfc1 = so = None
+        sconv1 = sconv2 = sconv3 = sfc1 = sfc2 = so = None
 
         if flag is None:
             for ts in range(seq_length):
                 # First convolution
                 z = self.conv1(x[ts, :])
                 z, sconv1 = self.lif_conv1(z, sconv1)
+                z = self.pool1(z)
 
                 # Second convolution
                 z = self.conv2(z)
@@ -1669,12 +1668,6 @@ class ConvSNN13(nn.Module):
                 # Third convolution
                 z = self.conv3(z)
                 z, sconv3 = self.lif_conv3(z, sconv3)
-                z = self.pool3(z)
-
-                # Third convolution
-                z = self.conv4(z)
-                z, sconv4 = self.lif_conv4(z, sconv4)
-                z = self.pool4(z)
 
                 # Fully connected part
                 z = z.flatten(start_dim=1)
@@ -1682,6 +1675,10 @@ class ConvSNN13(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
+
+                # Second FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc2(z, sfc2)
 
                 # Fc out
                 z = self.fc_out(z)
@@ -1697,6 +1694,7 @@ class ConvSNN13(nn.Module):
                 # First convolution
                 z = self.conv1(x[ts, :])
                 z, sconv1 = self.lif_conv1(z, sconv1)
+                z = self.pool1(z)
 
                 # Second convolution
                 z = self.conv2(z)
@@ -1708,17 +1706,16 @@ class ConvSNN13(nn.Module):
                 z, sconv3 = self.lif_conv3(z, sconv3)
                 z = self.pool3(z)
 
-                # Third convolution
-                z = self.conv4(z)
-                z, sconv4 = self.lif_conv4(z, sconv4)
-                z = self.pool4(z)
-
                 # Fully connected part
                 z = z.flatten(start_dim=1)
 
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
+
+                # Second FC
+                z = self.fc2(z)
+                z, sfc2 = self.lif_fc2(z, sfc2)
                 hidden_spks[ts, :, :] = z
 
                 # Fc out
