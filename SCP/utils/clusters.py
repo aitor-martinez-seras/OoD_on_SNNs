@@ -309,7 +309,7 @@ def create_clusters(preds_train, spk_count_train, class_names: List, n_samples_p
     if verbose == 0:
         return clusters_per_class
     else:
-        string_for_logger = create_string_for_logger(clusters_per_class, class_names)
+        string_for_logger = create_string_for_logger(clusters_per_class, class_names, n_samples_per_class)
         return clusters_per_class, string_for_logger
 
 
