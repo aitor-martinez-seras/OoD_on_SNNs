@@ -1788,10 +1788,6 @@ class ConvSNN14(nn.Module):
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
 
-                # Second FC
-                z = self.fc2(z)
-                z, sfc2 = self.lif_fc2(z, sfc2)
-
                 # Fc out
                 z = self.fc_out(z)
                 v, so = self.out(z, so)
@@ -1824,10 +1820,6 @@ class ConvSNN14(nn.Module):
                 # First FC
                 z = self.fc1(z)
                 z, sfc1 = self.lif_fc1(z, sfc1)
-
-                # Second FC
-                z = self.fc2(z)
-                z, sfc2 = self.lif_fc2(z, sfc2)
                 hidden_spks[ts, :, :] = z
 
                 # Fc out
