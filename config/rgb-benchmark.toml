@@ -23,5 +23,5 @@ batch_size = 512
 
 [model_arch]
     [model_arch.ConvNet]
-        'CIFAR10' = [64, 10]
+        'CIFAR10' = [100, 10]
         #'CIFAR100' = [300, 100]
