@@ -165,7 +165,7 @@ def main(args):
         split='test', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
     )
     # Define loaders
-    train_loader = load_dataloader(train_data, args.batch_size, shuffle=True)
+    train_loader = load_dataloader(train_data, args.batch_size, shuffle=True, num_workers=2)
     test_loader = load_dataloader(test_data, args.batch_size, shuffle=False)
     print(f'Load of {args.dataset} completed!')
 
