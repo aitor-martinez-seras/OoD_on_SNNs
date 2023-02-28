@@ -3457,8 +3457,8 @@ class ConvSNN28(nn.Module):
     def __init__(self, input_size, hidden_neurons, output_neurons, alpha=100):
         super().__init__()
 
-        self.ftmaps_h = int(((input_size[1] / 2) / 2) - 2 - 2)
-        self.ftmaps_v = int(((input_size[1] / 2) / 2) - 2 - 2)
+        self.ftmaps_h = int(((input_size[1] / 2) / 2) / 2)
+        self.ftmaps_v = int(((input_size[1] / 2) / 2) / 2)
 
         # Convolutions
         self.conv1 = nn.Conv2d(input_size[0], 32, 3, 1, padding=1, bias=False)
@@ -3468,7 +3468,7 @@ class ConvSNN28(nn.Module):
 
         # Linear part
         self.fc1 = nn.Linear(4 * 4 * 128, 1024, bias=False)  # 2048 to 1024
-        self.fc1 = nn.Linear(1024, hidden_neurons, bias=False)  # 1024 to ...
+        self.fc2 = nn.Linear(1024, hidden_neurons, bias=False)  # 1024 to ...
         self.fc_out = nn.Linear(hidden_neurons, output_neurons, bias=False)  # Out fc
 
         # LIF cells
@@ -3495,7 +3495,6 @@ class ConvSNN28(nn.Module):
         #         fan_in = size[1]  # number of columns
         #         variance2 = math.sqrt(2.0 / fan_in)
         #         m.weight.data.normal_(0.0, variance2)
-
 
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
