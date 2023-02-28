@@ -24,9 +24,7 @@ def get_args_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="OOD detection on SNNs", add_help=True)
 
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
-    parser.add_argument("--pretrained", action="store_true", default=False,
-                        help="Can only be set if no SNN is used, and in that case the pretrained weights for"
-                             "RPN and Detector will be used")
+    parser.add_argument("--pretrained", action="store_true", default=False, help="For using the weights of the paper")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("--f-max", default=100, type=int, dest='f_max',
                         help="max frecuency of the input neurons per second")
@@ -34,7 +32,7 @@ def get_args_parser() -> argparse.ArgumentParser:
                         help="number of timesteps for the simulation")
     parser.add_argument("--n-hidden-layers", default=1, type=int,
                         dest="n_hidden_layers", help="number of hidden layers of the models")
-    parser.add_argument("--samples-for-cluster-per-class", default=1200, type=int,
+    parser.add_argument("--samples-for-cluster-per-class", default=1000, type=int,
                         dest="samples_for_cluster_per_class", help="number of samples for validation per class")
     parser.add_argument("--samples-for-thr-per-class", default=1000, type=int,
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
@@ -93,7 +91,7 @@ def load_in_distribution_data(in_dataset, batch_size, datasets_loader, datasets_
     try:
         class_names = train_data.classes
     except AttributeError:
-        class_names = train_data.labels
+        class_names = [str(x) for x in range(10)]  # For the case of SVHN
     return train_loader, test_loader, class_names
 
 
