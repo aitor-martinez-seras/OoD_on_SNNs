@@ -1424,14 +1424,14 @@ class ConvSNN11_no_dropout(nn.Module):
             for m in self.modules():
                 import math
                 if isinstance(m, nn.Conv2d):
-                    print(torch.mean(m.weight))
+                    print(torch.mean(m.weight.data))
                     torch.nn.init.xavier_uniform_(m.weight)
-                    print(torch.mean(m.weight))
+                    print(torch.mean(m.weight.data))
 
                 elif isinstance(m, nn.Linear):
-                    print(torch.mean(m.weight))
+                    print(torch.mean(m.weight.data))
                     torch.nn.init.xavier_uniform_(m.weight)
-                    print(torch.mean(m.weight))
+                    print(torch.mean(m.weight.data))
 
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
