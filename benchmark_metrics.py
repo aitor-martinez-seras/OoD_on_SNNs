@@ -18,10 +18,13 @@ def get_args_parser() -> argparse.ArgumentParser:
     parser.add_argument("-m", "--mode", default="one-file", type=str, choices=["one-file", "all-subdirectories"],
                         help="which mode to run")
     parser.add_argument("-f", "--file", type=str,
-                        help="path of the file. If starts with '/' will be considered an absolute path")
+                        help="Path of the file to extract metrics form. "
+                             "If starts with '/' will be considered an absolute path. "
+                             "Only used if mode 'on-file' is selected")
     parser.add_argument("-d", "--dir", type=str,
                         help="Path of the directory to start the search from. Required if mode 'all-subdirectories'. "
-                             "If starts with '/' will be considered an absolute path")
+                             "If starts with '/' will be considered an absolute path. "
+                             "Only used if mode 'all-subdirectories' is selected")
     parser.add_argument("-cd", "--cd-graph", action='store_true', dest='cd_graph',
                         help="if passed, CD graph is plotted")
     parser.add_argument("-bsr", "--bayesian-signrank", action='store_true', dest='bayesian_signrank',
@@ -61,8 +64,8 @@ def check_tested_datasets_are_available_and_drop_not_tested_datasets(config, df,
     in_dataset_to_test = config["in_distribution_datasets"]
     ood_dataset_to_test = config["out_of_distribution_datasets"]
 
-    available_in_datasets = df['In-Distribution']
-    available_ood_datasets = df['Out-Distribution']
+    available_in_datasets = df['In-Distribution'].unique()
+    available_ood_datasets = df['Out-Distribution'].unique()
 
     check_tested_datasets_are_available('in-', in_dataset_to_test, available_in_datasets, file_path, indent)
     check_tested_datasets_are_available('out-of-', ood_dataset_to_test, available_ood_datasets, file_path, indent)
@@ -167,10 +170,12 @@ def open_folders_and_plot_excels(parent_folder: Path, config: dict, models: List
             indent = indent[:-1]
         else:
             if element.suffix == ".xlsx":
+                indent += '\t'
                 print(f'{indent}Processing {element.name}')
                 save_plots_one_file(
                     element, config, models, args, save_figure_path=element.with_stem(element.stem), indent=indent
                 )
+                indent = indent[:-1]
 
 
 def main(args: argparse.Namespace):
@@ -190,13 +195,15 @@ def main(args: argparse.Namespace):
         save_plots_one_file(file_path, config, models, args, save_figure_path=file_path.parent)
 
     elif args.mode == "all-subdirectories":
-        assert dir, '--dir argument must be specified when using "all-subdirectories" option'
+        assert args.dir, '--dir argument must be specified when using "all-subdirectories" option'
         parent_folder_path = Path(args.dir)
         print(f'Starting the search of all results files from {parent_folder_path}')
         open_folders_and_plot_excels(parent_folder_path, config, models, args)
 
     else:
         NameError('Wrong option')
+
+    print('Program finished!')
 
 
 if __name__ == "__main__":

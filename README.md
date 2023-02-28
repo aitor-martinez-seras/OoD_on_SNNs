@@ -45,6 +45,12 @@ All the code is available in the jupyter notebook called [Explainable_OoD_detect
 
 Results are given in the folder named as such.
 
+For extracting metric plots:
+
+````shell
+python .\benchmark_metrics.py -c bw-benchmark -r 0.01 -m all-subdirectories -d "path/to/dir" -cd -bs -bsr --metric AUROC --models ConvNet
+````
+
 ## Contributing
 
 If you find a bug, create a GitHub issue, or even better, submit a pull request. Similarly, if you have questions, simply post them as GitHub issues.
