@@ -11,7 +11,7 @@ from SCP.models.fc import FCSNN1, FCSNN2, FCSNN3, FCSNN4, FCSNN5, FCSNN6, FCSNN7
 from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, ConvSNN9, \
     ConvSNN10, ConvSNN11_no_dropout, ConvSNN8, ConvSNN12, ConvSNN13, ConvSNN14, ConvSNN16, ConvSNN15, ConvSNN17, \
     ConvSNN18, ConvSNN19_max_pooling, ConvSNN20, ConvSNN21, ConvSNN22, ConvSNN23, ConvSNN24, ConvSNN25, ConvSNN26, \
-    ConvSNN27
+    ConvSNN27, ConvSNN28
 
 
 def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler):
@@ -103,7 +103,6 @@ class Model(torch.nn.Module):
         self.decoder = decoder
 
     def forward(self, x, flag=None):
-        # print(f'Max: {x.max()}, Min: {x.min()}, Mean: {x.mean()}')
         x = self.encoder(x)
         if flag is None:
             x = self.snn(x)
@@ -123,13 +122,6 @@ def no_encoder(x):
 def decode(x):
     # Then compute the logsoftmax across the
     log_p_y = torch.nn.functional.log_softmax(x, dim=1)
-    return log_p_y
-
-
-def decoder_seq_state(x):
-    # print(x[0], x[1])
-    # print(f'Classification: {x[0].mean():.3f}%')
-    log_p_y = torch.nn.functional.log_softmax(x[0][-1], dim=1)
     return log_p_y
 
 
@@ -169,106 +161,6 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
-        elif n_hidden_layers == 3:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FCSNN3(input_features=input_size,
-                           hidden_features=hidden_neurons,
-                           output_features=output_neurons),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 4:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FCSNN4(input_features=input_size,
-                           hidden_features=hidden_neurons,
-                           output_features=output_neurons),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 5:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FCSNN5(input_features=input_size,
-                           hidden_features=hidden_neurons,
-                           output_features=output_neurons),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 6:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FCSNN6(input_features=input_size,
-                           hidden_features=hidden_neurons,
-                           output_features=output_neurons),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 7:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FCSNN7(input_features=input_size,
-                           hidden_features=hidden_neurons,
-                           output_features=output_neurons),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 8:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FC8(input_features=input_size,
-                        hidden_features=hidden_neurons,
-                        output_features=output_neurons),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 9:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FCSNN9(input_features=input_size,
-                           hidden_features=hidden_neurons,
-                           output_features=output_neurons),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 10:  # Model for OODGenomics
-            import norse
-            from norse.torch.functional import LSNNParameters
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            p = LSNNParameters(v_th=torch.tensor(0.05))
-            model_snn = norse.torch.SequentialState(
-                norse.torch.Lift(torch.nn.Linear(input_size, 400, bias=False)),
-                norse.torch.LSNNRecurrent(400, 400, p=p),
-                norse.torch.Lift(torch.nn.Linear(400, hidden_neurons, bias=False)),  # The idea is to use 128
-                norse.torch.LSNNRecurrent(hidden_neurons, hidden_neurons, p=p),
-                norse.torch.Lift(torch.nn.Linear(hidden_neurons, output_neurons, bias=False)),
-                norse.torch.LICell(),
-            )
-
-            model = Model(
-                encoder=no_encoder,
-                snn=model_snn,
-                decoder=decoder_seq_state,
-            )
-
-        elif n_hidden_layers == 11:  # Model for OODGenomics
-            assert n_time_steps == 250, 'Number of timesteps must be 250 for OODGenomics'
-            model = Model(
-                encoder=no_encoder,
-                snn=FCSNN11(input_features=input_size,
-                            hidden_features=hidden_neurons,
-                            output_features=output_neurons),
-                decoder=decode
-            )
-
         else:
             raise NameError('Wrong number of layers')
 
@@ -297,100 +189,6 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                     hidden_neurons=hidden_neurons,
                     output_neurons=output_neurons,
                     alpha=80
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 3:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN3(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 4:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN4(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 5:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN5(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-        elif n_hidden_layers == 6:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN6(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 7:
-            model = Model(
-                encoder=encoder,
-                snn=LIFConvNet(
-                    seq_length=n_time_steps,
-                    input_size=input_size,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 8:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN8(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 9:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN9(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 10:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN10(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
                 ),
                 decoder=decode
             )
@@ -443,114 +241,6 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
-        elif n_hidden_layers == 15:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN15(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 16:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN16(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 17:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN17(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 18:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN18(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 19:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN19_max_pooling(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 20:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN20(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 21:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN21(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 22:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN22(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 23:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN23(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
         elif n_hidden_layers == 24:
             model = Model(
                 encoder=encoder,
@@ -563,34 +253,10 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
-        elif n_hidden_layers == 25:
+        elif n_hidden_layers == 28:
             model = Model(
                 encoder=encoder,
-                snn=ConvSNN25(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100,
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 26:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN26(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100,
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 27:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN27(
+                snn=ConvSNN28(
                     input_size=input_size,
                     hidden_neurons=hidden_neurons,
                     output_neurons=output_neurons,
