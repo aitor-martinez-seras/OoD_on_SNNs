@@ -236,6 +236,7 @@ def main(args):
                 optimizer=optimizer,
                 factor=args.constant_lr_scheduler,
                 total_iters=1,
+                verbose=True
             )
         ]
 
