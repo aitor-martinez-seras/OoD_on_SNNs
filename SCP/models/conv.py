@@ -1407,22 +1407,31 @@ class ConvSNN11_no_dropout(nn.Module):
         self.hidden_neurons = hidden_neurons
         self.output_neurons = output_neurons
 
-        # for m in self.modules():
-        #     import math
-        #     if isinstance(m, nn.Conv2d):
-        #         n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
-        #         variance1 = math.sqrt(2.0 / n)
-        #         m.weight.data.normal_(0, variance1)
-        #         # define threshold
-        #         # m.threshold = 1
-        #
-        #     elif isinstance(m, nn.Linear):
-        #         size = m.weight.size()
-        #         fan_in = size[1]  # number of columns
-        #         variance2 = math.sqrt(2.0 / fan_in)
-        #         m.weight.data.normal_(0.0, variance2)
-        #         # define threshold
-        #         # m.threshold = 1
+        if False:
+            for m in self.modules():
+                import math
+                if isinstance(m, nn.Conv2d):
+                    n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+                    variance1 = math.sqrt(2.0 / n)
+                    m.weight.data.normal_(0, variance1)
+
+                elif isinstance(m, nn.Linear):
+                    size = m.weight.size()
+                    fan_in = size[1]  # number of columns
+                    variance2 = math.sqrt(2.0 / fan_in)
+                    m.weight.data.normal_(0.0, variance2)
+        else:
+            for m in self.modules():
+                import math
+                if isinstance(m, nn.Conv2d):
+                    print(torch.mean(m.weight))
+                    torch.nn.init.xavier_uniform_(m.weight)
+                    print(torch.mean(m.weight))
+
+                elif isinstance(m, nn.Linear):
+                    print(torch.mean(m.weight))
+                    torch.nn.init.xavier_uniform_(m.weight)
+                    print(torch.mean(m.weight))
 
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
