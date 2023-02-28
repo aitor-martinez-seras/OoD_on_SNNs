@@ -55,9 +55,6 @@ def get_args_parser():
     parser.add_argument("--lr-decay-rate", default=0, type=float, dest="lr_decay_rate", help="lr decay rate")
     parser.add_argument("--constant-lr-scheduler", default=0, type=float, dest="constant_lr_scheduler",
                         help="Use ConstantLR to decrease the LR the first epoch by the factor specified")
-    parser.add_argument("--train-seed", default=6, type=int, dest='train_seed', help="seed for the train set")
-    parser.add_argument("--test-seed", default=7, type=int, dest='test_seed', help="seed for the test set")
-
     return parser
 
 
@@ -167,13 +164,9 @@ def main(args):
     test_data = in_dataset_data_loader.load_data(
         split='test', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
     )
-    # Define loaders. Use a seeds
-    # g_train = torch.Generator()
-    # g_train.manual_seed(args.train_seed)
-    g_test = torch.Generator()
-    g_test.manual_seed(args.test_seed)
+    # Define loaders
     train_loader = load_dataloader(train_data, args.batch_size, shuffle=True)
-    test_loader = load_dataloader(test_data, args.batch_size, shuffle=True, generator=g_test)
+    test_loader = load_dataloader(test_data, args.batch_size, shuffle=False)
     print(f'Load of {args.dataset} completed!')
 
     # Set logger
