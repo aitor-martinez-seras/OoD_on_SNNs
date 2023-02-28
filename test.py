@@ -1,6 +1,5 @@
 from pathlib import Path
 import argparse
-from typing import Dict
 
 import torch
 import numpy as np
@@ -11,7 +10,7 @@ from SCP.utils.common import load_config
 
 
 def get_args_parser():
-    parser = argparse.ArgumentParser(description="Training SNN", add_help=True)
+    parser = argparse.ArgumentParser(description="Testing SNN", add_help=True)
 
     parser.add_argument("--dataset", required=True, type=str, help="dataset to train on")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
