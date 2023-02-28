@@ -3,14 +3,10 @@ in_distribution_datasets = [
     # 'SVHN'
 ]
 out_of_distribution_datasets = [
-    # 'Places365',
     'Food101',
     'SVHN',
-    # 'SUN397',
-    # 'iSUN',
     'LSUN_crop',
     'LSUN_resize',
-    # 'LSUN',
     'TinyImagenet',
     'EuroSAT',
     'CIFAR100',
@@ -27,6 +23,6 @@ batch_size = 512
 
 [model_arch]
     [model_arch.ConvNet]
-        'CIFAR10' = [128, 10]
+        'CIFAR10' = [300, 10]
         #'CIFAR100' = [300, 100]
         # 'SVHN' = [100, 10]
