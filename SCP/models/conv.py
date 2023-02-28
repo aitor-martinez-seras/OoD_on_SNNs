@@ -1425,12 +1425,14 @@ class ConvSNN11_no_dropout(nn.Module):
                 import math
                 if isinstance(m, nn.Conv2d):
                     print(torch.mean(m.weight.data))
-                    torch.nn.init.xavier_uniform_(m.weight)
+                    #torch.nn.init.xavier_uniform_(m.weight)
+                    torch.nn.init.kaiming_normal(m.weight)
                     print(torch.mean(m.weight.data))
 
                 elif isinstance(m, nn.Linear):
                     print(torch.mean(m.weight.data))
-                    torch.nn.init.xavier_uniform_(m.weight)
+                    # torch.nn.init.xavier_uniform_(m.weight)
+                    torch.nn.init.kaiming_normal(m.weight)
                     print(torch.mean(m.weight.data))
 
     def forward(self, x, flag=None):
@@ -1547,13 +1549,17 @@ class ConvSNN12(nn.Module):
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
                 variance1 = math.sqrt(2.0 / n)
+                print(torch.mean(m.weight.data))
                 m.weight.data.normal_(0, variance1)
+                print(torch.mean(m.weight.data))
 
             elif isinstance(m, nn.Linear):
                 size = m.weight.size()
                 fan_in = size[1]  # number of columns
                 variance2 = math.sqrt(2.0 / fan_in)
+                print(torch.mean(m.weight.data))
                 m.weight.data.normal_(0.0, variance2)
+                print(torch.mean(m.weight.data))
 
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
