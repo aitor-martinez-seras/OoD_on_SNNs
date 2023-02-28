@@ -4,6 +4,7 @@ in_distribution_datasets = [
 ]
 out_of_distribution_datasets = [
     # 'Places365',
+    'Food101',
     'SVHN',
     # 'SUN397',
     # 'iSUN',

@@ -10,14 +10,13 @@ from SCP.datasets.caltech import Caltech101
 from SCP.datasets.fgvc_aircraft import FGVCAircraft
 from SCP.datasets.dtd import DTD
 from SCP.datasets.genomics import load_oodgenomics
-from SCP.datasets.fer2013 import FER2013
 from SCP.datasets.gtsrb import GTSRB
 from SCP.datasets.eurosat import EuroSAT
 from SCP.datasets.tiny_imagenet import TinyImageNetLoader
-from SCP.datasets.sun import SUN397
 from SCP.datasets.lsun import LSUN, LoaderLSUNResize, LoaderLSUNCrop, LoaderPatchesiSUN
 from SCP.datasets.svhn import SVHN
 from SCP.datasets.places import Places365
+from SCP.datasets.food import Food101
 
 datasets_loader = {
     'MNIST': MNIST,
@@ -36,11 +35,10 @@ datasets_loader = {
     'CIFAR100': CIFAR100,
     'DTD': DTD,
     'OODGenomics': load_oodgenomics,
-    'FER2013': FER2013,
+    'Food101': Food101,
     'GTSRB': GTSRB,
     'EuroSAT': EuroSAT,
     'TinyImagenet': TinyImageNetLoader,
-    'SUN397': SUN397,
     'iSUN': LoaderPatchesiSUN,
     'LSUN_crop': LoaderLSUNCrop,
     'LSUN_resize': LoaderLSUNResize,
