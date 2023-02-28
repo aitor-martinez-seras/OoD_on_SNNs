@@ -30,23 +30,23 @@ class CIFAR10(DatasetCustomLoader):
         )
 
     def _train_transformation(self, output_shape):
-        # return T.Compose(
-        #     [
-        #         # T.RandomCrop(output_shape[0], padding=4),
-        #         # T.RandomRotation(15, ),
-        #         T.RandomHorizontalFlip(),
-        #         T.ToTensor(),
-        #         T.Resize(output_shape),
-        #
-        #     ]
-        # )
         return T.Compose(
             [
-                T.AutoAugment(T.AutoAugmentPolicy.CIFAR10),
+                # T.RandomCrop(output_shape[0], padding=4),
+                # T.RandomRotation(15, ),
+                T.RandomHorizontalFlip(),
                 T.ToTensor(),
                 T.Resize(output_shape),
+
             ]
         )
+        # return T.Compose(
+        #     [
+        #         T.AutoAugment(T.AutoAugmentPolicy.CIFAR10),
+        #         T.ToTensor(),
+        #         T.Resize(output_shape),
+        #     ]
+        # )
 
     def _test_transformation(self, output_shape):
         return T.Compose(

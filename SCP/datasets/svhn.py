@@ -30,25 +30,25 @@ class SVHN(DatasetCustomLoader):
         )
 
     def _train_transformation(self, output_shape):
-        # return T.Compose(
-        #     [
-        #         T.ToTensor(),
-        #         T.Resize(output_shape),
-        #         # T.RandomHorizontalFlip(),
-        #         # T.RandomVerticalFlip(),
-        #         # T.RandomResizedCrop(size=output_shape, scale=(0.9, 1)),
-        #         # T.RandomRotation(10),
-        #         T.ColorJitter(brightness=0.25, contrast=0.25, saturation=0.25, hue=0.1)
-        #
-        #     ]
-        # )
         return T.Compose(
             [
-                T.AutoAugment(T.AutoAugmentPolicy.SVHN),
                 T.ToTensor(),
                 T.Resize(output_shape),
+                # T.RandomHorizontalFlip(),
+                # T.RandomVerticalFlip(),
+                # T.RandomResizedCrop(size=output_shape, scale=(0.9, 1)),
+                # T.RandomRotation(10),
+                # T.ColorJitter(brightness=0.25, contrast=0.25, saturation=0.25, hue=0.1)
+
             ]
         )
+        # return T.Compose(
+        #     [
+        #         T.AutoAugment(T.AutoAugmentPolicy.SVHN),
+        #         T.ToTensor(),
+        #         T.Resize(output_shape),
+        #     ]
+        # )
 
 
 if __name__ == "__main__":
