@@ -1,6 +1,6 @@
 in_distribution_datasets = [
-#    'CIFAR10',
-#    'SVHN',
+    'CIFAR10',
+    'SVHN',
     'CIFAR100',
 ]
 out_of_distribution_datasets = [
