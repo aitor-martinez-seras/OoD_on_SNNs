@@ -1407,33 +1407,33 @@ class ConvSNN11_no_dropout(nn.Module):
         self.hidden_neurons = hidden_neurons
         self.output_neurons = output_neurons
 
-        if False:
-            for m in self.modules():
-                import math
-                if isinstance(m, nn.Conv2d):
-                    n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
-                    variance1 = math.sqrt(2.0 / n)
-                    m.weight.data.normal_(0, variance1)
-
-                elif isinstance(m, nn.Linear):
-                    size = m.weight.size()
-                    fan_in = size[1]  # number of columns
-                    variance2 = math.sqrt(2.0 / fan_in)
-                    m.weight.data.normal_(0.0, variance2)
-        else:
-            for m in self.modules():
-                import math
-                if isinstance(m, nn.Conv2d):
-                    print(torch.mean(m.weight.data))
-                    #torch.nn.init.xavier_uniform_(m.weight)
-                    torch.nn.init.kaiming_normal(m.weight)
-                    print(torch.mean(m.weight.data))
-
-                elif isinstance(m, nn.Linear):
-                    print(torch.mean(m.weight.data))
-                    # torch.nn.init.xavier_uniform_(m.weight)
-                    torch.nn.init.kaiming_normal(m.weight)
-                    print(torch.mean(m.weight.data))
+        # if False:
+        #     for m in self.modules():
+        #         import math
+        #         if isinstance(m, nn.Conv2d):
+        #             n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+        #             variance1 = math.sqrt(2.0 / n)
+        #             m.weight.data.normal_(0, variance1)
+        #
+        #         elif isinstance(m, nn.Linear):
+        #             size = m.weight.size()
+        #             fan_in = size[1]  # number of columns
+        #             variance2 = math.sqrt(2.0 / fan_in)
+        #             m.weight.data.normal_(0.0, variance2)
+        # else:
+        #     for m in self.modules():
+        #         import math
+        #         if isinstance(m, nn.Conv2d):
+        #             print(torch.mean(m.weight.data))
+        #             #torch.nn.init.xavier_uniform_(m.weight)
+        #             torch.nn.init.kaiming_normal_(m.weight)
+        #             print(torch.mean(m.weight.data))
+        #
+        #         elif isinstance(m, nn.Linear):
+        #             print(torch.mean(m.weight.data))
+        #             # torch.nn.init.xavier_uniform_(m.weight)
+        #             torch.nn.init.kaiming_normal_(m.weight)
+        #             print(torch.mean(m.weight.data))
 
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
@@ -1476,9 +1476,6 @@ class ConvSNN11_no_dropout(nn.Module):
                 seq_length, batch_size, self.hidden_neurons, device=x.device, dtype=torch.int8
             )
             for ts in range(seq_length):
-
-                # z = self.extract_fatures(x[ts], sconv1, sconv2, sconv3)
-
                 # First convolution
                 z = self.conv1(x[ts])
                 z, sconv1 = self.lif_conv1(z, sconv1)
@@ -1544,22 +1541,22 @@ class ConvSNN12(nn.Module):
         self.hidden_neurons = hidden_neurons
         self.output_neurons = output_neurons
 
-        for m in self.modules():
-            import math
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
-                variance1 = math.sqrt(2.0 / n)
-                print(torch.mean(m.weight.data))
-                m.weight.data.normal_(0, variance1)
-                print(torch.mean(m.weight.data))
-
-            elif isinstance(m, nn.Linear):
-                size = m.weight.size()
-                fan_in = size[1]  # number of columns
-                variance2 = math.sqrt(2.0 / fan_in)
-                print(torch.mean(m.weight.data))
-                m.weight.data.normal_(0.0, variance2)
-                print(torch.mean(m.weight.data))
+        # for m in self.modules():
+        #     import math
+        #     if isinstance(m, nn.Conv2d):
+        #         n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+        #         variance1 = math.sqrt(2.0 / n)
+        #         print(torch.mean(m.weight.data))
+        #         m.weight.data.normal_(0, variance1)
+        #         print(torch.mean(m.weight.data))
+        #
+        #     elif isinstance(m, nn.Linear):
+        #         size = m.weight.size()
+        #         fan_in = size[1]  # number of columns
+        #         variance2 = math.sqrt(2.0 / fan_in)
+        #         print(torch.mean(m.weight.data))
+        #         m.weight.data.normal_(0.0, variance2)
+        #         print(torch.mean(m.weight.data))
 
     def forward(self, x, flag=None):
         seq_length = x.shape[0]
