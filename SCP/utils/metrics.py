@@ -235,6 +235,6 @@ def likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(likelihood_test
 
     # Eliminating NaN value at TPR = 1 and other NaN values that may appear due to
     # precision = TP / (TP + FN) = 0 / (0 + 0)
-    precision[0] = 1
-    # np.nan_to_num(precision, nan=1, copy=False)
+    # precision[0] = 1
+    np.nan_to_num(precision, nan=1, copy=False)
     return precision, tpr_values, fpr_values
