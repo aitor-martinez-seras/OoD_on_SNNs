@@ -14,7 +14,7 @@ from SCP.utils.common import load_config, get_batch_size
 def get_args_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="OOD detection on SNNs", add_help=True)
 
-    parser.add_argument("--conf", default="config", type=str, required=True,
+    parser.add_argument("-c", "--conf", default="config", type=str, required=True,
                         help="name of the configuration in config folder")
     parser.add_argument("--train-seed", default=7, type=int, dest='train_seed',
                         help="seed for the selection of train instances")
@@ -44,18 +44,18 @@ def main(args):
     COLUMNS = ['Dataset', 'Split', 'Number of examples', 'Mean', 'Median', 'STD']
     df_results = pd.DataFrame(columns=COLUMNS)
 
-    for in_dataset in tqdm(datasets_to_test, desc=f'In-Distribution dataset loop'):
+    for dataset in tqdm(datasets_to_test, desc=f'Datasets loop'):
         results_list = []
         # Get the batch size and data loaders to obtain the data splits
         batch_size = 512
-        in_dataset_data_loader = datasets_loader[in_dataset](datasets_path)
+        in_dataset_data_loader = datasets_loader[dataset](datasets_path)
 
         # Load both splits
-        train_data = in_dataset_data_loader.load_data(
-            split='train', transformation_option='test', output_shape=datasets_conf[in_dataset]['input_size'][1:]
-        )
+        # train_data = in_dataset_data_loader.load_data(
+        #     split='train', transformation_option='test', output_shape=datasets_conf[dataset]['input_size'][1:]
+        # )
         test_data = in_dataset_data_loader.load_data(
-            split='test', transformation_option='test', output_shape=datasets_conf[in_dataset]['input_size'][1:]
+            split='test', transformation_option='test', output_shape=datasets_conf[dataset]['input_size'][1:]
         )
 
         # Define loaders. Deactivated the train set, as the difference between sets in the used datasets is
@@ -80,7 +80,7 @@ def main(args):
 
         # results_list.append(
         #     [
-        #         in_dataset,
+        #         dataset,
         #         'train',
         #         len(train_samples),
         #         train_samples.mean(),
@@ -91,7 +91,7 @@ def main(args):
 
         results_list.append(
             [
-                in_dataset,
+                dataset,
                 'test',
                 len(test_samples),
                 test_samples.mean(),
