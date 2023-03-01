@@ -24,7 +24,7 @@ input_size = [3, 32, 32]
 classes = 100
 
 [GTSRB]
-input_size = [3, 96, 96]
+input_size = [3, 32, 32]
 classes = 0
 
 [OODGenomics]
