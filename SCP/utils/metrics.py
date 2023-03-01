@@ -212,14 +212,17 @@ def computation_likelihood_in_or_out_distribution_per_tpr(likelihood_test, likel
 def likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(likelihood_test, likelihood_ood,
                                                                  likelihood_thresholds):
     # Creation of the array with True if predicted InD (True) or OD (False)
-    in_or_out_distribution_per_tpr_test = compare_likelihood_to_likelihood_thr_one_for_all_classes(likelihood_test,
-                                                                                                   likelihood_thresholds)
-    in_or_out_distribution_per_tpr_test[0] = np.zeros((in_or_out_distribution_per_tpr_test.shape[1]),
-                                                      dtype=bool)  # To fix that one element is True when TPR is 0
-    in_or_out_distribution_per_tpr_test[-1] = np.ones((in_or_out_distribution_per_tpr_test.shape[1]),
-                                                      dtype=bool)  # To fix that last element is True when TPR is 1
-    in_or_out_distribution_per_tpr_ood = compare_likelihood_to_likelihood_thr_one_for_all_classes(likelihood_ood,
-                                                                                                  likelihood_thresholds)
+    in_or_out_distribution_per_tpr_test = compare_likelihood_to_likelihood_thr_one_for_all_classes(
+        likelihood_test, likelihood_thresholds
+    )
+    # To fix that one element is True when TPR is 0
+    in_or_out_distribution_per_tpr_test[0] = np.zeros((in_or_out_distribution_per_tpr_test.shape[1]), dtype=bool)
+    # To fix that last element is True when TPR is 1
+    in_or_out_distribution_per_tpr_test[-1] = np.ones((in_or_out_distribution_per_tpr_test.shape[1]), dtype=bool)
+    # OOD
+    in_or_out_distribution_per_tpr_ood = compare_likelihood_to_likelihood_thr_one_for_all_classes(
+        likelihood_ood, likelihood_thresholds
+    )
 
     # Creation of arrays with TP, FN and FP, TN
     tp_fn_test = tp_fn_fp_tn_computation(in_or_out_distribution_per_tpr_test)
