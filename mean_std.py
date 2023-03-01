@@ -14,7 +14,8 @@ from SCP.utils.common import load_config, get_batch_size
 def get_args_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="OOD detection on SNNs", add_help=True)
 
-    parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
+    parser.add_argument("--conf", default="config", type=str, required=True,
+                        help="name of the configuration in config folder")
     parser.add_argument("--train-seed", default=7, type=int, dest='train_seed',
                         help="seed for the selection of train instances")
     parser.add_argument("--test-seed", default=8, type=int, dest='test_seed',
@@ -57,12 +58,13 @@ def main(args):
             split='test', transformation_option='test', output_shape=datasets_conf[in_dataset]['input_size'][1:]
         )
 
-        # Define loaders. Use a seed for train loader
-        g_train = torch.Generator()
-        g_train.manual_seed(args.train_seed)
+        # Define loaders. Deactivated the train set, as the difference between sets in the used datasets is
+        # no significant between train and test
+        # g_train = torch.Generator()
+        # g_train.manual_seed(args.train_seed)
+        # train_loader = load_dataloader(train_data, batch_size, shuffle=True, generator=g_train)
         g_test = torch.Generator()
         g_test.manual_seed(args.test_seed)
-        train_loader = load_dataloader(train_data, batch_size, shuffle=True, generator=g_train)
         test_loader = load_dataloader(test_data, batch_size, shuffle=True, generator=g_test)
 
         # train_samples = []
