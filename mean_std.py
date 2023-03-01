@@ -16,6 +16,8 @@ def get_args_parser() -> argparse.ArgumentParser:
 
     parser.add_argument("-c", "--conf", default="config", type=str, required=True,
                         help="name of the configuration in config folder")
+    parser.add_argument("--img-shape", type=int, required=True, dest='img_shape',
+                        help="the size of the img for the resize (for BW 28, for RGB 32)")
     parser.add_argument("--train-seed", default=7, type=int, dest='train_seed',
                         help="seed for the selection of train instances")
     parser.add_argument("--test-seed", default=8, type=int, dest='test_seed',
@@ -55,7 +57,7 @@ def main(args):
         #     split='train', transformation_option='test', output_shape=datasets_conf[dataset]['input_size'][1:]
         # )
         test_data = in_dataset_data_loader.load_data(
-            split='test', transformation_option='test', output_shape=datasets_conf[dataset]['input_size'][1:]
+            split='test', transformation_option='test', output_shape=(args.img_shape, args.img_shape)
         )
 
         # Define loaders. Deactivated the train set, as the difference between sets in the used datasets is
