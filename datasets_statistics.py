@@ -1,17 +1,16 @@
 from pathlib import Path
 import argparse
+import math
 
 from tqdm import tqdm
 import pandas as pd
 import torch
 import numpy as np
 from scipy.stats import norm
-from scipy.special import kl_div
-from matplotlib import pyplot as plt
 
 from SCP.datasets import datasets_loader
 from SCP.datasets.utils import load_dataloader
-from SCP.utils.common import load_config, get_batch_size
+from SCP.utils.common import load_config
 
 
 def get_args_parser() -> argparse.ArgumentParser:
@@ -19,6 +18,8 @@ def get_args_parser() -> argparse.ArgumentParser:
 
     parser.add_argument("-c", "--conf", default="config", type=str, required=True,
                         help="name of the configuration in config folder")
+    parser.add_argument("--channels", type=int, required=True,
+                        help="1 for BW, 3 for RGB")
     parser.add_argument("--img-shape", type=int, required=True, dest='img_shape',
                         help="the size of the img for the resize (for BW 28, for RGB 32)")
     parser.add_argument("--ind-seed", default=7, type=int, dest='ind_seed',
@@ -76,9 +77,10 @@ def main(args):
         batch_size = 512
         in_dataset_data_loader = datasets_loader[in_dataset](datasets_path)
 
+        img_shape = (args.channels, args.img_shape, args.img_shape)
         # Load data
         ind_test_data = in_dataset_data_loader.load_data(
-            split='test', transformation_option='test', output_shape=(args.img_shape, args.img_shape)
+            split='test', transformation_option='test', output_shape=img_shape[1:]
         )
 
         # Define loaders
@@ -91,8 +93,9 @@ def main(args):
         mean_ind_samples = np.mean(ind_samples, axis=0)
         std_ind_samples = np.std(ind_samples, axis=0)
 
-        x = np.linspace(0, 1, 5000)
-        ind_pdf = np.zeros((5000, 3, 32, 32))
+        num_samples_for_pdf = 10000
+        x = np.linspace(0, 1, num_samples_for_pdf)
+        ind_pdf = np.zeros((num_samples_for_pdf, img_shape[0], img_shape[1], img_shape[2]))
         for ch in range(3):
             for h in range(32):
                 for w in range(32):
@@ -104,7 +107,7 @@ def main(args):
             # Load OOD data
             ood_dataset_data_loader = datasets_loader[ood_dataset](datasets_path)
             ood_test_data = ood_dataset_data_loader.load_data(
-                split='test', transformation_option='test', output_shape=(args.img_shape, args.img_shape)
+                split='test', transformation_option='test', output_shape=img_shape[1:]
             )
             g_ood = torch.Generator()
             g_ood.manual_seed(args.ood_seed)
@@ -115,14 +118,14 @@ def main(args):
             mean_ood_samples = np.mean(ood_samples, axis=0)
             std_ood_samples = np.std(ood_samples, axis=0)
 
-            ood_pdf = np.zeros((5000, 3, 32, 32))
+            ood_pdf = np.zeros((num_samples_for_pdf, img_shape[0], img_shape[1], img_shape[2]))
             for ch in range(3):
                 for h in range(32):
                     for w in range(32):
                         ood_pdf[:, ch, h, w] = norm.pdf(x, loc=mean_ood_samples[ch, h, w],
                                                         scale=std_ood_samples[ch, h, w])
 
-            kl_all = np.zeros((3, 32, 32))
+            kl_all = np.zeros(img_shape)
             for ch in range(3):
                 for h in range(32):
                     for w in range(32):
@@ -160,7 +163,7 @@ def main(args):
                         np.median(mean_ood_samples),
                         np.std(mean_ood_samples),
 
-                        np.sum(kl_all),
+                        np.sum(kl_all) / math.prod(img_shape),
                     ]
             )
 
