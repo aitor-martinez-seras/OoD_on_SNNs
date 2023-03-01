@@ -93,7 +93,7 @@ def main(args):
 
         x = np.linspace(0, 1, 5000)
         ind_pdf = np.zeros((5000, 3, 32, 32))
-        for ch in tqdm(range(3)):
+        for ch in range(3):
             for h in range(32):
                 for w in range(32):
                     ind_pdf[:, ch, h, w] = norm.pdf(x, loc=mean_ind_samples[ch, h, w],
@@ -116,14 +116,14 @@ def main(args):
             std_ood_samples = np.std(ood_samples, axis=0)
 
             ood_pdf = np.zeros((5000, 3, 32, 32))
-            for ch in tqdm(range(3)):
+            for ch in range(3):
                 for h in range(32):
                     for w in range(32):
                         ood_pdf[:, ch, h, w] = norm.pdf(x, loc=mean_ood_samples[ch, h, w],
                                                         scale=std_ood_samples[ch, h, w])
 
             kl_all = np.zeros((3, 32, 32))
-            for ch in tqdm(range(3)):
+            for ch in range(3):
                 for h in range(32):
                     for w in range(32):
                         kl_all[ch, h, w] = kl_divergence(ind_pdf[:, ch, h, w], ood_pdf[:, ch, h, w])
