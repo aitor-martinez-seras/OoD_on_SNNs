@@ -68,10 +68,10 @@ def main(args):
     COLUMNS = ['In-Dataset', 'OoD-Dataset', 'Split', 'Number of OoD examples', 'Mean diff', 'Median diff',
                'InD mean', 'InD Median', 'InD STD', 'OoD mean', 'OoD Median',
                'OoD STD', 'KL Divergence custom metric']
-    df_results = pd.DataFrame(columns=COLUMNS)
 
+    results_list = []
     for in_dataset in tqdm(in_dist_dataset_to_test, desc=f'In-Distribution datasets loop'):
-        results_list = []
+
         # Get the batch size and data loaders to obtain the data splits
         batch_size = 512
         in_dataset_data_loader = datasets_loader[in_dataset](datasets_path)
@@ -143,7 +143,6 @@ def main(args):
             # 'InD mean', 'InD Median', 'InD STD', 'InD KL Metric' 'OoD mean', 'OoD Median', 'OoD STD', 'OoD KL metric'
             # 'KL Divergence custom metric']
 
-            df_results_one_dataset = pd.DataFrame(results_list, columns=COLUMNS)
             results_list.append(
                     [
                         in_dataset,
@@ -165,8 +164,7 @@ def main(args):
                     ]
             )
 
-            df_results = pd.concat([df_results, df_results_one_dataset])
-
+    df_results = pd.DataFrame(results_list, columns=COLUMNS)
     df_results.to_excel(results_path / f'statistics_{args.conf}.xlsx')
 
 
