@@ -589,7 +589,7 @@ def main(args: argparse.Namespace):
                 # Save results to list
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
-                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-SCP', auroc, aupr, fpr95, fpr80, temp])
+                                     test_accuracy, accuracy_ood, 'Ensemble-Odin-Energy', auroc, aupr, fpr95, fpr80, temp])
 
             # ---------------------------------------------------------------
             # Save results for every model arch

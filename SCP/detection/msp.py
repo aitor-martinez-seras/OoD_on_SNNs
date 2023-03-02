@@ -25,10 +25,9 @@ class MSP(_OODMethod):
 
         # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
         likelihood_thresholds_train = thresholds_for_each_TPR_likelihood(softmax_train_winners)
-        
+
         # Computing precision, tpr and fpr
         self.precision, self.tpr_values, self.fpr_values = likelihood_method_compute_precision_tpr_fpr_for_test_and_ood(
             softmax_test_winners, softmax_ood_winners, likelihood_thresholds_train
         )
         return super().compute_metrics()
-

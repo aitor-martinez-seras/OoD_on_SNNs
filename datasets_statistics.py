@@ -45,7 +45,7 @@ def extract_all_images_to_array(img_loader):
 
 
 def kl_divergence(p, q):
-    return np.sum(np.where(p != 0, p * np.log(p / q), 0))
+    return np.sum(np.where(p != 0, p * np.log(p / q + 0.00000000000001), 0)) / len(p)
 
 
 def main(args):
@@ -163,7 +163,7 @@ def main(args):
                         np.median(mean_ood_samples),
                         np.std(mean_ood_samples),
 
-                        np.sum(kl_all) / math.prod(img_shape),
+                        np.sum(kl_all),
                     ]
             )
 
