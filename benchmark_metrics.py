@@ -105,7 +105,7 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
     # create this variable containing 'Ours' when SCP is the reference method. We also need to remove from
     # ood_methods the reference method
     ref_method_df_name = args.ref_ood_method if args.ref_ood_method != 'SCP' else 'Ours'
-    if args.ref_ood_method in args.ood_methods:
+    if ref_method_df_name in args.ood_methods:
         print(f'{indent}Removing from the results the cases where the '
               f'In-Distribution and Out-of-Distribution dataset match')
         args.ood_methods.remove(args.ref_ood_method)
