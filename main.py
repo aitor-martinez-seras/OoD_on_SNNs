@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import torch
 
-from SCP.detection.ensembles import EnsembleOdinSCP, EnsembleOdinEnergy
+from SCP.detection.ensembles import EnsembleOdinSCP, EnsembleOdinEnergy, EnsembleEnergySCP
 from SCP.detection.weights import download_pretrained_weights
 from SCP.datasets import datasets_loader
 from SCP.datasets.utils import load_dataloader, create_loader_with_subset_of_specific_size_with_random_data
@@ -590,6 +590,21 @@ def main(args: argparse.Namespace):
                 local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
                 results_list.append([local_time, in_dataset, ood_dataset, model_name,
                                      test_accuracy, accuracy_ood, 'Ensemble-Odin-Energy', auroc, aupr, fpr95, fpr80, temp])
+
+                # *************** Ensemble Energy-SCP method ***************
+                ensemble_odin_energy = EnsembleEnergySCP()
+                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_energy(
+                    distances_train_per_class, distances_test_per_class, distances_ood_per_class,
+                    logits_train_thr, logits_test, logits_ood,
+                    save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
+                )
+                results_log = create_str_for_ood_method_results('Ensemble-Energy-SCP', auroc, aupr, fpr95, fpr80)
+                logger.info(results_log)
+                # Save results to list
+                local_time = datetime.datetime.now(pytz.timezone('Europe/Madrid')).ctime()
+                results_list.append([local_time, in_dataset, ood_dataset, model_name,
+                                     test_accuracy, accuracy_ood, 'Ensemble-Energy-SCP', auroc, aupr, fpr95, fpr80,
+                                     temp])
 
             # ---------------------------------------------------------------
             # Save results for every model arch

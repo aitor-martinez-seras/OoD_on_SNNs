@@ -130,6 +130,71 @@ class EnsembleOdinSCP(_OODMethod):
         plt.close(fig)
 
 
+class EnsembleEnergySCP(_OODMethod):
+
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, distances_train_per_class, distances_test_per_class, distances_ood_per_class,
+                 logits_train, logits_test, logits_ood,
+                 save_histogram=False, name='', class_names=None, preds_ood=None, *args, **kwargs):
+        # ----- Odin -----
+        # Get the best temperature
+        # ----- Energy -----
+        temp_energy = 1
+        # Compute the energies
+        energy_train = -(-temp_energy * torch.logsumexp(torch.Tensor(logits_train) / temp_energy, dim=1)).numpy()
+        energy_test = -(-temp_energy * torch.logsumexp(torch.Tensor(logits_test) / temp_energy, dim=1)).numpy()
+        energy_ood = -(-temp_energy * torch.logsumexp(torch.Tensor(logits_ood) / temp_energy, dim=1)).numpy()
+
+        # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
+        likelihood_thresholds_train = thresholds_for_each_TPR_likelihood(energy_train)
+
+        # Creation of the array with True if predicted InD (True) or OD (False)
+        energy_in_or_ood_per_tpr_test, energy_in_or_ood_per_tpr_ood = computation_likelihood_in_or_out_distribution_per_tpr(
+            energy_test, energy_ood, likelihood_thresholds_train
+        )
+
+        # ----- SCP -----
+        # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
+        distance_thresholds_train = thresholds_per_class_for_each_TPR(
+            len(class_names), distances_train_per_class
+        )
+
+        scp_in_or_ood_per_tpr_test, scp_in_or_ood_per_tpr_ood = computation_distances_per_class_in_or_out_distribution_per_tpr(
+            distances_test_per_class, distances_ood_per_class,  distance_thresholds_train
+        )
+
+        # ----- Ensemble -----
+        sum_test = scp_in_or_ood_per_tpr_test + energy_in_or_ood_per_tpr_test
+        sum_ood = scp_in_or_ood_per_tpr_ood + energy_in_or_ood_per_tpr_ood
+        in_or_ood_per_tpr_test = np.where(sum_test >= 1, 1, 0)
+        in_or_ood_per_tpr_ood = np.where(sum_ood >= 1, 1, 0)
+
+        # Metrics
+        # Creation of arrays with TP, FN and FP, TN
+        tp_fn_test = tp_fn_fp_tn_computation(in_or_ood_per_tpr_test)
+        fp_tn_ood = tp_fn_fp_tn_computation(in_or_ood_per_tpr_ood)
+
+        # Computing TPR, FPR and Precision
+        self.tpr_values = tp_fn_test[:, 0] / (tp_fn_test[:, 0] + tp_fn_test[:, 1])
+        self.fpr_values = fp_tn_ood[:, 0] / (fp_tn_ood[:, 0] + fp_tn_ood[:, 1])
+        self.precision = tp_fn_test[:, 0] / (tp_fn_test[:, 0] + fp_tn_ood[:, 0])
+        # Eliminating NaN value at TPR = 1
+        self.precision[0] = 1
+
+        if save_histogram:
+            self.plot_in_or_ood(
+                energy_in_or_ood_per_tpr_test, energy_in_or_ood_per_tpr_ood,
+                scp_in_or_ood_per_tpr_test, scp_in_or_ood_per_tpr_ood,
+                name=f'{name}_Ensemble_OdinSCP',
+            )
+
+        auroc, aupr, fpr95, fpr80 = super().compute_metrics()
+
+        return auroc, aupr, fpr95, fpr80, temp
+
+
 class EnsembleOdinEnergy(_OODMethod):
 
     def __init__(self):
