@@ -192,7 +192,7 @@ class EnsembleEnergySCP(_OODMethod):
 
         auroc, aupr, fpr95, fpr80 = super().compute_metrics()
 
-        return auroc, aupr, fpr95, fpr80, temp
+        return auroc, aupr, fpr95, fpr80, temp_energy
 
 
 class EnsembleOdinEnergy(_OODMethod):
