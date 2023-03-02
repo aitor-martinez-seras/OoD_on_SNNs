@@ -592,8 +592,8 @@ def main(args: argparse.Namespace):
                                      test_accuracy, accuracy_ood, 'Ensemble-Odin-Energy', auroc, aupr, fpr95, fpr80, temp])
 
                 # *************** Ensemble Energy-SCP method ***************
-                ensemble_odin_energy = EnsembleEnergySCP()
-                auroc, aupr, fpr95, fpr80, temp = ensemble_odin_energy(
+                ensemble_energy_scp = EnsembleEnergySCP()
+                auroc, aupr, fpr95, fpr80, temp = ensemble_energy_scp(
                     distances_train_per_class, distances_test_per_class, distances_ood_per_class,
                     logits_train_thr, logits_test, logits_ood,
                     save_histogram=save_ensemble_odin_scp, name=new_figures_path, class_names=class_names
