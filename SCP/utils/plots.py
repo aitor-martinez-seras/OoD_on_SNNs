@@ -26,7 +26,7 @@ def cd_graph(score_per_method: OrderedDict, fig_path: Path):
 
     CD = compute_CD(avgranks, number_of_ood_datasets, test='nemenyi')
     graph_ranks(avgranks, ood_method_names, cd=CD, width=5, textspace=0.8)
-    plt.savefig(f'{fig_path.as_posix()}CD_Graph.pdf', bbox_inches='tight')  # bbox_inches=Bbox([[0.2, 0], [0.8, 1]]))
+    plt.savefig(fr'{fig_path.as_posix()}CD_Graph.pdf', bbox_inches='tight')  # bbox_inches=Bbox([[0.2, 0], [0.8, 1]]))
     plt.close()
 
 
