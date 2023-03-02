@@ -35,10 +35,13 @@ def get_args_parser() -> argparse.ArgumentParser:
                         choices=['AUROC', 'AUPR', 'FPR95'])
     parser.add_argument("--ref-ood-method", type=str, default='SCP', dest='ref_ood_method',
                         help="The method to make the pairwise bayesian tests",
-                        choices=['Baseline', 'ODIN', 'Free energy', 'EnsembleOdinSCP', 'EnsembleOdinEnergy'])
-    parser.add_argument("--ood-methods", default=['Baseline', 'ODIN', 'Free energy'], type=str, nargs='+',
-                        dest="ood_methods", help="Test the specified methods against SCP. If empty, test all. "
-                                                 "Options: Baseline, ODIN, Free energy, EnsembleOdinSCP, EnsembleOdinEnergy")
+                        choices=['Baseline', 'ODIN', 'Free energy', 'Ensemble-Odin-SCP', 'Ensemble-Odin-Energy'])
+    parser.add_argument("--ood-methods", type=str, nargs='+', dest="ood_methods",
+                        default=['Baseline', 'ODIN', 'Free energy',
+                                 'Ensemble-Odin-SCP', 'Ensemble-Odin-Energy', 'Ensemble-Energy-SCP'],
+                        help="Test the specified methods against SCP. If empty, test all. "
+                             "Options: Baseline, ODIN, Free energy, "
+                             "Ensemble-Odin-SCP, Ensemble-Odin-Energy, Ensemble-Energy-SCP")
     parser.add_argument("--models", default=[], type=str, nargs='+', dest="models",
                         help="Test the specified models. If empty, test all. Options: 'Fully_connected' and 'ConvNet'")
     return parser
@@ -52,9 +55,13 @@ def check_tested_datasets_are_available(in_or_out, datasets_to_test, available_d
 
 def drop_available_datasets_that_wont_be_tested(in_or_out, df, datasets_to_test,
                                                 available_datasets, indent) -> pd.DataFrame:
+    if in_or_out == 'in-':
+        search_dataset_in_or_out = 'In-Distribution'
+    elif in_or_out == 'out-of-':
+        search_dataset_in_or_out = 'Out-Distribution'
     for dataset in available_datasets:
         if dataset not in datasets_to_test:
-            df = df[df['In-Distribution'] != dataset]
+            df = df[df[search_dataset_in_or_out] != dataset]
             print(f'{indent}The {in_or_out}distribution dataset {dataset} will be dropped'
                   f' as is not present in the config file')
     return df
@@ -78,6 +85,7 @@ def check_tested_datasets_are_available_and_drop_not_tested_datasets(config, df,
 
 def save_plots_one_file(file_path: Path, config: dict, models: List, args: argparse.Namespace,
                         save_figure_path: Path, indent=''):
+    indent += '\t'
     # Load results form the file
     df_full_results = pd.read_excel(file_path)
 
@@ -105,17 +113,24 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
     # create this variable containing 'Ours' when SCP is the reference method. We also need to remove from
     # ood_methods the reference method
     ref_method_df_name = args.ref_ood_method if args.ref_ood_method != 'SCP' else 'Ours'
-    if ref_method_df_name in args.ood_methods:
-        print(f'{indent}Removing from the results the cases where the '
-              f'In-Distribution and Out-of-Distribution dataset match')
-        args.ood_methods.remove(args.ref_ood_method)
+    # if ref_method_df_name in args.ood_methods:
+    #     print(f'{indent}Removing from the results the cases where the '
+    #           f'In-Distribution and Out-of-Distribution dataset match')
+    #     args.ood_methods.remove(args.ref_ood_method)
 
     # Initialize the dict containing the scores per ood_method
     scores_dict = OrderedDict()
 
+    coincidences = len(
+        np.where((df_full_results['In-Distribution'] == df_full_results['Out-Distribution']).to_numpy(bool) == True)[0]
+    )
     df = df_full_results.loc[df_full_results['In-Distribution'] != df_full_results['Out-Distribution']]
+    print(f'{indent}Removing cases from the results the cases where the '
+          f'In-Distribution and Out-of-Distribution dataset match. Occurred {coincidences} times.')
+    # print(f'{indent}In-Dist: {df_full_results["In-Distribution"]}')
+    # print(f'{indent}Out-Dist: {df_full_results["Out-Distribution"]}')
 
-    models_available = df_full_results['Model'].unique()
+    models_available = df['Model'].unique()
     for model in models:
 
         if model not in models_available:
@@ -124,15 +139,22 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
         df_ref_method = df.loc[df['OoD Method'] == ref_method_df_name]
         scores_reference_method = df_ref_method.loc[df_ref_method['Model'] == model][[args.metric]].to_numpy() / 100
 
+        # Create a dictionary where each key is a method's performance scores
         scores_dict[args.ref_ood_method] = scores_reference_method.squeeze()
 
+        # Fill the dict with each ood method's score
         for method in args.ood_methods:
             df_other_method = df.loc[df['OoD Method'] == method]
             score_other_method = df_other_method.loc[df_other_method['Model'] == model][[args.metric]].to_numpy() / 100
             scores_dict[method] = score_other_method.squeeze()
 
         if args.cd_graph:
-            cd_graph(scores_dict, fig_path=save_figure_path)
+            print(Path(f'{save_figure_path.as_posix()}'))
+            if save_figure_path.is_dir():  # Used in 'one-file' case
+                fig_path = save_figure_path / f'{args.ref_ood_method}_'
+            else:  # Used in 'all-subdirectories' case
+                fig_path = save_figure_path
+            cd_graph(scores_dict, fig_path=fig_path)
 
         if args.bayesian_signrank or args.bayesian_signed:
 
@@ -141,24 +163,15 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
                 pairwise_scores[args.ref_ood_method] = scores_dict[args.ref_ood_method]
                 pairwise_scores[method] = scores_dict[method]
 
-                if save_figure_path.is_dir():
+                if save_figure_path.is_dir():  # Used in 'one-file' case
                     figure_path = save_figure_path / f'{args.ref_ood_method}vs{method}'
-                else:
+                else:  # Used in 'all-subdirectories' case
                     figure_path = Path(f'{save_figure_path.as_posix()}_{args.ref_ood_method}vs{method}')
 
                 if args.bayesian_signrank:
                     bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path, rope=args.rope)
                 if args.bayesian_signed:
                     bayesian_test(pairwise_scores, option='signtest', fig_path=figure_path, rope=args.rope)
-
-
-def all_subdirectories():
-    """
-    Recorrer todos los subdirectorios de una carpeta y crear en la carpeta donde haya un excel que empiece por
-    benchmark_ y en la carpeta indicada a traves de los args los test indicados (cd, bayesian) de los datasets
-    indicados y los metodos indicados.
-    """
-    pass
 
 
 def open_folders_and_plot_excels(parent_folder: Path, config: dict, models: List, args: argparse.Namespace, indent=''):
