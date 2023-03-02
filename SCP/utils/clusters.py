@@ -290,7 +290,7 @@ def create_clusters(preds_train, spk_count_train, class_names: List, n_samples_p
     # Select a distance threshold for each class
     if distance_for_clustering is None:
         distance_for_clustering = (800, 3000)
-    possible_distance_thrs = np.linspace(distance_for_clustering[0], distance_for_clustering[1], 50)
+    possible_distance_thrs = np.linspace(distance_for_clustering[0], distance_for_clustering[1], 100)
 
     # Select the best performing cluster configuration for each class based on a performance metric
     selected_distance_thrs_per_class = select_best_distance_threshold_for_each_class(
