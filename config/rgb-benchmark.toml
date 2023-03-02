@@ -1,7 +1,6 @@
 in_distribution_datasets = [
     'CIFAR10',
     'SVHN',
-    # 'CIFAR100',
 ]
 out_of_distribution_datasets = [
     'Food101',
@@ -12,7 +11,6 @@ out_of_distribution_datasets = [
     'GTSRB',
 
     'CIFAR10',
-    'CIFAR100',
     'SVHN',
     'TinyImagenet',
     'EuroSAT',
