@@ -263,11 +263,6 @@ def main(args: argparse.Namespace):
             logger.info(f"Available train samples' shape: {spk_count_train_clusters.shape}")
 
             # Create cluster models
-            # TODO: Tengo que conseguir que se use el args.samples_for_cluster_per_class sin que de error.
-            #   El problema viene de que se coge el subset de train para hacer los clusters, pero se escoge
-            #   antes de hacer el predict, y luego cuando se predice nos quedamos con menos.
-            #   Tengo que hacer la funcion create clusters robusta ante sizes mas pequeños, añadiendo un warning
-            #   para cuando se ejecute
             dist_clustering = (500, 5000)
             file_name = figures_path / f'{in_dataset}_{model_name}_{args.cluster_mode}_{hidden_neurons}' \
                                        f'_{output_neurons}_{args.n_hidden_layers}_layers'
