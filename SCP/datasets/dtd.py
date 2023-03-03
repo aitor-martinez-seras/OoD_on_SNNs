@@ -11,23 +11,18 @@ from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
 class DTD(DatasetCustomLoader):
 
     def __init__(self, root_path, *args, **kwargs):
-        super().__init__(torchvision.datasets.DTD, root_path=root_path)
+        torchvision.datasets.DTD(root=root_path, download=True)
+        self._dtd_images = 'dtd\dtd\images'
+        super().__init__(torchvision.datasets.ImageFolder, root_path=root_path / self._dtd_images)
 
     def _train_data(self, transform) -> VisionDataset:
         return self.dataset(
             root=self.root_path,
-            split='train',
-            download=True,
             transform=transform,
         )
 
     def _test_data(self, transform) -> VisionDataset:
-        return self.dataset(
-            root=self.root_path,
-            split='test',
-            download=True,
-            transform=transform,
-        )
+        return self._train_data(transform)
 
     def _train_transformation(self, output_shape):
         return T.Compose(
