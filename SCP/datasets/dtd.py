@@ -12,7 +12,7 @@ class DTD(DatasetCustomLoader):
 
     def __init__(self, root_path, *args, **kwargs):
         torchvision.datasets.DTD(root=root_path, download=True)
-        self._dtd_images = 'dtd\dtd\images'
+        self._dtd_images = Path('dtd/dtd/images')
         super().__init__(torchvision.datasets.ImageFolder, root_path=root_path / self._dtd_images)
 
     def _train_data(self, transform) -> VisionDataset:
