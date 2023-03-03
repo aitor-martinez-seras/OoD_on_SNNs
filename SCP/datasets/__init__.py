@@ -9,13 +9,11 @@ from SCP.datasets.flowers import Flowers102
 from SCP.datasets.caltech import Caltech101
 from SCP.datasets.fgvc_aircraft import FGVCAircraft
 from SCP.datasets.dtd import DTD
-from SCP.datasets.genomics import load_oodgenomics
 from SCP.datasets.gtsrb import GTSRB
 from SCP.datasets.eurosat import EuroSAT
 from SCP.datasets.tiny_imagenet import TinyImageNetLoader
 from SCP.datasets.lsun import LSUN, LoaderLSUNResize, LoaderLSUNCrop, LoaderPatchesiSUN
 from SCP.datasets.svhn import SVHN
-from SCP.datasets.places import Places365
 from SCP.datasets.food import Food101
 
 datasets_loader = {
@@ -34,7 +32,6 @@ datasets_loader = {
     'Caltech101': Caltech101,
     'CIFAR100': CIFAR100,
     'DTD': DTD,
-    'OODGenomics': load_oodgenomics,
     'Food101': Food101,
     'GTSRB': GTSRB,
     'EuroSAT': EuroSAT,
@@ -44,5 +41,4 @@ datasets_loader = {
     'LSUN_resize': LoaderLSUNResize,
     'LSUN': LSUN,
     'SVHN': SVHN,
-    'Places365': Places365,
 }

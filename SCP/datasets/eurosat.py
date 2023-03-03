@@ -1,4 +1,6 @@
 from pathlib import Path
+
+import numpy as np
 import torchvision
 import torchvision.transforms as T
 from torchvision.datasets import VisionDataset
@@ -45,10 +47,18 @@ if __name__ == "__main__":
 
     dataset = EuroSAT(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(512, 512)),
+        dataset.load_data(split='test', transformation_option='test', output_shape=(32, 32)),
         batch_size=64,
         shuffle=True
     )
     print(loader.dataset.classes)
+    imgs = []
+    for img, _ in loader:
+        imgs.append(img)
+    imgs = np.concatenate(imgs)
+    print('Max', np.max(imgs))
+    print('Min', np.min(imgs))
+    print('Mean', np.mean(imgs))
+    print('STD', np.std(imgs))
     show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
     show_grid_from_dataloader(loader)
