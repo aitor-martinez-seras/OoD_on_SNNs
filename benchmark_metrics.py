@@ -151,9 +151,9 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
         if args.cd_graph:
             print(Path(f'{save_figure_path.as_posix()}'))
             if save_figure_path.is_dir():  # Used in 'one-file' case
-                fig_path = save_figure_path / f'{args.ref_ood_method}_'
+                fig_path = save_figure_path / f'{model}_'
             else:  # Used in 'all-subdirectories' case
-                fig_path = save_figure_path
+                fig_path = Path(f'{save_figure_path.as_posix()}_{model}_')
             cd_graph(scores_dict, fig_path=fig_path)
 
         if args.bayesian_signrank or args.bayesian_signed:
@@ -164,9 +164,9 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
                 pairwise_scores[method] = scores_dict[method]
 
                 if save_figure_path.is_dir():  # Used in 'one-file' case
-                    figure_path = save_figure_path / f'{args.ref_ood_method}vs{method}'
+                    figure_path = save_figure_path / f'{model}_{args.ref_ood_method}vs{method}'
                 else:  # Used in 'all-subdirectories' case
-                    figure_path = Path(f'{save_figure_path.as_posix()}_{args.ref_ood_method}vs{method}')
+                    figure_path = Path(f'{save_figure_path.as_posix()}_{model}_{args.ref_ood_method}vs{method}')
 
                 if args.bayesian_signrank:
                     bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path, rope=args.rope)
@@ -220,5 +220,4 @@ def main(args: argparse.Namespace):
 
 
 if __name__ == "__main__":
-    # args =
     main(get_args_parser().parse_args())
