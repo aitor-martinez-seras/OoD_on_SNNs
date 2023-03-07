@@ -2,18 +2,27 @@ import numpy as np
 
 
 def tp_fn_fp_tn_computation(in_or_out_distribution_per_tpr):
-    '''
+    """
     Function that creates an array with the number of values of tp and fp or fn and tn, depending on if the
-    passed array is InD or OD.
-    :in_or_out_distribution_per_tpr: array with True if predicted InD and False if predicted OD, for each TPR
-    ::return: array with shape (tpr, 2) with the 2 dimensions being tp,fn if passed array is InD, and fp and tn if the passed array is OD
-    '''
+    passed array is InD or OD. The following table reflects what is represented in each case by a 1 or 0.
+                       Predicted
+                     _____________
+                    |  1   |   0  |  1 = InD, 0 = OoD
+            ------- |-------------|
+              InD   |  TP  |  FN  |
+    Real    ------- |-------------|
+              OoD   |  FP  |  TN  |
+            ------- |-------------|
+    :arg in_or_out_distribution_per_tpr: array with True if predicted InD and False if predicted OoD, for each TPR
+    :return array with shape (tpr, 2) with the 2 dimensions being tp,fn if passed array is InD,
+              and fp and tn if the passed array is OD
+    """
     tp_fn_fp_tn = np.zeros((len(in_or_out_distribution_per_tpr), 2), dtype='uint16')
     length_array = in_or_out_distribution_per_tpr.shape[1]
     for index, element in enumerate(in_or_out_distribution_per_tpr):
         n_true = int(len(element.nonzero()[0]))
-        tp_fn_fp_tn[index, 0] = n_true
-        tp_fn_fp_tn[index, 1] = length_array - n_true
+        tp_fn_fp_tn[index, 0] = n_true  # 1 represents predicted InD
+        tp_fn_fp_tn[index, 1] = length_array - n_true  # 0 represents predicted OoD
     return tp_fn_fp_tn
 
 

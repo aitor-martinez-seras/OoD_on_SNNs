@@ -82,6 +82,7 @@ class EnsembleOdinSCP(_OODMethod):
         )
 
         # ----- Ensemble -----
+        # Only OoD if both say its OoD (sum is 0)
         sum_test = scp_in_or_ood_per_tpr_test + odin_in_or_ood_per_tpr_test
         sum_ood = scp_in_or_ood_per_tpr_ood + odin_in_or_ood_per_tpr_ood
         in_or_ood_per_tpr_test = np.where(sum_test >= 1, 1, 0)
@@ -166,6 +167,7 @@ class EnsembleEnergySCP(_OODMethod):
         )
 
         # ----- Ensemble -----
+        # Only OoD if both say its OoD (sum is 0)
         sum_test = scp_in_or_ood_per_tpr_test + energy_in_or_ood_per_tpr_test
         sum_ood = scp_in_or_ood_per_tpr_ood + energy_in_or_ood_per_tpr_ood
         in_or_ood_per_tpr_test = np.where(sum_test >= 1, 1, 0)
@@ -268,6 +270,7 @@ class EnsembleOdinEnergy(_OODMethod):
         )
 
         # ----- Ensemble -----
+        # Only OoD if both say its OoD (sum is 0)
         sum_test = energy_in_or_ood_per_tpr_test + odin_in_or_ood_per_tpr_test
         sum_ood = energy_in_or_ood_per_tpr_ood + odin_in_or_ood_per_tpr_ood
         in_or_ood_per_tpr_test = np.where(sum_test >= 1, 1, 0)
