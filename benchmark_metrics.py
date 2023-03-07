@@ -35,7 +35,8 @@ def get_args_parser() -> argparse.ArgumentParser:
                         choices=['AUROC', 'AUPR', 'FPR95'])
     parser.add_argument("--ref-ood-method", type=str, default='SCP', dest='ref_ood_method',
                         help="The method to make the pairwise bayesian tests",
-                        choices=['Baseline', 'ODIN', 'Free energy', 'Ensemble-Odin-SCP', 'Ensemble-Odin-Energy'])
+                        choices=['Baseline', 'ODIN', 'Free energy', 'Ensemble-Odin-SCP', 'Ensemble-Odin-Energy',
+                                 'Ensemble-Energy-SCP'])
     parser.add_argument("--ood-methods", type=str, nargs='+', dest="ood_methods",
                         default=['Baseline', 'ODIN', 'Free energy',
                                  'Ensemble-Odin-SCP', 'Ensemble-Odin-Energy', 'Ensemble-Energy-SCP'],
@@ -131,29 +132,25 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
     # print(f'{indent}Out-Dist: {df_full_results["Out-Distribution"]}')
 
     models_available = df['Model'].unique()
-    for model in models:
 
-        if model not in models_available:
-            continue
+    if 'all' in models:
 
-        df_ref_method = df.loc[df['OoD Method'] == ref_method_df_name]
-        scores_reference_method = df_ref_method.loc[df_ref_method['Model'] == model][[args.metric]].to_numpy() / 100
+        scores_reference_method = df.loc[df['OoD Method'] == ref_method_df_name][[args.metric]].to_numpy() / 100
 
         # Create a dictionary where each key is a method's performance scores
         scores_dict[args.ref_ood_method] = scores_reference_method.squeeze()
 
         # Fill the dict with each ood method's score
         for method in args.ood_methods:
-            df_other_method = df.loc[df['OoD Method'] == method]
-            score_other_method = df_other_method.loc[df_other_method['Model'] == model][[args.metric]].to_numpy() / 100
+            score_other_method = df.loc[df['OoD Method'] == method][[args.metric]].to_numpy() / 100
             scores_dict[method] = score_other_method.squeeze()
 
         if args.cd_graph:
             print(Path(f'{save_figure_path.as_posix()}'))
             if save_figure_path.is_dir():  # Used in 'one-file' case
-                fig_path = save_figure_path / f'{model}_'
+                fig_path = save_figure_path / f'full_'
             else:  # Used in 'all-subdirectories' case
-                fig_path = Path(f'{save_figure_path.as_posix()}_{model}_')
+                fig_path = save_figure_path
             cd_graph(scores_dict, fig_path=fig_path)
 
         if args.bayesian_signrank or args.bayesian_signed:
@@ -164,14 +161,58 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
                 pairwise_scores[method] = scores_dict[method]
 
                 if save_figure_path.is_dir():  # Used in 'one-file' case
-                    figure_path = save_figure_path / f'{model}_{args.ref_ood_method}vs{method}'
+                    figure_path = save_figure_path / f'{args.ref_ood_method}vs{method}'
                 else:  # Used in 'all-subdirectories' case
-                    figure_path = Path(f'{save_figure_path.as_posix()}_{model}_{args.ref_ood_method}vs{method}')
+                    figure_path = Path(f'{save_figure_path.as_posix()}_{args.ref_ood_method}vs{method}')
 
                 if args.bayesian_signrank:
                     bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path, rope=args.rope)
                 if args.bayesian_signed:
                     bayesian_test(pairwise_scores, option='signtest', fig_path=figure_path, rope=args.rope)
+
+    else:
+
+        for model in models:
+
+            if model not in models_available:
+                continue
+
+            df_ref_method = df.loc[df['OoD Method'] == ref_method_df_name]
+            scores_reference_method = df_ref_method.loc[df_ref_method['Model'] == model][[args.metric]].to_numpy() / 100
+
+            # Create a dictionary where each key is a method's performance scores
+            scores_dict[args.ref_ood_method] = scores_reference_method.squeeze()
+
+            # Fill the dict with each ood method's score
+            for method in args.ood_methods:
+                df_other_method = df.loc[df['OoD Method'] == method]
+                score_other_method = df_other_method.loc[df_other_method['Model'] == model][[args.metric]].to_numpy() / 100
+                scores_dict[method] = score_other_method.squeeze()
+
+            if args.cd_graph:
+                print(Path(f'{save_figure_path.as_posix()}'))
+                if save_figure_path.is_dir():  # Used in 'one-file' case
+                    fig_path = save_figure_path / f'{model}_'
+                else:  # Used in 'all-subdirectories' case
+                    fig_path = Path(f'{save_figure_path.as_posix()}_{model}_')
+                cd_graph(scores_dict, fig_path=fig_path)
+
+            if args.bayesian_signrank or args.bayesian_signed:
+
+                for method in args.ood_methods:
+                    pairwise_scores = OrderedDict()
+                    pairwise_scores[args.ref_ood_method] = scores_dict[args.ref_ood_method]
+                    pairwise_scores[method] = scores_dict[method]
+
+                    if save_figure_path.is_dir():  # Used in 'one-file' case
+                        figure_path = save_figure_path / f'{model}_{args.ref_ood_method}vs{method}'
+                    else:  # Used in 'all-subdirectories' case
+                        figure_path = Path(f'{save_figure_path.as_posix()}_{model}_{args.ref_ood_method}vs{method}')
+
+                    if args.bayesian_signrank:
+                        bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path, rope=args.rope)
+                    if args.bayesian_signed:
+                        bayesian_test(pairwise_scores, option='signtest', fig_path=figure_path, rope=args.rope)
 
 
 def open_folders_and_plot_excels(parent_folder: Path, config: dict, models: List, args: argparse.Namespace, indent=''):
@@ -194,14 +235,20 @@ def open_folders_and_plot_excels(parent_folder: Path, config: dict, models: List
 def main(args: argparse.Namespace):
     print(f'Loading configuration from {args.conf}.toml')
     config = load_config(args.conf)
-
+    print('-'*75)
+    print(f'The following method is the reference method: {args.ref_ood_method}')
+    print(f'The following methods are tested: {args.ood_methods}')
+    print('-' * 75)
     print(f'The following In-Distribution datasets will be tested: {config["in_distribution_datasets"]}')
     print(f'The following Out-of-Distribution datasets will be tested: {config["out_of_distribution_datasets"]}')
+    print('-' * 75)
 
     if not args.models:
         models = ['Fully_connected', 'ConvNet']
     else:
         models = args.models
+        if 'all' in models:
+            print('All the models are going to be measured together')
 
     if args.mode == "one-file":
         file_path = Path(args.file)
