@@ -21,7 +21,7 @@ For the bayesian test and the CD graph, the following resources are used:
 
 ## Datasets
 
-The majority of datasets is downloaded automatically, with the exception of:
+The majority of datasets is downloaded automatically, except for:
 
 - [LSUN_Crop](https://www.dropbox.com/s/fhtsw1m3qxlwj6h/LSUN.tar.gz)
 - [LSUN_Resize](https://www.dropbox.com/s/fhtsw1m3qxlwj6h/LSUN.tar.gz)
@@ -30,13 +30,13 @@ The majority of datasets is downloaded automatically, with the exception of:
 
 For reproducing results in GPU and with one FC hidden layer models, run:
 ````shell
-python main.py --conf config --pretrained --n-hidden-layers 1
+python main.py --conf config --pretrained --arch-selector 1
 ````
 
 For training:
 
 ````shell
-CUDA_VISIBLE_DEVICES=1,2,3 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --n-hidden-layers 3 --f-max 200 -b 256 --lr 0.1 --opt SGD --epochs 100 --lr-decay-milestones 50 75 --lr-decay-rate 0.5
+CUDA_VISIBLE_DEVICES=1,2,3 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --arch-selector 11 --f-max 200 -b 256 --lr 0.1 --opt SGD --epochs 100 --lr-decay-milestones 50 75 --lr-decay-rate 0.5
 ````
 The name of the dataset must be the same as in the configuration file
 
@@ -48,7 +48,7 @@ Results are given in the folder named as such.
 For extracting metric plots:
 
 ````shell
-python .\benchmark_metrics.py -c bw-benchmark -r 0.01 -m all-subdirectories -d "path/to/dir" -cd -bs -bsr --metric AUROC --models ConvNet
+python .\benchmark_metrics.py -c bw-benchmark -r 0.01 -m all-subdirectories -d "path/to/dir" -cd -bs --metric AUROC --models ConvNet
 ````
 
 ## Contributing
