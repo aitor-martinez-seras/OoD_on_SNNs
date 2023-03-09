@@ -23,7 +23,7 @@ out_of_distribution_datasets = [
 # as the variable to define the batch size
 batch_size = 512
 
-[model_arch]
-    [model_arch.ConvNet]
+[model_type]
+    [model_type.ConvNet]
         'CIFAR10' = [100, 10]
         'SVHN' = [100, 10]

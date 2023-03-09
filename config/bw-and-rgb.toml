@@ -15,14 +15,14 @@ out_of_distribution_datasets = [
 # as the variable to define the batch size
 batch_size = 512
 
-[model_arch]
-    [model_arch.Fully_connected]
+[model_type]
+    [model_type.Fully_connected]
         'MNIST' = [200, 10]
         'Fashion_MNIST' = [200, 10]
         'KMNIST' = [200, 10]
         'Letters' = [200, 26]
 
-    [model_arch.ConvNet]
+    [model_type.ConvNet]
         'MNIST' = [300, 10]
         'Fashion_MNIST' = [300, 10]
         'KMNIST' = [300, 10]
