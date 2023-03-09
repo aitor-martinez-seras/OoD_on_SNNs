@@ -1,4 +1,4 @@
 *
-!paper_figures/
 */
 !.gitignore
+!/paper_figures/
