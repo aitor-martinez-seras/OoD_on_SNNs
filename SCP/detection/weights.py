@@ -8,7 +8,7 @@ import os
 
 def download_pretrained_weights(pretrained_weights_path: Path):
     print('Downloading pretrained weights...')
-    url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/Ea2uSuEbePRIklCHnUxhAB0BLUVrQ4IxcnLyu4BnU_i8ag?download=1"
+    url = "https://tecnalia365-my.sharepoint.com/:u:/g/personal/aitor_martinez_tecnalia_com/Eas7K6U9YJVHvFwcyOJTzwYBQVJYZ9Ibq0Rqq0cG132xKg?download=1"
     r = requests.get(url)
     zipfile = ZipFile(BytesIO(r.content))
     zipfile.extractall(path=pretrained_weights_path)
