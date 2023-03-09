@@ -30,8 +30,8 @@ def get_args_parser() -> argparse.ArgumentParser:
                         help="max frecuency of the input neurons per second")
     parser.add_argument("--n-time-steps", default=50, type=int, dest='n_time_steps',
                         help="number of timesteps for the simulation")
-    parser.add_argument("--n-hidden-layers", default=1, type=int,
-                        dest="n_hidden_layers", help="number of hidden layers of the models")
+    parser.add_argument("--arch-selector", default=1, type=int,
+                        dest="arch_selector", help="selects the architecture from the available ones")
     parser.add_argument("--samples-for-cluster-per-class", default=1000, type=int,
                         dest="samples_for_cluster_per_class", help="number of samples for validation per class")
     parser.add_argument("--samples-for-thr-per-class", default=1000, type=int,
@@ -137,7 +137,7 @@ def main(args: argparse.Namespace):
     ood_datasets_to_test = config["out_of_distribution_datasets"]
 
     # Model architectures
-    model_archs = config["model_arch"]
+    model_archs = config["model_type"]
     archs_to_test = [k for k in model_archs.keys()]
 
     # Check if pretrained weights are downloaded when required
@@ -149,7 +149,7 @@ def main(args: argparse.Namespace):
                 output_neurons = model_archs[model_name][in_dataset][1]
                 weights_path = pretrained_weights_folder_path / f'state_dict_{in_dataset}_{model_name}' \
                                                                 f'_{hidden_neurons}_{output_neurons}_' \
-                                                                f'{args.n_hidden_layers}_layers.pth'
+                                                                f'{args.arch_selector}_layers.pth'
                 if not weights_path.exists():
                     print(f'As {weights_path} does not exist, pretrained weights will be downloaded')
                     download_pretrained_weights(pretrained_weights_path=pretrained_weights_folder_path)
@@ -207,11 +207,11 @@ def main(args: argparse.Namespace):
             # TODO: Voy a tener que cambiar la forma de cargarlo ya que si finalmente metemos mas datasets
             #   entonces el caso para reproducir resultados va a ser diferente para color y para no color
             model = load_model(
-                model_arch=model_name,
+                model_type=model_name,
                 input_size=input_size,
                 hidden_neurons=hidden_neurons,
                 output_neurons=output_neurons,
-                n_hidden_layers=args.n_hidden_layers,
+                arch_selector=args.arch_selector,
                 f_max=args.f_max,  # Default value is for reproducing results of BW
                 encoder='poisson',
                 n_time_steps=args.n_time_steps,  # Default value is for reproducing results of BW
@@ -225,7 +225,7 @@ def main(args: argparse.Namespace):
             # Load weights
             weights_path = Path(
                 f'state_dict_{in_dataset}_{model_name}_{hidden_neurons}'
-                f'_{output_neurons}_{args.n_hidden_layers}_layers.pth'
+                f'_{output_neurons}_{args.arch_selector}_layers.pth'
             )
             if args.pretrained:
                 weights_path = pretrained_weights_folder_path / weights_path
@@ -265,7 +265,7 @@ def main(args: argparse.Namespace):
             # Create cluster models
             dist_clustering = (500, 5000)
             file_name = figures_path / f'{in_dataset}_{model_name}_{args.cluster_mode}_{hidden_neurons}' \
-                                       f'_{output_neurons}_{args.n_hidden_layers}_layers'
+                                       f'_{output_neurons}_{args.arch_selector}_layers'
             clusters_per_class, logging_info = create_clusters(
                 labels_for_clustering,
                 spk_count_train_clusters,
@@ -365,7 +365,7 @@ def main(args: argparse.Namespace):
                 logger.info(f'Logs for benchmark with the OoD dataset {ood_dataset}')
 
                 new_figures_path = figures_path / f'{in_dataset}_vs_{ood_dataset}_{model_name}_{args.cluster_mode}' \
-                                                  f'_{hidden_neurons}_{output_neurons}_{args.n_hidden_layers}_layers'
+                                                  f'_{hidden_neurons}_{output_neurons}_{args.arch_selector}_layers'
 
                 # In case the number of samples has been decreased, use the backup to reload all the predictions
                 # logits and spike counts for the next dataset, as it may not need the test set to be reduced

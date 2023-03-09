@@ -1,4 +1,3 @@
-from typing import Dict
 from collections import OrderedDict
 import math
 
@@ -7,11 +6,8 @@ from norse.torch import PoissonEncoder
 from norse.torch import ConstantCurrentLIFEncoder
 from norse.torch import LIFParameters
 
-from SCP.models.fc import FCSNN1, FCSNN2, FCSNN3, FCSNN4, FCSNN5, FCSNN6, FCSNN7, FC8, FCSNN9, FCSNN11
-from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN3, ConvSNN5, ConvSNN4, ConvSNN6, LIFConvNet, ConvSNN9, \
-    ConvSNN10, ConvSNN11_no_dropout, ConvSNN8, ConvSNN12, ConvSNN13, ConvSNN14, ConvSNN16, ConvSNN15, ConvSNN17, \
-    ConvSNN18, ConvSNN19_max_pooling, ConvSNN20, ConvSNN21, ConvSNN22, ConvSNN23, ConvSNN24, ConvSNN25, ConvSNN26, \
-    ConvSNN27, ConvSNN28
+from SCP.models.fc import FCSNN1, FCSNN2
+from SCP.models.conv import ConvSNN1, ConvSNN2, ConvSNN11
 
 
 def save_checkpoint(fpath, model, optimizer, args, epoch, lr_scheduler):
@@ -125,16 +121,18 @@ def decode(x):
     return log_p_y
 
 
-def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_neurons=10, n_hidden_layers=1,
+def load_model(model_type: str, input_size: list, hidden_neurons=None, output_neurons=10, arch_selector=1,
                encoder='poisson', n_time_steps=24, f_max=100):
-    if encoder == 'poisson':
+
+    # Select the encoder
+    if encoder.lower() == 'poisson':
         encoder = PoissonEncoder(seq_length=n_time_steps, f_max=f_max)
-    elif encoder == 'constant':
+    elif encoder.lower() == 'constant':
         encoder = ConstantCurrentLIFEncoder(seq_length=n_time_steps, p=LIFParameters(v_th=torch.tensor(0.25)))
     else:
         raise NotImplementedError(f'Encoder {encoder} not implemented')
 
-    if model_arch == 'Fully_connected':
+    if model_type == 'Fully_connected':
 
         # To obtain input size flattened from the different dimensions of the image
         input_size = math.prod(input_size)
@@ -142,7 +140,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
         if hidden_neurons is None:
             hidden_neurons = 200
 
-        if n_hidden_layers == 1:
+        if arch_selector == 1:
 
             model = Model(
                 encoder=encoder,
@@ -152,7 +150,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
-        elif n_hidden_layers == 2:
+        elif arch_selector == 2:
             model = Model(
                 encoder=encoder,
                 snn=FCSNN2(input_features=input_size,
@@ -164,12 +162,12 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
         else:
             raise NameError('Wrong number of layers')
 
-    elif model_arch == 'ConvNet':
+    elif model_type == 'ConvNet':
 
         if hidden_neurons is None:
             hidden_neurons = 300
 
-        if n_hidden_layers == 1:
+        if arch_selector == 1:
             model = Model(
                 encoder=encoder,
                 snn=ConvSNN1(
@@ -181,7 +179,7 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
-        elif n_hidden_layers == 2:
+        elif arch_selector == 2:
             model = Model(
                 encoder=encoder,
                 snn=ConvSNN2(
@@ -193,81 +191,21 @@ def load_model(model_arch: str, input_size: list, hidden_neurons=None, output_ne
                 decoder=decode
             )
 
-        elif n_hidden_layers == 11:
+        elif arch_selector == 11:
             model = Model(
                 encoder=encoder,
-                snn=ConvSNN11_no_dropout(
+                snn=ConvSNN11(
                     input_size=input_size,
                     hidden_neurons=hidden_neurons,
                     output_neurons=output_neurons,
                     alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 12:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN12(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 13:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN13(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 14:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN14(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 24:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN24(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100,
-                ),
-                decoder=decode
-            )
-
-        elif n_hidden_layers == 28:
-            model = Model(
-                encoder=encoder,
-                snn=ConvSNN28(
-                    input_size=input_size,
-                    hidden_neurons=hidden_neurons,
-                    output_neurons=output_neurons,
-                    alpha=100,
                 ),
                 decoder=decode
             )
 
         else:
-            raise NameError('Wrong number of layers')
+            raise NameError('Wrong architecture selected')
     else:
-        raise ValueError('Wrong model architecture introduced')
+        raise ValueError('Wrong model type introduced')
 
     return model

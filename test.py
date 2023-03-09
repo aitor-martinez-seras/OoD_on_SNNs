@@ -22,8 +22,8 @@ def get_args_parser():
                         help="number of timesteps for the simulation")
     parser.add_argument("--f-max", default=100, type=int, dest='f_max',
                         help="max frecuency of the input neurons per second")
-    parser.add_argument("--n-hidden-layers", default=1, type=int,
-                        dest="n_hidden_layers", help="number of hidden layers of the models")
+    parser.add_argument("--arch-selector", default=1, type=int,
+                        dest="arch_selector", help="selects the architecture from the available ones")
     parser.add_argument("--penultimate-layer-neurons", default=200, type=int, dest="penultimate_layer_neurons",
                         help="number of neurons in the second to last layer of the model")
     parser.add_argument("--load-weights", type=str, default=False, dest='load_weights',
@@ -113,11 +113,11 @@ def main(args):
 
     # Load model
     model = load_model(
-        model_arch=args.model,
+        model_type=args.model,
         input_size=dat_conf['input_size'],
         hidden_neurons=args.penultimate_layer_neurons,
         output_neurons=dat_conf['classes'],
-        n_hidden_layers=args.n_hidden_layers,
+        arch_selector=args.arch_selector,
         encoder=args.encoder,
         n_time_steps=args.n_time_steps,
         f_max=args.f_max
