@@ -45,6 +45,7 @@ def get_args_parser() -> argparse.ArgumentParser:
                              "Ensemble-Odin-SCP, Ensemble-Odin-Energy, Ensemble-Energy-SCP")
     parser.add_argument("--models", default=[], type=str, nargs='+', dest="models",
                         help="Test the specified models. If empty, test all. Options: 'Fully_connected' and 'ConvNet'")
+    parser.add_argument("-bbox", "--use-bbox", action='store_true', default=False, dest="use_bbox")
     return parser
 
 
@@ -166,9 +167,11 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
                     figure_path = Path(f'{save_figure_path.as_posix()}_{args.ref_ood_method}vs{method}')
 
                 if args.bayesian_signrank:
-                    bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path, rope=args.rope)
+                    bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path,
+                                  rope=args.rope, use_bbox=args.use_bbox)
                 if args.bayesian_signed:
-                    bayesian_test(pairwise_scores, option='signtest', fig_path=figure_path, rope=args.rope)
+                    bayesian_test(pairwise_scores, option='signtest', fig_path=figure_path,
+                                  rope=args.rope, use_bbox=args.use_bbox)
 
     else:
 
@@ -210,9 +213,11 @@ def save_plots_one_file(file_path: Path, config: dict, models: List, args: argpa
                         figure_path = Path(f'{save_figure_path.as_posix()}_{model}_{args.ref_ood_method}vs{method}')
 
                     if args.bayesian_signrank:
-                        bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path, rope=args.rope)
+                        bayesian_test(pairwise_scores, option='signrank', fig_path=figure_path,
+                                      rope=args.rope, use_bbox=args.use_bbox)
                     if args.bayesian_signed:
-                        bayesian_test(pairwise_scores, option='signtest', fig_path=figure_path, rope=args.rope)
+                        bayesian_test(pairwise_scores, option='signtest', fig_path=figure_path,
+                                      rope=args.rope, use_bbox=args.use_bbox)
 
 
 def open_folders_and_plot_excels(parent_folder: Path, config: dict, models: List, args: argparse.Namespace, indent=''):
@@ -235,6 +240,7 @@ def open_folders_and_plot_excels(parent_folder: Path, config: dict, models: List
 def main(args: argparse.Namespace):
     print(f'Loading configuration from {args.conf}.toml')
     config = load_config(args.conf)
+    print(args)
     print('-'*75)
     print(f'The following method is the reference method: {args.ref_ood_method}')
     print(f'The following methods are tested: {args.ood_methods}')

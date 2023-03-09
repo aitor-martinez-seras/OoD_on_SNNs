@@ -30,7 +30,7 @@ def cd_graph(score_per_method: OrderedDict, fig_path: Path):
     plt.close()
 
 
-def bayesian_test(scores_dict: OrderedDict, option: str, fig_path: Path, rope=0.025):
+def bayesian_test(scores_dict: OrderedDict, option: str, fig_path: Path, rope: float, use_bbox: bool):
     # TeX must be installed to use this statement
     plt.rcParams.update({"text.usetex": True, "font.family": "Latin Modern Sans"})
     if option == 'signrank':
@@ -45,7 +45,12 @@ def bayesian_test(scores_dict: OrderedDict, option: str, fig_path: Path, rope=0.
     names = (method_left, method_right)
     # print(bayesian_test_obj.probs(scores_dict[method_left], scores_dict[method_right], rope=rope))
     bayesian_test_obj.plot(scores_dict[method_left], scores_dict[method_right], rope=rope, names=names, nsamples=5000)
-    plt.savefig(fr'{fig_path.as_posix()}_{option}.pdf', bbox_inches='tight')
+    if use_bbox:
+        from matplotlib.transforms import Bbox
+        bbox = Bbox([[1.25, 0.75], [5.5, 3.55]])
+        plt.savefig(fr'{fig_path.as_posix()}_{option}.pdf', bbox_inches=bbox)
+    else:
+        plt.savefig(fr'{fig_path.as_posix()}_{option}.pdf', bbox_inches='tight')
     plt.close()
 
 # ----------------------
