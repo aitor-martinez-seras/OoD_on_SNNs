@@ -38,7 +38,7 @@ def get_args_parser() -> argparse.ArgumentParser:
                         dest="samples_for_thr_per_class", help="number of samples for validation per class")
     parser.add_argument("--max-number-of-test-images", default=10000, type=int,
                         dest="max_number_of_test_images", help="max number of test samples for OOD detection")
-    parser.add_argument("--cluster-mode", default="predictions", type=str, dest='cluster_mode',
+    parser.add_argument("--cluster-mode", default="correct-predictions", type=str, dest='cluster_mode',
                         choices=["predictions", "labels", "correct-predictions"],
                         help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("--use-test-labels", action='store_true', dest='use_test_labels',
