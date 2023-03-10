@@ -1,6 +1,7 @@
 # Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks
 
-Repository containing the code and results for the paper *A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks*. The paper is currently being evaluated is Neural Networks, but a preprint is available at https://arxiv.org/abs/2210.00894.
+Repository containing the code and results for the paper *A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks*. The paper is currently being evaluated is Neural Networks, but a preprint is available at https://arxiv.org/abs/2210.00894. 
+Obtained results are available in the results folder.
 
 <img src="./figures/paper_figures/SCP.png"  width="100%" />
 
@@ -10,13 +11,13 @@ Repository containing the code and results for the paper *A Novel Explainable Ou
 
 1. PyTorch 1.12.1 (vision 0.13.1) [https://github.com/pytorch/pytorch]
 2. Norse 0.0.7 [https://github.com/norse/norse]
-3. Other libraries typically included in mainstream Python distributions (NumPy, Pickle, Matplotlib, Pandas, scikit-learn, SciPy etc)
+3. Other libraries typically included in mainstream Python distributions (NumPy, Pickle, Matplotlib, Pandas, scikit-learn, SciPy etc). There is a requirements.txt with the concrete libraries and versions.
 
 To correctly install Norse locally, first install desired PyTorch version and then install Norse following the instructions at [the norse instalation guide and troubleshooting](https://norse.github.io/norse/pages/installing.html#installation-troubleshooting)
 
 For the bayesian test and the CD graph, the following resources are used:
-1. Orange3 [https://github.com/biolab/orange3]
-2. Bayesian test repository's bayesiantest.py [https://github.com/BayesianTestsML/tutorial/blob/master/Python/bayesiantests.py]
+1. Orange3, version 3.30.0 [https://github.com/biolab/orange3]
+2. [BayesianTestsML](https://github.com/BayesianTestsML/tutorial/blob/master/Python/bayesiantests.py) repository's bayesiantest.py
 
 
 ## Datasets
@@ -36,20 +37,17 @@ python main.py --conf config --pretrained --arch-selector 1
 For training:
 
 ````shell
-CUDA_VISIBLE_DEVICES=1,2,3 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --arch-selector 11 --f-max 200 -b 256 --lr 0.1 --opt SGD --epochs 100 --lr-decay-milestones 50 75 --lr-decay-rate 0.5
+CUDA_VISIBLE_DEVICES=0 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --arch-selector 10 --f-max 200 -b 128 --lr 0.002 --epochs 75 --weight-decay 0.00001 --opt adamw --n-time-steps 64 --save-every 10  --lr-decay-milestones 10 20 25 30 --lr-decay-rate 0.8 --penultimate-layer-neurons 100
 ````
 The name of the dataset must be the same as in the configuration file
-
-
-All the code is available in the jupyter notebook called [Explainable_OoD_detection_on_SNNs](https://github.com/aitor-martinez-seras/OoD_on_SNNs/blob/main/Explainable_OoD_detection_on_SNNs.ipynb), where instructions about how the algorithm works and how to execute it are provided. 
-
-Results are given in the folder named as such.
 
 For extracting metric plots:
 
 ````shell
-python .\benchmark_metrics.py -c bw-benchmark -r 0.01 -m all-subdirectories -d "path/to/dir" -cd -bs --metric AUROC --models ConvNet
+python .\benchmark_metrics.py -c bw -r 0.01 -m all-subdirectories -d "path/to/dir" -cd -bs --metric AUROC --models ConvNet
 ````
+
+There is also available an older version of the code in the jupyter notebook called [Explainable_OoD_detection_on_SNNs](https://github.com/aitor-martinez-seras/OoD_on_SNNs/blob/main/Explainable_OoD_detection_on_SNNs.ipynb), where instructions about how the algorithm works and how to execute it are provided.
 
 ## Contributing
 
