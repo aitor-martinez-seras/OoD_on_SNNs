@@ -24,10 +24,23 @@ def cd_graph(score_per_method: OrderedDict, fig_path: Path):
     ranks = np.argsort(order, axis=1) + 1
     avgranks = np.mean(ranks, axis=0)
 
+    for i, name in enumerate(ood_method_names):
+        ood_method_names[i] = _change_ensemble_name(name)
+
     CD = compute_CD(avgranks, number_of_ood_datasets, test='nemenyi')
     graph_ranks(avgranks, ood_method_names, cd=CD, width=5, textspace=0.8)
     plt.savefig(fr'{fig_path.as_posix()}CD_Graph.pdf', bbox_inches='tight')  # bbox_inches=Bbox([[0.2, 0], [0.8, 1]]))
     plt.close()
+
+
+def _change_ensemble_name(name):
+    if name == 'Ensemble-Odin-SCP':
+        name = 'E-ODIN-SCP'
+    elif name == 'Ensemble-Odin-Energy':
+        name = 'E-ODIN-Energy'
+    elif name == 'Ensemble-Energy-SCP':
+        name = 'E-Energy-SCP'
+    return name
 
 
 def bayesian_test(scores_dict: OrderedDict, option: str, fig_path: Path, rope: float, use_bbox: bool):
@@ -42,7 +55,11 @@ def bayesian_test(scores_dict: OrderedDict, option: str, fig_path: Path, rope: f
 
     method_left, method_right = scores_dict.keys()
 
-    names = (method_left, method_right)
+    name_method_left = _change_ensemble_name(method_left)
+    name_method_right = _change_ensemble_name(method_right)
+
+    names = (name_method_left, name_method_right)
+
     # print(bayesian_test_obj.probs(scores_dict[method_left], scores_dict[method_right], rope=rope))
     bayesian_test_obj.plot(scores_dict[method_left], scores_dict[method_right], rope=rope, names=names, nsamples=5000)
     if use_bbox:
