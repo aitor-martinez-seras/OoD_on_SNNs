@@ -35,7 +35,7 @@ def get_args_parser() -> argparse.ArgumentParser:
                         choices=['AUROC', 'AUPR', 'FPR95'])
     parser.add_argument("--ref-ood-method", type=str, default='SCP', dest='ref_ood_method',
                         help="The method to make the pairwise bayesian tests",
-                        choices=['Baseline', 'ODIN', 'Free energy', 'Ensemble-Odin-SCP', 'Ensemble-Odin-Energy',
+                        choices=['SCP', 'Baseline', 'ODIN', 'Free energy', 'Ensemble-Odin-SCP', 'Ensemble-Odin-Energy',
                                  'Ensemble-Energy-SCP'])
     parser.add_argument("--ood-methods", type=str, nargs='+', dest="ood_methods",
                         default=['Baseline', 'ODIN', 'Free energy',

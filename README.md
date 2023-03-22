@@ -29,9 +29,14 @@ The majority of datasets is downloaded automatically, except for:
 
 ## Usage:
 
-For reproducing results in GPU and with one FC hidden layer models, run:
+For reproducing results of black and white datasets and with one FC hidden layer models, run:
 ````shell
-python main.py --conf config --pretrained --arch-selector 1
+python main.py --conf bw --pretrained --arch-selector 1  --f-max 100 --n-time-steps 50
+````
+
+For the case of color datasets
+````shell
+python main.py --conf rgb --pretrained --arch-selector 11  --f-max 200 --n-time-steps 64
 ````
 
 For training:

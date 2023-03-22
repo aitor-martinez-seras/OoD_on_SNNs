@@ -25,4 +25,3 @@ batch_size = 512
         'Fashion_MNIST' = [300, 10]
         'KMNIST' = [300, 10]
         'Letters' = [300, 26]
-
