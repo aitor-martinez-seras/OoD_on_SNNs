@@ -1,5 +1,6 @@
 # User defined
 screenlog.0
+.vscode/
 
 ### https://github.com/microsoft/vscode-python/blob/main/.gitignore
 .DS_Store
