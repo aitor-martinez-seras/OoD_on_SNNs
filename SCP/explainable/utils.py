@@ -1,5 +1,6 @@
 import numpy as np
-import matplotlib as plt
+
+from SCP.utils.metrics import thresholds_per_class_for_each_TPR, compute_precision_tpr_fpr_for_test_and_ood
 
 
 def order_array_of_samples_to_per_class_list(array, preds, n_samples=0):
@@ -10,33 +11,33 @@ def order_array_of_samples_to_per_class_list(array, preds, n_samples=0):
     return list_per_class
 
 
-def compute_reconstruction(spk_counts, weights):
-    if isinstance(weights, list):
-        for l, w_l in enumerate(weights):
-            if l == 0:
-                reconst = np.matmul(spk_counts, w_l)
-            else:
-                reconst = np.matmul(reconst, w_l)
-    else:
-        reconst = np.matmul(spk_counts, weights)
-    return reconst
+# def compute_reconstruction(spk_counts, weights):
+#     if isinstance(weights, list):
+#         for l_idx, w_l in enumerate(weights):
+#             if l_idx == 0:
+#                 reconst = np.matmul(spk_counts, w_l)
+#             else:
+#                 reconst = np.matmul(reconst, w_l)
+#     else:
+#         reconst = np.matmul(spk_counts, weights)
+#     return reconst
 
 
-def compute_reconstruction_per_class(spk_frec_per_class, weights):
+def compute_reconstruction_per_class(spk_count_per_class, weights):
     reconst_per_class = []
-    for spikes_one_class in spk_frec_per_class:
-        reconst = compute_reconstruction_n_layers(spikes_one_class, weights)
+    for spikes_one_class in spk_count_per_class:
+        reconst = compute_reconstruction(spikes_one_class, weights)
         reconst_per_class.append(reconst)
     return reconst_per_class
 
 
-def compute_reconstruction_n_layers(spk_counts, weights):
+def compute_reconstruction(spk_counts, weights):
     if isinstance(weights, list):
-        for l, w_l in enumerate(weights):
-            if l == 0:
-                reconst = np.matmul(spk_counts, w_l)
+        for l_idx, layer_weights in enumerate(weights):
+            if l_idx == 0:
+                reconst = np.matmul(spk_counts, layer_weights)
             else:
-                reconst = np.matmul(reconst, w_l)
+                reconst = np.matmul(reconst, layer_weights)
     else:
         reconst = np.matmul(spk_counts, weights)
 
@@ -63,9 +64,9 @@ def rearrange_to_ftmaps_per_class(spk_count_per_class, ftmaps_shape=(50, 8, 8)):
     return ftmaps_per_class
 
 
-def auroc_aupr(d_train_per_class, d_test_per_class, d_ood_per_class):
+def auroc_aupr(n_classes, d_train_per_class, d_test_per_class, d_ood_per_class):
     # Creation of the array with the thresholds for each TPR (class, dist_per_TPR)
-    d_thresholds_train = thresholds_per_class_for_each_TPR(d_train_per_class)
+    d_thresholds_train = thresholds_per_class_for_each_TPR(n_classes, d_train_per_class)
     # Conmputing precision, tpr and fpr
     precision, tpr_values, fpr_values = compute_precision_tpr_fpr_for_test_and_ood(
         d_test_per_class, d_ood_per_class, d_thresholds_train
@@ -87,8 +88,8 @@ def auroc_aupr(d_train_per_class, d_test_per_class, d_ood_per_class):
     print(f'AUPR  = {aupr * 100:.3f} %')
     print('-' * 30)
     print(f'FPR at 95% TPR: {round(fpr_val_auroc[95] * 100, 2)}%')
-    print(
-        f'Threshold mean and std for all classes at 95% TPR: {d_thresholds_train[:, 95].mean():.2f}, {d_thresholds_train[:, 95].std():.2f}')
+    print(f'Threshold mean and std for all classes at 95% TPR: {d_thresholds_train[:, 95].mean():.2f},'
+          f' {d_thresholds_train[:, 95].std():.2f}')
     print('-' * 30, '\n')
 
     return d_thresholds_train
@@ -115,8 +116,9 @@ def create_spk_count(model, device, ood_dict, od_dataset, mnist_c_opt='zigzag', 
                                                                                                       axis=0,
                                                                                                       dtype='uint16')
         else:
-            accuracy_ood, preds_ood, logits_ood, _spk_count_ood = test(model, device, test_loader_ood,
-                                                                       return_logits=True, return_conv_spikes=False)
+            accuracy_ood, preds_ood, logits_ood, _spk_count_ood = test(
+                model, device, test_loader_ood, return_logits=True, return_conv_spikes=False
+            )
     else:
         accuracy_ood, preds_ood, logits_ood, _spk_count_ood = test(model, device, test_loader_ood, return_logits=True,
                                                                    return_conv_spikes=False)
