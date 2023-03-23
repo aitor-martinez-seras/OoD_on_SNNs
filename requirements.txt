@@ -9,7 +9,7 @@ idna==3.4
 norse==0.0.7.post1
 tomli==2.0.1
 matplotlib==3.6.3
-scipy==1.10.0
+scipy==1.9.1
 tqdm==4.64.1
 scikit-learn==1.2.0
 pytz==2022.7
@@ -27,3 +27,4 @@ packaging==23.0
 kiwisolver==1.4.4
 openpyxl==3.0.10
 orange3==3.30.0
+scikit-image==0.20.0

@@ -310,6 +310,7 @@ def main(args: argparse.Namespace):
             test_accuracy, preds_test, logits_test, _spk_count_test, test_labels = validate_one_epoch(
                 model, device, test_loader, return_logits=True, return_targets=True
             )
+
             # Option to use the test labels for the metrics (only affects SPC)
             if args.use_test_labels:
                 preds_test = test_labels
@@ -327,6 +328,7 @@ def main(args: argparse.Namespace):
                 logger.info(f'Only using correctly classified test samples... '
                             f'New number of samples for metrics: {new_number_of_samples_for_metrics}')
 
+            # Reduce the number of InD test images to the max number specified in the args
             len_test_images = len(preds_test)
             if args.max_number_of_test_images < len_test_images:
                 preds_test = preds_test[:args.max_number_of_test_images]
