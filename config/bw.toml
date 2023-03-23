@@ -1,0 +1,27 @@
+in_distribution_datasets = ['MNIST', 'Fashion_MNIST', 'KMNIST', 'Letters']
+out_of_distribution_datasets = [
+    'MNIST', 'Fashion_MNIST', 'KMNIST', 'Letters', 'noMNIST', 'omniglot', 'CIFAR10-BW',
+#    'MNIST-C/canny_edges', 'MNIST-C/dotted_line', 'MNIST-C/fog', 'MNIST-C/glass_blur', 'MNIST-C/identity',
+#    'MNIST-C/impulse_noise', 'MNIST-C/motion_blur', 'MNIST-C/rotate', 'MNIST-C/scale', 'MNIST-C/shear',
+#    'MNIST-C/shot_noise', 'MNIST-C/spatter', 'MNIST-C/stripe', 'MNIST-C/translate', 'MNIST-C/brightness',
+#    'MNIST_Square', 'MNIST-C/zigzag',
+]
+
+[hyperparameters]
+# In case you want to use a different batch size for a certain dataset, use the name of the dataset
+# as the variable to define the batch size
+# 50 TIMESTEPS used in the paper
+batch_size = 512
+
+[model_type]
+    [model_type.Fully_connected]
+        'MNIST' = [200, 10]
+        'Fashion_MNIST' = [200, 10]
+        'KMNIST' = [200, 10]
+        'Letters' = [200, 26]
+
+    [model_type.ConvNet]
+        'MNIST' = [300, 10]
+        'Fashion_MNIST' = [300, 10]
+        'KMNIST' = [300, 10]
+        'Letters' = [300, 26]

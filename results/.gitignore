@@ -1,0 +1,5 @@
+*
+*/
+!.gitignore
+!/paper_results/
+!/paper_results/*

@@ -1,0 +1,13 @@
+in_distribution_datasets = ['MNIST']
+
+out_of_distribution_datasets = ['MNIST_Square', 'MNIST-C']
+
+[hyperparameters]
+batch_size = 512
+
+[model_type]
+    [model_type.Fully_connected]
+        'MNIST' = [200, 10]
+
+    [model_type.ConvNet]
+        'MNIST' = [300, 10]

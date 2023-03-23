@@ -1,0 +1,36 @@
+# If classes are 0, means the dataset is only used as OOD
+[MNIST]
+input_size = [1, 28, 28]
+classes = 10
+
+[Fashion_MNIST]
+input_size = [1, 28, 28]
+classes = 10
+
+[KMNIST]
+input_size = [1, 28, 28]
+classes = 10
+
+[Letters]
+input_size = [1, 28, 28]
+classes = 26
+
+[CIFAR10]
+input_size = [3, 32, 32]
+classes = 10
+
+[CIFAR100]
+input_size = [3, 32, 32]
+classes = 100
+
+[GTSRB]
+input_size = [3, 32, 32]
+classes = 0
+
+[OODGenomics]
+input_size = [4]
+classes = 10
+
+[SVHN]
+input_size = [3, 32, 32]
+classes = 10

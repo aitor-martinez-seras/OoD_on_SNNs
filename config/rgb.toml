@@ -1,0 +1,29 @@
+in_distribution_datasets = [
+    'CIFAR10',
+    'SVHN',
+]
+out_of_distribution_datasets = [
+    'Food101',
+    'LSUN_crop',
+    'LSUN_resize',
+    'Flowers102',
+    'Caltech101',
+    'GTSRB',
+
+    'CIFAR10',
+    'SVHN',
+    'TinyImagenet',
+    'EuroSAT',
+    'DTD',
+
+]
+
+[hyperparameters]
+# In case you want to use a different batch size for a certain dataset, use the name of the dataset
+# as the variable to define the batch size
+batch_size = 512
+
+[model_type]
+    [model_type.ConvNet]
+        'CIFAR10' = [100, 10]
+        'SVHN' = [100, 10]
