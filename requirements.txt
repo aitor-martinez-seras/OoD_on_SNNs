@@ -28,3 +28,4 @@ kiwisolver==1.4.4
 openpyxl==3.0.10
 orange3==3.30.0
 scikit-image==0.20.0
+tonic==1.2.6

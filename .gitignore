@@ -1,6 +1,8 @@
 # User defined
 screenlog.0
 .vscode/
+norse-venv/
+neuro-venv/
 
 ### https://github.com/microsoft/vscode-python/blob/main/.gitignore
 .DS_Store

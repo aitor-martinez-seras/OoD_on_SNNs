@@ -39,12 +39,24 @@ For the case of color datasets
 python main.py --conf rgb --pretrained --arch-selector 11  --f-max 200 --n-time-steps 64
 ````
 
+For the case of neuromorphic datasets
+
+````shell
+python main.py --conf rgb --pretrained --arch-selector 11  --f-max 200 --n-time-steps 64 --neuromorphic
+````
+
 For training:
 
 ````shell
 CUDA_VISIBLE_DEVICES=0 python train.py --conf datasets --dataset CIFAR10 --model ConvNet --arch-selector 10 --f-max 200 -b 128 --lr 0.002 --epochs 75 --weight-decay 0.00001 --opt adamw --n-time-steps 64 --save-every 10  --lr-decay-milestones 10 20 25 30 --lr-decay-rate 0.8 --penultimate-layer-neurons 100
 ````
 The name of the dataset must be the same as in the configuration file
+
+For training neuromorphic
+
+````shell
+CUDA_VISIBLE_DEVICES=2 python train.py --conf datasets --dataset DVSGesture --model ConvNet --arch-selector 11 --f-max 200 -b 8 --lr 0.0005 --epochs 20 --weight-decay 0.00001 --opt adamw --n-time-steps 64 --save-every 1  --lr-decay-milestones 10 --lr-decay-rate 0.5 --penultimate-layer-neurons 100 --encoder neuromorphic
+````
 
 For extracting metric plots:
 

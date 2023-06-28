@@ -6,6 +6,8 @@ import torch
 import torchvision
 import torchvision.transforms as T
 from torchvision.datasets import VisionDataset
+import tonic
+import tonic.transforms as tonic_tfrs
 
 from SCP.datasets.utils import DatasetCustomLoader, download_dataset
 from SCP.utils.plots import show_img_from_dataloader, show_grid_from_dataloader
@@ -167,15 +169,34 @@ class MNIST_C_Loader(DatasetCustomLoader):
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
 
-    # dataset = MNIST_C_Loader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), option='zigzag')
-    dataset = MNIST_Square(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    dataset = MNIST_C_Loader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), option='zigzag')
+    # dataset = NMNIST(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(28, 28)),
-        batch_size=64,
-        shuffle=True
-    )
+                dataset=dataset.load_data(split='test', transformation_option='test', output_shape=(34,34)),
+                batch_size=6,
+                shuffle=False,
+                collate_fn=tonic.collation.PadTensors(batch_first=False)
+            )
+    # loader = DataLoader(
+    #     dataset.load_data(split='test', transformation_option='test', output_shape=(28,28)),
+    #     batch_size=6,
+    #     shuffle=True,
+    # )
+
     # print(loader.dataset.classes)
     # print(len(loader.dataset.images))
     # print(len(loader.dataset.targets))
-    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
-    show_grid_from_dataloader(loader)
+    import matplotlib.pyplot as plt
+    def plot_frames(frames):
+        fig, axes = plt.subplots(1, len(frames))
+        for axis, frame in zip(axes, frames):
+            axis.imshow(frame[1] - frame[0], )
+            axis.axis("off")
+            # plt.tight_layout()
+        plt.show()
+
+    data, targets = next(iter(loader))
+    frames = data[100:110, 0]
+    plot_frames(frames)
+    # show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
+    # show_grid_from_dataloader(loader)

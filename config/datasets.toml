@@ -34,3 +34,27 @@ classes = 10
 [SVHN]
 input_size = [3, 32, 32]
 classes = 10
+
+[NMNIST]
+input_size = [2, 34, 34]
+classes = 10
+
+[CIFAR10DVS]
+input_size = [2, 128, 128]
+classes = 10
+
+[DVSGesture]
+input_size = [2, 128, 128]
+classes = 11
+
+[POKERDVS]
+input_size = [2, 35, 35]
+classes = 4
+
+[DVSLip]
+input_size = [2, 128, 128]
+classes = 100
+
+[NCALTECH101]
+input_size = [2, 128, 128]
+classes = 100

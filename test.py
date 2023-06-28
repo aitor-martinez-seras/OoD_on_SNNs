@@ -14,7 +14,7 @@ def get_args_parser():
 
     parser.add_argument("--dataset", required=True, type=str, help="dataset to train on")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
-    parser.add_argument("-b", "--batch-size", dest='batch_size', default=16, type=int, help="batch size")
+    parser.add_argument("-b", "--batch-size", dest='batch_size', default=4, type=int, help="batch size")
     parser.add_argument("--model", default="", type=str, help="name of the model")
     parser.add_argument("--encoder", default="poisson", type=str,
                         help="encoder to use. Options 'poisson' and 'constant'")
@@ -47,6 +47,8 @@ def validate_one_epoch(model, device, test_loader, return_logits=False, return_t
 
     with torch.no_grad():
         for data, target in test_loader:
+            if not isinstance(data, torch.FloatTensor):
+                data = data.to(torch.float32)
             data, target = data.to(device), target.to(device)
 
             if return_logits is True:

@@ -3,7 +3,7 @@ from typing import List
 
 import numpy as np
 from tqdm import tqdm
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering, DBSCAN
 import sklearn.metrics as skmetrics
 
 from .common import find_idx_of_class
@@ -152,7 +152,7 @@ def select_distance_threshold_for_one_class(clustering_performance_scores) -> in
 
 def select_best_distance_threshold_for_each_class(
         class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train,
-        performance_measuring_method, name, verbose
+        performance_measuring_method, name, verbose, cluster_method
 ):
     n_classes = len(class_names)
     clustering_performance_scores_for_all_possible_thresholds_per_class = []
@@ -165,12 +165,12 @@ def select_best_distance_threshold_for_each_class(
 
     elif performance_measuring_method == 'bic':
         cluster_performance_measuring_function = bic_score
-        raise NotImplementedError('Still not implemented correctly, for future developments')
+        # raise NotImplementedError('Still not implemented correctly, for future developments')
 
     elif performance_measuring_method == 'calinski':
         cluster_performance_measuring_function = skmetrics.calinski_harabasz_score
         performance_measuring_method = 'calinski-harabasz'
-        raise NotImplementedError('Still not implemented correctly, for future developments')
+        # raise NotImplementedError('Still not implemented correctly, for future developments')
     else:
         raise NameError(f'Wrong option selected for measuring performance of the clustering. '
                         f'Selected {performance_measuring_method}')
@@ -180,9 +180,15 @@ def select_best_distance_threshold_for_each_class(
         clustering_performance_scores = []
         for threshold in possible_distance_thrs:
             indices = find_idx_of_class(class_index, preds_train, n_samples_per_class)
-            cluster_model = AgglomerativeClustering(
-                n_clusters=None, metric='manhattan', linkage='average', distance_threshold=threshold
-            )
+
+            if cluster_method == 'DBSCAN':
+                cluster_model = DBSCAN(eps=threshold, metric='manhattan', p=None)
+            elif cluster_method == 'agglomerative':
+                cluster_model = AgglomerativeClustering(
+                    n_clusters=None, metric='manhattan', linkage='average', distance_threshold=threshold
+                )
+            else:
+                raise NameError('Wrong cluster method')
             try:
                 cluster_model.fit(spk_count_train[indices])
                 # cluster_labels.append(cluster_model.labels_)
@@ -227,19 +233,30 @@ def select_best_distance_threshold_for_each_class(
 
 
 def create_clusters_per_class_based_on_distance_threshold(
-        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, n_samples_per_class
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, n_samples_per_class, cluster_method
 ):
     n_classes = len(class_names)
     # Create the clusters by extracting the labels for every sample
     clusters_per_class = []
     for class_index in range(n_classes):
         indices = find_idx_of_class(class_index, preds_train, n_samples_per_class)
-        if isinstance(selected_distance_thrs_per_class, list):
-            cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='complete',
-                                                    distance_threshold=selected_distance_thrs_per_class[class_index])
+
+        if cluster_method == 'DBSCAN':
+            if isinstance(selected_distance_thrs_per_class, list):
+                cluster_model = DBSCAN(eps=selected_distance_thrs_per_class[class_index], metric='manhattan', p=None)
+            else:
+                cluster_model = DBSCAN(eps=selected_distance_thrs_per_class, metric='manhattan', p=None)
+
+        elif cluster_method == 'agglomerative':
+            if isinstance(selected_distance_thrs_per_class, list):
+                cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='complete',
+                                                        distance_threshold=selected_distance_thrs_per_class[
+                                                            class_index])
+            else:
+                cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='complete',
+                                                        distance_threshold=selected_distance_thrs_per_class)
         else:
-            cluster_model = AgglomerativeClustering(n_clusters=None, metric='manhattan', linkage='complete',
-                                                    distance_threshold=selected_distance_thrs_per_class)
+            raise NameError('Wrong cluster method')
 
         cluster_model.fit(spk_count_train[indices])
         clusters_per_class.append(cluster_model)
@@ -248,7 +265,8 @@ def create_clusters_per_class_based_on_distance_threshold(
 
 # Possible refactorization: enable multiprocessing, as each class is independent
 def create_clusters(preds_train, spk_count_train, class_names: List, n_samples_per_class: int,
-                    distance_for_clustering=None, verbose=2, name=Path(), performance_measuring_method='silhouette'):
+                    distance_for_clustering=None, verbose=2, name=Path(),
+                    performance_measuring_method='silhouette', cluster_method='agglomerative'):
     """
     Function that creates the cluster for each class independently
     Parameters
@@ -279,6 +297,9 @@ def create_clusters(preds_train, spk_count_train, class_names: List, n_samples_p
     performance_measuring_method: str, default='silhouette',
         String that defines what method to use to measure the performance or goodness of fit of the clusters
 
+    cluster_method: str, default='agglomerative',
+        String that defines what method to use to measure the performance or goodness of fit of the clusters
+
     Returns
     -------
     clusters_per_class : List[AgglomerativeClustering]
@@ -295,15 +316,15 @@ def create_clusters(preds_train, spk_count_train, class_names: List, n_samples_p
     # Select the best performing cluster configuration for each class based on a performance metric
     selected_distance_thrs_per_class = select_best_distance_threshold_for_each_class(
         class_names, possible_distance_thrs, n_samples_per_class, preds_train, spk_count_train,
-        performance_measuring_method, name, verbose
+        performance_measuring_method, name, verbose, cluster_method
     )
 
     # Create the clusters for every class
     clusters_per_class = create_clusters_per_class_based_on_distance_threshold(
-        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, n_samples_per_class
+        class_names, preds_train, spk_count_train, selected_distance_thrs_per_class, n_samples_per_class, cluster_method
     )
 
-    if verbose == 2:
+    if verbose == 2 and cluster_method == 'agglomerative':
         plot_dendogram_per_class(class_names, clusters_per_class, name, save=True)
 
     if verbose == 0:

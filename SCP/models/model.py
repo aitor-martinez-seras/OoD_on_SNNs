@@ -129,6 +129,8 @@ def load_model(model_type: str, input_size: list, hidden_neurons=None, output_ne
         encoder = PoissonEncoder(seq_length=n_time_steps, f_max=f_max)
     elif encoder.lower() == 'constant':
         encoder = ConstantCurrentLIFEncoder(seq_length=n_time_steps, p=LIFParameters(v_th=torch.tensor(0.25)))
+    elif encoder.lower() == 'neuromorphic':
+        encoder = no_encoder
     else:
         raise NotImplementedError(f'Encoder {encoder} not implemented')
 

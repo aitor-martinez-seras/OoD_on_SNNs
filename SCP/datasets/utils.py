@@ -4,6 +4,7 @@ import requests
 from io import BytesIO
 from zipfile import ZipFile
 
+import tonic
 import torch
 from torchvision.datasets import VisionDataset
 import torchvision.transforms as T
@@ -110,9 +111,10 @@ def isolate_model(df, option):
 
 class DatasetCustomLoader(ABC):
 
-    def __init__(self, dataset_class, root_path: Path, *args, **kwargs):
+    def __init__(self, dataset_class, root_path: Path, neuromorphic_data=False, *args, **kwargs):
         self.dataset = dataset_class
         self.root_path = root_path
+        self.neuromorphic_data = neuromorphic_data
 
     @abstractmethod
     def _train_data(self, transform) -> VisionDataset:
@@ -170,33 +172,57 @@ class DatasetCustomLoader(ABC):
             )
 
 
-def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0, generator=None) -> DataLoader:
-    if shuffle and generator:
-        dataloader = DataLoader(
-            dataset=data,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            pin_memory=True,
-            num_workers=num_workers,
-            generator=generator
-        )
+def load_dataloader(data, batch_size: int, shuffle: bool, num_workers=0,
+                    generator=None, neuromorphic=False) -> DataLoader:
+    if neuromorphic:
+        if shuffle and generator:
+            dataloader = DataLoader(
+                dataset=data,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                pin_memory=True,
+                num_workers=num_workers,
+                generator=generator,
+                collate_fn=tonic.collation.PadTensors(batch_first=False)
+            )
+        else:
+            dataloader = DataLoader(
+                dataset=data,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                pin_memory=True,
+                num_workers=num_workers,
+                collate_fn=tonic.collation.PadTensors(batch_first=False)
+            )
+
     else:
-        dataloader = DataLoader(
-            dataset=data,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            pin_memory=True,
-            num_workers=num_workers,
-        )
+        if shuffle and generator:
+            dataloader = DataLoader(
+                dataset=data,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                pin_memory=True,
+                num_workers=num_workers,
+                generator=generator
+            )
+        else:
+            dataloader = DataLoader(
+                dataset=data,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                pin_memory=True,
+                num_workers=num_workers,
+            )
+
     return dataloader
 
 
-def create_loader_with_subset_of_specific_size_with_random_data(data, new_size,
-                                                                generator, batch_size) -> DataLoader:
+def create_loader_with_subset_of_specific_size_with_random_data(
+        data, new_size, generator, batch_size, neuromorphic=False) -> DataLoader:
     # rnd_idxs = torch.randint(high=size_data, size=(new_size,), generator=generator)
     rnd_idxs = torch.randperm(new_size, generator=generator)
     subset = Subset(data, [x for x in rnd_idxs.numpy()])
-    loader = load_dataloader(subset, batch_size=batch_size, shuffle=False)
+    loader = load_dataloader(subset, batch_size=batch_size, shuffle=False, neuromorphic=neuromorphic)
     return loader
 
 

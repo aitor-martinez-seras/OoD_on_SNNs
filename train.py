@@ -29,10 +29,11 @@ def get_args_parser():
     parser.add_argument("--conf", default="config", type=str, help="name of the configuration in config folder")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument("-b", "--batch-size", dest='batch_size', default=16, type=int, help="batch size")
+    parser.add_argument("-j", "--workers", dest='workers', default=4, type=int, help="workers for train")
     parser.add_argument("--model", default="", type=str, help="name of the model",
                         choices=['Fully_connected', 'ConvNet'])
-    parser.add_argument("--encoder", default="poisson", type=str,
-                        help="encoder to use. Options 'poisson' and 'constant'")
+    parser.add_argument("--encoder", default="poisson", type=str, choices=["poisson", "neuromorphic"],
+                        help="encoder to use. Options 'poisson' and 'neuromorphic'")
     parser.add_argument("--n-time-steps", default=24, type=int, dest='n_time_steps',
                         help="number of timesteps for the simulation")
     parser.add_argument("--f-max", default=100, type=int, dest='f_max',
@@ -66,6 +67,8 @@ def train_one_epoch(model, device, train_loader, optimizer, epoch):
     for data, target in tqdm(train_loader, leave=False, desc=f'Progress of epoch {epoch + 1}'):
 
         # Process data
+        if target.dtype == torch.int32:
+            target = target.to(torch.int64)
         data, target = data.to(device), target.to(device)
         output = model(data)
 
@@ -137,8 +140,14 @@ def train(model, device, train_loader: DataLoader, test_loader: DataLoader, epoc
 
 def main(args):
     print('****************** Starting training script ******************')
+    
+    print('Selecting device')
+
     # Device for computation
     device = args.device if torch.cuda.is_available() else torch.device('cpu')
+
+    print(f'Selected device: {args.device}')
+
 
     # Paths
     config_pth = load_config('paths')
@@ -146,6 +155,8 @@ def main(args):
     figures_path = Path(config_pth["paths"]["figures"])
     weights_path = Path(config_pth["paths"]["weights"])
     datasets_path = Path(config_pth["paths"]["datasets"])
+
+    print('Loaded paths')
 
     # Load dataset and its config and create the data loaders
     all_datasets_conf = load_config('datasets')
@@ -164,9 +175,13 @@ def main(args):
     test_data = in_dataset_data_loader.load_data(
         split='test', transformation_option='test', output_shape=dataset_conf['input_size'][1:]
     )
+    if in_dataset_data_loader.neuromorphic_data:
+        args.encoder = 'neuromorphic'
     # Define loaders
-    train_loader = load_dataloader(train_data, args.batch_size, shuffle=True, num_workers=4)
-    test_loader = load_dataloader(test_data, args.batch_size, shuffle=False)
+    train_loader = load_dataloader(train_data, args.batch_size, shuffle=True, num_workers=args.workers,
+                                   neuromorphic=in_dataset_data_loader.neuromorphic_data)
+    test_loader = load_dataloader(test_data, args.batch_size, shuffle=False,
+                                  neuromorphic=in_dataset_data_loader.neuromorphic_data)
     print(f'Load of {args.dataset} completed!')
 
     # Set logger

@@ -1,0 +1,24 @@
+in_distribution_datasets = [
+    'NMNIST',
+    'DVSGesture',
+    # 'POKERDVS',
+    # 'DVSLip',
+]
+out_of_distribution_datasets = [
+    'NMNIST',
+    'CIFAR10DVS',
+    'DVSGesture',
+    # 'POKERDVS',
+    'DVSLip',
+    
+]
+
+[hyperparameters]
+# In case you want to use a different batch size for a certain dataset, use the name of the dataset
+# as the variable to define the batch size
+batch_size = 128
+
+[model_type]
+    [model_type.ConvNet]
+        'NMNIST' = [100, 10]
+        'DVSGesture' = [100, 10]

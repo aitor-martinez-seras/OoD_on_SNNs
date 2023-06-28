@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import tonic
+import tonic.transforms as tonic_tfrs
 import torchvision
 import torchvision.transforms as T
 from torchvision.datasets import VisionDataset
@@ -99,16 +101,48 @@ class CIFAR100BW(CIFAR10BW):
 
 if __name__ == "__main__":
     from torch.utils.data import DataLoader
-
-    dataset = CIFAR10(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    
+    dataset = MNIST_C_Loader(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"), option='zigzag')
+    # dataset = CIFAR10DVS(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs_Gitlab/datasets"))
     loader = DataLoader(
-        dataset.load_data(split='test', transformation_option='test', output_shape=(32, 32)),
-        batch_size=64,
-        shuffle=False
-    )
-    print(loader.dataset.classes)
-    d, t = next(iter(loader))
-    print(d.mean(), d.std())
-    show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
-    show_grid_from_dataloader(loader)
+                dataset=dataset.load_data(split='test', transformation_option='test', output_shape=(34,34,2)),
+                batch_size=2,
+                shuffle=False,
+                collate_fn=tonic.collation.PadTensors(batch_first=False)
+            )
+    # loader = DataLoader(
+    #     dataset.load_data(split='test', transformation_option='test', output_shape=(28,28)),
+    #     batch_size=6,
+    #     shuffle=True,
+    # )
+
+    # print(loader.dataset.classes)
+    # print(len(loader.dataset.images))
+    # print(len(loader.dataset.targets))
+    import matplotlib.pyplot as plt
+    def plot_frames(frames):
+        fig, axes = plt.subplots(1, len(frames))
+        for axis, frame in zip(axes, frames):
+            axis.imshow(frame[1] - frame[0], )
+            axis.axis("off")
+            # plt.tight_layout()
+        plt.show()
+
+    data, targets = next(iter(loader))
+    frames = data[100:110, 0]
+    plot_frames(frames)
+    # show_img_from_dataloader(loader, img_pos=15, number_of_iterations=5)
+    # show_grid_from_dataloader(loader)
+
+    # dataset = CIFAR10(Path(r"C:/Users/110414/PycharmProjects/OoD_on_SNNs/datasets"))
+    # loader = DataLoader(
+    #     dataset.load_data(split='test', transformation_option='test', output_shape=(32, 32)),
+    #     batch_size=64,
+    #     shuffle=False
+    # )
+    # print(loader.dataset.classes)
+    # d, t = next(iter(loader))
+    # print(d.mean(), d.std())
+    # show_img_from_dataloader(loader, img_pos=15, number_of_iterations=10)
+    # show_grid_from_dataloader(loader)
 

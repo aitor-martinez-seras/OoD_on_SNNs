@@ -15,6 +15,7 @@ from SCP.datasets.tiny_imagenet import TinyImageNetLoader
 from SCP.datasets.lsun import LSUN, LoaderLSUNResize, LoaderLSUNCrop, LoaderPatchesiSUN
 from SCP.datasets.svhn import SVHN
 from SCP.datasets.food import Food101
+from SCP.datasets.neuromorphic_datasets import  NMNIST, NMNISTMissingEvents, CIFAR10DVS, NCALTECH101, DVSGesture, POKERDVS, DVSLip
 
 datasets_loader = {
     'MNIST': MNIST,
@@ -41,4 +42,11 @@ datasets_loader = {
     'LSUN_resize': LoaderLSUNResize,
     'LSUN': LSUN,
     'SVHN': SVHN,
+    'NMNIST': NMNIST,
+    'CIFAR10DVS': CIFAR10DVS,
+    'NMNIST_missing_events': NMNISTMissingEvents,
+    'DVSGesture': DVSGesture,
+    'POKERDVS': POKERDVS,
+    'DVSLip': DVSLip,
+    'NCALTECH101': NCALTECH101,
 }
