@@ -72,19 +72,22 @@ If you find a bug, create a GitHub issue, or even better, submit a pull request.
 
 ## Citing this work:
 
-*Aitor Martinez Seras, Javier Del Ser, Jesus L. Lobo, Pablo Garcia-Bringas, Nikola Kasabov, "A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks", under review, arXiv:2210.00894, 2022*
+Martinez-Seras, A., Del Ser, J., Lobo, J. L., Garcia-Bringas, P., & Kasabov, N. (2023). A novel out-of-distribution detection approach for spiking neural networks: design, fusion, performance evaluation and explainability. Information Fusion, 100, 101943.
+
+```bibtex
+@article{martinez2023novel,
+  title={A novel out-of-distribution detection approach for spiking neural networks: design, fusion, performance evaluation and explainability},
+  author={Martinez-Seras, Aitor and Del Ser, Javier and Lobo, Jesus L and Garcia-Bringas, Pablo and Kasabov, Nikola},
+  journal={Information Fusion},
+  volume={100},
+  pages={101943},
+  year={2023},
+  publisher={Elsevier}
+}
+```
 
 ### Abstract
 
 Research around Spiking Neural Networks has ignited during the last years due to their advantages when compared to traditional neural networks, including their efficient processing and inherent ability to model complex temporal dynamics. Despite these differences, Spiking Neural Networks face similar issues than other neural computation counterparts when deployed in real-world settings. This work addresses one of the practical circumstances that can hinder the trustworthiness of this family of models: the possibility of querying a trained model with samples far from the distribution of its training data (also referred to as Out-of-Distribution or OoD data). Specifically, this work presents a novel OoD detector that can identify whether test examples input to a Spiking Neural Network belong to the distribution of the data over which it was trained. For this purpose, we characterize the internal activations of the hidden layers of the network in the form of spike count patterns, which lay a basis for determining when the activations induced by a test instance is atypical. Furthermore, a local explanation method is devised to produce attribution maps revealing which parts of the input instance push most towards the detection of an example as an OoD sample. Experimental results are performed over several image classification datasets to compare the proposed detector to other OoD detection schemes from the literature, and to assess whether its fusion with other baseline OoD detection schemes can complement and boost the overall detection capability. As the obtained results clearly show, the proposed detector performs competitively against such alternative schemes, and when fused together, can significantly improve the detection scores of their constituent individual detectors. Furthermore, the explainability technique associated to our proposal is proven to produce relevance attribution maps that conform to expectations for synthetically created OoD instances.
 
 [[Link to the paper]](https://arxiv.org/abs/2210.00894)
-
-```
-@article{martinezseras22journal,
-  title={{A Novel Explainable Out-of-Distribution Detection Approach for Spiking Neural Networks}},
-  author={Seras, Aitor Martinez and Del Ser, Javier and Lobo, Jesus L. and Garcia-Bringas, Pablo and Kasabov, Nikola},
-  journal={Under review, preprint available at arXiv},
-  year={2022}
-}
-```
